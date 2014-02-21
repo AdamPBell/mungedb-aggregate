@@ -15,7 +15,7 @@
     "test": "npm_scripts/test/test.sh"
   },
   "repository": {
-    "url": "git+https://stash.rd.rcg.local/scm/eagle6/mungedb-aggregate.git#develop"
+    "url": "git+https://stash.rd.rcg.local/scm/eagle6/mungedb-aggregate.git#release/v0.6.7+2014.02.10"
   },
   "keywords": [
     "manipulation",
