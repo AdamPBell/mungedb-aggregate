@@ -13,6 +13,7 @@ DEBUG=
 NO_SYNTAX=
 NO_UNIT=
 NO_COVERAGE=
+BUILD_SYSTEM=$BAMBOO_HOME
 
 # Shortcut for running echo and then exit
 die() {
@@ -43,6 +44,8 @@ NARGS=-1; while [ "$#" -ne "$NARGS" ]; do NARGS=$#; case $1 in
 		NO_UNIT=$(( $NO_UNIT + 1 )) && shift && echo "#-INFO: NO_UNIT=$NO_UNIT"; ;;
 	-C|--no-coverage) # Enable coverage tests
 		NO_COVERAGE=$(( $NO_COVERAGE + 1 )) && shift && echo "#-INFO: NO_COVERAGE=$NO_COVERAGE"; ;;
+	-B|--build-system) # Enable options needed for the build system
+		BUILD_SYSTEM=$(( $BUILD_SYSTEM + 1 )) && shift && echo "#-INFO: BUILD_SYSTEM=$BUILD_SYSTEM"; ;;
 	# PAIRS
 #	-t|--thing)	 # Set a thing to a value (DEFAULT: $THING)
 #		shift && THING="$1" && shift && [ -n "$VERBOSE" ] && echo "#-INFO: THING=$THING"; ;;
@@ -153,19 +156,19 @@ if [ -z "$NO_SYNTAX" ]; then
 	echo
 fi
 
+# Used by unit and coverage tests.
+MOCHA_BIN="$npm_package_config_mocha_bin"
+[ -n "$MOCHA_BIN" ] && [ -x "$MOCHA_BIN" ] || MOCHA_BIN=$(which mocha || true)
+[ -n "$MOCHA_BIN" ] && [ -x "$MOCHA_BIN" ] || die "ERROR: Unable to find 'mocha' binary! Install via 'npm install mocha' to proceed!"
+
 # Unit tests
 [ "$npm_package_config_test_unit" = "false" ] && NO_UNIT=1
 if [ -z "$NO_UNIT" ]; then
 	echo "Running unit tests ..."
 
-	# Deps
-	MOCHA_BIN="$npm_package_config_mocha_bin"
-	[ -n "$MOCHA_BIN" ] && [ -x "$MOCHA_BIN" ] || MOCHA_BIN=$(which mocha || true)
-	[ -n "$MOCHA_BIN" ] && [ -x "$MOCHA_BIN" ] || die "ERROR: Unable to find 'mocha' binary! Install via 'npm install mocha' to proceed!"
-
 	# Prep
 	MOCHA_REPORTER="spec"
-	if [ -n "$JENKINS_URL" ]; then
+	if [ -n "$BUILD_SYSTEM" ]; then
 		MOCHA_REPORTER="$npm_package_config_test_reporter"
 		[ -n "$MOCHA_REPORTER" ] || MOCHA_REPORTER="xunit"
 	fi
@@ -219,7 +222,7 @@ if [ -z "$NO_COVERAGE" ]; then
 	fi
 
 	# Exec
-	JSCOVERAGE_EXCLUDES="$(find "$CODE_DIR" -type f -not -path '*/.svn/*' -not -name '*.js' | xargs -n1 basename | sort -u | tr '\n' , | sed 's/,$//')"
+	#JSCOVERAGE_EXCLUDES="$(find "$CODE_DIR" -type f -not -path '*/.svn/*' -not -name '*.js' | xargs -n1 basename | sort -u | tr '\n' , | sed 's/,$//')"
 	"$JSCOVERAGE_BIN" "$CODE_DIR" "$JSCOVERAGE_TMP_DIR" --exclude "$JSCOVERAGE_EXCLUDES"
 	# - Backup the actual code and replace it with jscoverage results
 	[ -n "$VERBOSE" ] && echo "Replacing $CODE_DIR with $JSCOVERAGE_TMP_DIR ..."
@@ -235,12 +238,14 @@ if [ -z "$NO_COVERAGE" ]; then
 #		|| die "ERROR: JSCoverage errors during coverage tests! $(rm -fr "$CODE_DIR" && mv "$CODE_DIR.ORIGINAL" "$CODE_DIR"; echo; cat "$REPORT_FILE")"
 #	[ -n "$VERBOSE" ] && echo "REPORT OUTPUT: $REPORT_FILE" && cat "$REPORT_FILE" && echo
 
+	LOGGER_PREFIX='' LOGGER_LEVEL=NOTICE "$MOCHA_BIN" --ui "exports" --reporter "json-cov" --recursive "$TEST_DIR" 2> "$REPORT_FILE_ERR" > "$REPORT_FILE_BASE.json"
+
 	# Cleanup
 	rm -rf "$CODE_DIR"	\
 		&& mv "$CODE_DIR.ORIGINAL" "$CODE_DIR"	\
 		|| die "ERROR: Unable to put code directory \"$CODE_DIR.ORIGNAL\" back where it belongs!"
 
-	#TODO: verifying reports should be part of checking test coverage
+	node -e "if (JSON.parse(require('fs').readFileSync('$REPORT_FILE_BASE.json')).coverage < 100) { console.error('Less than 100% code coverage! See code coverage report at https://bamboo.rd.rcg.local/$bamboo_buildplanname-$bamboo_buildnumber/artifact/JOB1/code-coverage/$PKG_NAME-coverage.html'); process.exit(1); }"
 
 	echo
 fi
