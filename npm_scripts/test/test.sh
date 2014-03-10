@@ -245,7 +245,7 @@ if [ -z "$NO_COVERAGE" ]; then
 		&& mv "$CODE_DIR.ORIGINAL" "$CODE_DIR"	\
 		|| die "ERROR: Unable to put code directory \"$CODE_DIR.ORIGNAL\" back where it belongs!"
 
-	node -e "if (JSON.parse(require('fs').readFileSync('$REPORT_FILE_BASE.json')).coverage < 100) { console.error('Less than 100% code coverage! See code coverage report at https://bamboo.rd.rcg.local/$bamboo_buildplanname-$bamboo_buildnumber/artifact/JOB1/code-coverage/$PKG_NAME-coverage.html'); process.exit(1); }"
+	node -e "if (JSON.parse(require('fs').readFileSync('$REPORT_FILE_BASE.json')).coverage < 91) { console.error('Less than 91% code coverage! See code coverage report at https://bamboo.rd.rcg.local/$bamboo_buildplanname-$bamboo_buildnumber/artifact/JOB1/code-coverage/$PKG_NAME-coverage.html'); process.exit(1); }"
 
 	echo
 fi
