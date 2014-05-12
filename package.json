@@ -23,7 +23,7 @@
   ],
   "dependencies": {
     "sift": "*",
-	"async":"git+https://github.com/louischatriot/async"
+	"async": "*"
   },
   "devDependencies": {
     "mocha": "*",
