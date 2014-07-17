@@ -1,6 +1,6 @@
 {
   "name": "mungedb-aggregate",
-  "version": "0.7.1+2014.04.17",
+  "version": "0.0.2+2014-Q3-2",
   "description": "A JavaScript data aggregation pipeline based on the MongoDB aggregation framework.",
   "author": "Rivera Group <support@riverainc.com>",
   "contributors": [
