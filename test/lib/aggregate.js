@@ -10,8 +10,17 @@ function testAggregate(opts){
 	var results = aggregate(opts.pipeline, opts.inputs);
 	assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
+	// SYNC: test one-off usage with context
+	results = aggregate(opts.pipeline, {hi: "there"}, opts.inputs);
+	assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
+
+	// SYNC: test use with context
+	var aggregator = aggregate(opts.pipeline, {hi: "there"});
+	results = aggregator(opts.inputs);
+	assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
+
 	// SYNC: test reusable aggregator functionality
-	var aggregator = aggregate(opts.pipeline);
+	aggregator = aggregate(opts.pipeline);
 	results = aggregator(opts.inputs);
 	assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
@@ -24,19 +33,34 @@ function testAggregate(opts){
 		assert.ifError(err);
 		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
-		// ASYNC: test reusable aggregator functionality
-		var aggregator = aggregate(opts.pipeline);
-		aggregator(opts.inputs, function(err, results){
+		// ASYNC: test one-off usage with context
+		aggregate(opts.pipeline, {hi: "there"}, opts.inputs, function(err, results){
 			assert.ifError(err);
 			assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
-			// ASYNC: test that it is actually reusable
-			aggregator(opts.inputs, function(err, results){
+			// ASYNC: test reusable aggregator functionality with context
+			var aggregator = aggregate(opts.pipeline);
+			aggregator({hi: "there"}, opts.inputs, function(err, results){
 				assert.ifError(err);
-				assert.equal(JSON.stringify(results), JSON.stringify(opts.expected), "Reuse of aggregator should yield the same results!");
+				assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
-				// success!
-				return opts.next();
+				// ASYNC: test reusable aggregator functionality
+				var aggregator = aggregate(opts.pipeline);
+				aggregator(opts.inputs, function(err, results){
+					assert.ifError(err);
+					assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
+
+					// ASYNC: test that it is actually reusable
+					aggregator(opts.inputs, function(err, results){
+						assert.ifError(err);
+						assert.equal(JSON.stringify(results), JSON.stringify(opts.expected), "Reuse of aggregator should yield the same results!");
+
+						// success!
+						return opts.next();
+					});
+
+				});
+
 			});
 
 		});
