@@ -130,6 +130,12 @@ module.exports = {
 				assert.throws(function() {
 					testableExpr.checkArgCountRange(2, 4);
 				});
+			},
+			"should accept if there are no operands but the lower range is 0": function(){
+				var testableExpr = new TestableExpression();
+				assert.doesNotThrow(function() {
+					testableExpr.checkArgCountRange(0, 4);
+				});
 			}
 		},
 
