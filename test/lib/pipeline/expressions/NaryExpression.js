@@ -123,6 +123,55 @@ module.exports = {
 				testableExpr.checkArgCount(3);
 			});
 		},
+
+		"#checkArgCountRange() sans operands": {
+			"should fail with Error if there are no arguments": function(){
+				var testableExpr = new TestableExpression();
+				assert.throws(function() {
+					testableExpr.checkArgCountRange(2, 4);
+				});
+			}
+		},
+
+		"#checkArgCountRange()": {
+			before: function() {
+				this.testableExpr = new TestableExpression();
+				this.testableExpr.addOperand(new ConstantExpression("uno"));
+				this.testableExpr.addOperand(new ConstantExpression("dos"));
+				this.testableExpr.addOperand(new ConstantExpression("tres"));
+			},
+
+			"should throw Error if the number of arguments is too low": function () {
+				var t = this.testableExpr;
+				assert.throws(function() {
+					t.checkArgCountRange(4, 6);
+				});
+			},
+			"should throw Error if the number of arguments is too high": function () {
+				var t = this.testableExpr;
+				assert.throws(function() {
+					t.checkArgCountRange(1, 2);
+				});
+			},
+			"should accept if the number of arguments equals the minimum": function () {
+				var t = this.testableExpr;
+				assert.doesNotThrow(function() {
+					t.checkArgCountRange(3, 5);
+				});
+			},
+			"should accept if the number of arguments equals the maximum": function () {
+				var t = this.testableExpr;
+				assert.doesNotThrow(function() {
+					t.checkArgCountRange(1, 3);
+				});
+			},
+			"should accept if the number of arguments falls within the range": function () {
+				var t = this.testableExpr;
+				assert.doesNotThrow(function() {
+					t.checkArgCountRange(2, 4);
+				});
+			}
+		},
 		
 		//the following test case is eagerly awaiting ObjectExpression
 		"#addDependencies()": function testDependencies(){
