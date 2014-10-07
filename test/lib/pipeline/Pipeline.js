@@ -121,10 +121,9 @@ module.exports = {
 			},
 
 			"should call callback with errors from pipeline components": function (next) {
-				var p = Pipeline.parseCommand({pipeline:[{$match:{$foo:{bar:"baz"}}}]});
-				p.run(new DocumentSource({}), function(err, results){
-					assert(err instanceof Error);
-					return next();
+				// The $foo part is invalid and causes a throw.
+				assert.throws(function(){
+					Pipeline.parseCommand({pipeline:[{$match:{$foo:{bar:"baz"}}}]});
 				});
 			}
 
