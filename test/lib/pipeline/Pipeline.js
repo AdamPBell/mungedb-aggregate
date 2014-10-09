@@ -161,7 +161,7 @@ module.exports = {
 				p.run(new DocumentSource({}), function (err, results) {
 					assert(err instanceof Error);
 					return next();
-				})
+				});
 			}
 		}
 	}
