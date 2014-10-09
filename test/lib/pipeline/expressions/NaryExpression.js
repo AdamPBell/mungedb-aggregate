@@ -123,7 +123,7 @@ module.exports = {
 				testableExpr.checkArgCount(3);
 			});
 		},
-		
+
 		//the following test case is eagerly awaiting ObjectExpression
 		"#addDependencies()": function testDependencies(){
 			var testableExpr = new TestableExpression();
