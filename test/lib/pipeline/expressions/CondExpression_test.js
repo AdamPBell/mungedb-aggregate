@@ -50,6 +50,21 @@ module.exports = {
 
 				"should evaluate boolean expression as false, then return 0; [ false === true, 1, 0 ]": function () {
 					assert.strictEqual(Expression.parseOperand({$cond: [ false, 1, 0 ]}, {}).evaluateInternal({}), 0);
+				},
+				"should fail when the 'if' position is empty": function(){
+					assert.throws(function(){
+						Expression.parseOperand({$cond:[undefined, 2, 3]}, {});
+					})
+				},
+				"should fail when the 'then' position is empty": function(){
+					assert.throws(function(){
+						Expression.parseOperand({$cond:[1, undefined, 3]}, {});
+					})
+				},
+				"should fail when the 'else' position is empty": function(){
+					assert.throws(function(){
+						Expression.parseOperand({$cond:[1, 2, undefined]}, {});
+					})
 				}
 			},
 
@@ -72,6 +87,15 @@ module.exports = {
 				},
 				"should fail because of missing else": function(){
 					this.shouldFail({$cond:{if:1, then:2, xelse:3}});
+				},
+				"should fail because of empty if": function(){
+					this.shouldFail({$cond:{if:undefined, then:2, else:3}});
+				},
+				"should fail because of empty then": function(){
+					this.shouldFail({$cond:{if:1, then:undefined, else:3}});
+				},
+				"should fail because of empty else": function(){
+					this.shouldFail({$cond:{if:1, then:2, else:undefined}});
 				},
 				"should fail because of mystery args": function(){
 					this.shouldFail({$cond:{if:1, then:2, else:3, zoot:4}});
