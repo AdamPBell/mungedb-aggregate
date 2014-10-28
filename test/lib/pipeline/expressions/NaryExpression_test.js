@@ -26,9 +26,11 @@ var Testable = (function(){
 	proto.evaluateInternal = function evaluateInternal(vars) {
 		// Just put all the values in a list.  This is not associative/commutative so
 		// the results will change if a factory is provided and operations are reordered.
-		return this.operands.map(function(operand) {
-			return operand.evaluateInternal(vars);
-		});
+		var values = [];
+		for (var i = 0, l = this.operands.length; i < l; i++) {
+			values.push(this.operands[i].evaluateInternal(vars));
+		}
+		return values;
 	};
 
 	proto.getOpName = function getOpName() {
@@ -40,7 +42,7 @@ var Testable = (function(){
 	};
 
 	klass.create = function create(associativeAndCommutative) {
-		return new Testable(!!associativeAndCommutative);
+		return new Testable(Boolean(associativeAndCommutative));
 	};
 
 	klass.factory = function factory() {
