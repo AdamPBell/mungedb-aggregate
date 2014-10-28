@@ -179,19 +179,19 @@ exports.NaryExpression = {
 		/** A string constant prevents factory optimization. */
 		"StringConstant": function testStringConstant() {
 			var testable = Testable.createFromOperands(["abc", "def", "$path"], true);
-			assert.deepEqual(testable.serialize(), testable.optimize().serialize());
+			assert.strictEqual(testable, testable.optimize());
 		},
 
 		/** A single (instead of multiple) constant prevents optimization.  SERVER-6192 */
 		"SingleConstant": function testSingleConstant() {
 			var testable = Testable.createFromOperands([55, "$path"], true);
-			assert.deepEqual(testable.serialize(), testable.optimize().serialize());
+			assert.strictEqual(testable, testable.optimize());
 		},
 
 		/** Factory optimization is not used without a factory. */
 		"NoFactory": function testNoFactory() {
 			var testable = Testable.createFromOperands([55, 66, "$path"], false);
-			assert.deepEqual(testable.serialize(), testable.optimize().serialize());
+			assert.strictEqual(testable, testable.optimize());
 		},
 
 	},
@@ -199,9 +199,9 @@ exports.NaryExpression = {
 	/** Factory optimization separates constant from non constant expressions. */
 	"FactoryOptimize": function testFactoryOptimize() {
 		// The constant expressions are evaluated separately and placed at the end.
-		var testable = Testable.createFromOperands([55, 66, "$path"], false),
+		var testable = Testable.createFromOperands([55, 66, "$path"], true),
 			optimized = testable.optimize();
-		assert.deepEqual({$testable:["$path", [55, 66]]}, utils.expressionToJson(optimized));
+		assert.deepEqual(utils.constify({$testable:["$path", [55, 66]]}), utils.expressionToJson(optimized));
 	},
 
 	/** Factory optimization flattens nested operators of the same type. */
@@ -231,12 +231,11 @@ exports.NaryExpression = {
 		top.addOperand(nested);
 		var optimized = top.optimize();
 		assert.deepEqual(
-			utils.constify({$testable:[
-				"$a",
-				"$b",
-				"$c",
-				[1,2,[3,4,[5,6]]]]}),
-			utils.expressionToJson(optimized));
+			utils.constify({
+				$testable: ["$a", "$b", "$c", [1, 2, [3, 4, [5, 6]]]]
+			}),
+			utils.expressionToJson(optimized)
+		);
 	},
 
 };
