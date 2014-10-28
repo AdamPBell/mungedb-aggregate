@@ -39,7 +39,11 @@ module.exports = {
 						Expression.parseOperand({$cond:[1,2]}, {});
 					})
 				},
-
+				"should fail if there are too many arguments": function() {
+					assert.throws(function(){
+						Expression.parseOperand({$cond:[1, 2, 3, 4]}, {});
+					})
+				},
 				"should evaluate boolean expression as true, then return 1; [ true === true, 1, 0 ]": function () {
 					assert.strictEqual(Expression.parseOperand({$cond: [ true, 1, 0 ]}, {}).evaluateInternal({}), 1);
 				},
@@ -77,16 +81,24 @@ module.exports = {
 						Expression.parseOperand({$cond:{ if: $a, then: 1, else: 0}}, {}).evaluate({$a: 1}),
 						1);
 				},
+				"should evaluate true even with mixed up args": function(){
+					assert.strictEqual(
+						Expression.parseOperand({$cond:{ else: 0, then: 1, if: $a }}, {}).evaluate({$a: 1}),
+						1);
+				},
 				"should evaluate false": function(){
 					assert.strictEqual(
 						Expression.parseOperand({$cond:{ if: $a, then: 0, else: 1}}, {}).evaluate({$a: 0}),
 						1);
+				},
+				"should evaluate false even with mixed up args": function() {
+					assert.strictEqual(
+						Expression.parseOperand({$cond: { else: 1, then: 0, if: $a}}, {}).evaluate({$a: 0}),
+						1);
 				}
-
 			}
 		}
 	}
-
 };
 
 if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
