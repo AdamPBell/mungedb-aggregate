@@ -2,7 +2,8 @@
 var assert = require("assert"),
 	CoerceToBoolExpression = require("../../../../lib/pipeline/expressions/CoerceToBoolExpression"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
-	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression");
+	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression"),
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker");
 
 
 module.exports = {
