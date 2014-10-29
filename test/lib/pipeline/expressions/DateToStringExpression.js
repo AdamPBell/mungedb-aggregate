@@ -27,8 +27,11 @@ module.exports = {
 
 		"evaluateInternal1()" : {
 			"should return the date to string": function evaluateInternal1() {
-				var input = [new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")];  //"%Y%m%d", 
-				assert.strictEqual(Expression.parseExpression("$dateToString", input).evaluate({}), "2013/2/18");
+				//var input = ["%Y%m%d", new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")];
+				//assert.strictEqual(DateToStringExpression.parse("$dateToString", input).evaluate({}), "2013/2/18");
+
+				var dateToStringExpression = new DateToStringExpression().parse({$expr:{vars:["$dateToString", "%Y%m%d", new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")]}}, {});
+				assert(dateToStringExpression);
 			}
 		}
 	}
