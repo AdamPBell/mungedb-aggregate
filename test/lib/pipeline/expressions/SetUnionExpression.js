@@ -20,8 +20,8 @@ module.exports = {
 
 				"#getOpName()": {
 
-						"should return the correct op name; $setunion": function testOpName() {
-								assert.equal(new SetUnionExpression([1, 2, 3], [4, 5, 6]).getOpName(), "$setunion");
+						"should return the correct op name; $setUnion": function testOpName() {
+								assert.equal(new SetUnionExpression([1, 2, 3], [4, 5, 6]).getOpName(), "$setUnion");
 						}
 
 				},
@@ -33,7 +33,7 @@ module.exports = {
 										array2 = [6, 7, 8, 9];
 								assert.throws(function() {
 										Expression.parseOperand({
-												$setunion: ["$array1", "$array2"]
+												$setUnion: ["$array1", "$array2"]
 										}).evaluateInternal({
 												array1: array1,
 												array2: array2
@@ -46,7 +46,7 @@ module.exports = {
 										array2 = "not an array";
 								assert.throws(function() {
 										Expression.parseOperand({
-												$setunion: ["$array1", "$array2"]
+												$setUnion: ["$array1", "$array2"]
 										}).evaluateInternal({
 												array1: array1,
 												array2: array2
@@ -59,7 +59,7 @@ module.exports = {
 										array2 = "not an array";
 								assert.throws(function() {
 										Expression.parseOperand({
-												$setunion: ["$array1", "$array2"]
+												$setUnion: ["$array1", "$array2"]
 										}).evaluateInternal({
 												array1: array1,
 												array2: array2
@@ -77,7 +77,7 @@ module.exports = {
 												"b": "3"
 										};
 								assert.strictEqual(Expression.parseOperand({
-										$setunion: ["$array1", "$array2"]
+										$setUnion: ["$array1", "$array2"]
 								}).evaluateInternal({
 										array1: array1,
 										array2: array2
@@ -92,7 +92,7 @@ module.exports = {
 								var array1 = [1, 2, 3, 4, 5],
 										array2 = [2, 3, 6, 7, 8];
 								assert.strictEqual(Expression.parseOperand({
-										$setunion: ["$array1", "$array2"]
+										$setUnion: ["$array1", "$array2"]
 								}).evaluateInternal({
 										array1: array1,
 										array2: array2
@@ -103,7 +103,7 @@ module.exports = {
 								var array1 = [1, 2, 3, 4, 5],
 										array2 = [7, 8, 9];
 								assert.strictEqual(Expression.parseOperand({
-										$setunion: ["$array1", "$array2"]
+										$setUnion: ["$array1", "$array2"]
 								}).evaluateInternal({
 										array1: array1,
 										array2: array2
