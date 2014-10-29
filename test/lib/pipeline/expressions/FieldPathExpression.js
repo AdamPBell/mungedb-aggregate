@@ -44,7 +44,7 @@ module.exports = {
 				results = fieldPath.evaluateInternal(vars);
 				assert.strictEqual(results, undefined);
 			},
-
+// belowMissing
 			"should return undefined if field path is nested below Number": function testNestedBelowInt(){
 			    var vars = new Variables(1,{a:2}),
 				fieldPath = FieldPathExpression.create('a.b'),
