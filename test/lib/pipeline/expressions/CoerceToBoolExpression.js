@@ -63,8 +63,10 @@ module.exports = {
 		"#addDependencies()": {
 
 			"should forward dependencies of nested expression": function testDependencies(){
-				var expr = new CoerceToBoolExpression(new FieldPathExpression('a.b')),
-					deps = expr.addDependencies({});
+				var nested = new FieldPathExpression.create("a.b"),
+					expr = new CoerceToBoolExpression(nested),
+					deps = new DepsTracker();
+					expr.addDependencies(deps);
 				assert.equal(Object.keys(deps).length, 1);
 				assert.ok(deps['a.b']);
 			}
