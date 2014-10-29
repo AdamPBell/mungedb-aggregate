@@ -141,7 +141,7 @@ module.exports = {
 				assertExpectedResult({
 					expression: expr,
 					expected: {"_id":0, "a":1},
-					expectedDependencies: {"_id":1, "a":1},
+					expectedDependencies: {"fields":{"_id":1, "a":1}},
 					expectedJsonRepresentation: {"a":{$const:null}}
 				});
 			},
@@ -154,7 +154,7 @@ module.exports = {
 					source: {"_id":0, "b":2},
 					expression: expr,
 					expected: {"_id":0},
-					expectedDependencies: {"_id":1, "a":1},
+					expectedDependencies: {"fields":{"_id":1, "a":1}},
 					expectedJsonRepresentation: {"a":{$const:null}}
 				});
 			},
@@ -166,7 +166,7 @@ module.exports = {
 				assertExpectedResult({
 					expression: expr,
 					expected: {"_id":0},
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {"_id":{$const:null}}
 				});
 			},
@@ -179,7 +179,7 @@ module.exports = {
 				assertExpectedResult({
 					expression: expr,
 					expected: {"b":2},
-					expectedDependencies: {"b":1},
+					expectedDependencies: {"fields":{"b":1}},
 					expectedJsonRepresentation: {"b":{$const:null}}
 				});
 			},
@@ -192,7 +192,7 @@ module.exports = {
 				assertExpectedResult({
 					expression: expr,
 					get expected() { return this.source; },
-					expectedDependencies: {"_id":1, "a":1, "b":1},
+					expectedDependencies: {"fields":{"_id":1, "a":1, "b":1}},
 					expectedJsonRepresentation: {"b":{$const:null}, "a":{$const:null}}
 				});
 			},
@@ -205,7 +205,7 @@ module.exports = {
 					source: {"_id":0, "a":{ "b":5, "c":6}, "z":2 },
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":5} },
-					expectedDependencies: {"_id":1, "a.b":1},
+					expectedDependencies: {"fields":{"_id":1, "a.b":1}},
 					expectedJsonRepresentation: {"a":{ "b":{$const:null}} }
 				});
 			},
@@ -219,7 +219,7 @@ module.exports = {
 					source: {"_id":0, "a":{ "b":5, "c":6}, "z":2 },
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":5, "c":6} },
-					expectedDependencies: {"_id":1, "a.b":1, "a.c":1},
+					expectedDependencies: {"fields":{"_id":1, "a.b":1, "a.c":1}},
 					expectedJsonRepresentation: {"a":{ "b":{$const:null}, "c":{$const:null}} }
 				});
 			},
@@ -233,7 +233,7 @@ module.exports = {
 					source: {"_id":0, "a":{ "b":5 }, "c":{"d":6} },
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":5}, "c":{"d":6} },
-					expectedDependencies: {"_id":1, "a.b":1, "c.d":1},
+					expectedDependencies: {"fields":{"_id":1, "a.b":1, "c.d":1}},
 					expectedJsonRepresentation: {"a":{"b":{$const:null}}, "c":{"d":{$const:null}} }
 				});
 			},
@@ -246,7 +246,7 @@ module.exports = {
 					source: {"_id":0, "a":{ "c":6}, "z":2 },
 					expression: expr,
 					expected: {"_id":0, "a":{} },
-					expectedDependencies: {"_id":1, "a.b":1},
+					expectedDependencies: {"fields":{"_id":1, "a.b":1}},
 					expectedJsonRepresentation: {"a":{ "b":{$const:null}} }
 				});
 			},
@@ -259,7 +259,7 @@ module.exports = {
 					source: {"_id":0, "a":2, "z":2},
 					expression: expr,
 					expected: {"_id":0},
-					expectedDependencies: {"_id":1, "a.b":1},
+					expectedDependencies: {"fields":{"_id":1, "a.b":1}},
 					expectedJsonRepresentation: {"a":{ "b":{$const:null}} }
 				});
 			},
@@ -272,7 +272,7 @@ module.exports = {
 					source: {_id:0,a:[{b:5,c:6},{b:2,c:9},{c:7},[],2],z:1},
 					expression: expr,
 					expected: {_id:0,a:[{b:5},{b:2},{}]},
-					expectedDependencies: {"_id":1, "a.b":1},
+					expectedDependencies: {"fields":{"_id":1, "a.b":1}},
 					expectedJsonRepresentation: {"a":{ "b":{$const:null}} }
 				});
 			},
@@ -285,7 +285,7 @@ module.exports = {
 					source: {"_id":0, "a":{ "_id":1, "b":1} },
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":1} },
-					expectedDependencies: {"_id":1, "a.b":1},
+					expectedDependencies: {"fields":{"_id":1, "a.b":1}},
 					expectedJsonRepresentation: {"a":{ "b":{$const:null}}}
 				});
 			},
@@ -298,7 +298,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0, "a":5},
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {"a":{ "$const":5} },
 					expectedIsSimple: false
 				});
@@ -312,7 +312,7 @@ module.exports = {
 					source: {"_id":0, "a":99},
 					expression: expr,
 					expected: {"_id": 0, "a": 5},
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {"a": {"$const": 5}},
 					expectedIsSimple: false
 				});
@@ -326,7 +326,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0},
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {a:{$const:undefined}},
 					expectedIsSimple: false
 				});
@@ -340,7 +340,7 @@ module.exports = {
 					source: {"_id":0, "a":99},
 					expression: expr,
 					expected: {"_id":0, "a":5},
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {"a":{"$const":5}},
 					expectedIsSimple: false
 				});
@@ -354,7 +354,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0, "a":null},
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {"a":{"$const":null}},
 					expectedIsSimple: false
 				});
@@ -368,7 +368,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0, "a":{"b":5}},
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {"a":{"b":{"$const":5}}},
 					expectedIsSimple: false
 				});
@@ -382,7 +382,7 @@ module.exports = {
 					source: {"_id":0, "x":4},
 					expression: expr,
 					expected: {"_id":0, "a":4},
-					expectedDependencies: {"_id":1, "x":1},
+					expectedDependencies: {"fields":{"_id":1, "x":1}},
 					expectedJsonRepresentation: {"a":"$x"},
 					expectedIsSimple: false
 				});
@@ -396,7 +396,7 @@ module.exports = {
 					source: {"_id":0, "x":{"y":4}},
 					expression: expr,
 					expected: {"_id":0, "a":{"b":4}},
-					expectedDependencies: {"_id":1, "x.y":1},
+					expectedDependencies: {"fields":{"_id":1, "x.y":1}},
 					expectedJsonRepresentation: {"a":{"b":"$x.y"}},
 					expectedIsSimple: false
 				});
@@ -413,7 +413,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0},
-					expectedDependencies: {"_id":1, 'a.b':1},
+					expectedDependencies: {"fields":{"_id":1, 'a.b':1}},
 					expectedJsonRepresentation: {a:{b:"$a.b"}},
 					expectedIsSimple: false
 				});
@@ -430,7 +430,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":6} },
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {a:{b:{$const:6}}},
 					expectedIsSimple: false
 				});
@@ -445,7 +445,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":6, "c":7} },
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {a:{b:{$const:6},c:{$const:7}}},
 					expectedIsSimple: false
 				});
@@ -462,7 +462,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":6, "c":7} },
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {a:{b:{$const:6},c:{$const:7}}},
 					expectedIsSimple: false
 				});
@@ -479,7 +479,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":6, "c":7} },
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {a:{b:{$const:6},c:{$const:7}}},
 					expectedIsSimple: false
 				});
@@ -498,7 +498,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":6, "c":7} },
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {a:{b:{$const:6},c:{$const:7}}},
 					expectedIsSimple: false
 				});
@@ -517,7 +517,7 @@ module.exports = {
 					source: {"_id":0},
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":6, "d":7, "c":8} },
-					expectedDependencies: {"_id":1},
+					expectedDependencies: {"fields":{"_id":1}},
 					expectedJsonRepresentation: {a:{b:{$const:6},d:{$const:7},c:{$const:8}}},
 					expectedIsSimple: false
 				});
@@ -536,7 +536,7 @@ module.exports = {
 					source:{_id:0},
 					expression: expr,
 					expected: {"_id":0, "a":{ "b":{ "c":6, "d":7}}},
-					expectedDependencies:{_id:1},
+					expectedDependencies: {"fields":{_id:1}},
 					expectedJsonRepresentation:{"a":{"b":{"c":{$const:6},"d":{$const:7}}}},
 					expectedIsSimple:false
 				});
