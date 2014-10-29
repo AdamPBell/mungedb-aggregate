@@ -31,14 +31,6 @@ module.exports = {
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new NotExpression().getFactory(), undefined);
-			}
-
-		},
-
 		"#evaluateInternal()": {
 
 			"should return false for a true input; false for true": function(){
