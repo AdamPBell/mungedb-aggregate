@@ -2,7 +2,8 @@
 var assert = require("assert"),
 	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
-	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState");
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker");
 
 // Mocha one-liner to make these tests self-hosted
 if (!module.parent)return(require.cache[__filename] = null, (new (require("mocha"))({ui: "exports", reporter: "spec", grep: process.env.TEST_GREP})).addFile(__filename).run(process.exit));
@@ -58,9 +59,9 @@ exports.ConstantExpression = {
 
 		"should return nothing": function testDependencies() {
 			var expr = ConstantExpression.create(5),
-				deps = {}; //TODO: new DepsTracker
+				deps = new DepsTracker();
 			expr.addDependencies(deps);
-			assert.strictEqual(deps.fields.length, 0);
+			assert.deepEqual(deps.fields, {});
 			assert.strictEqual(deps.needWholeDocument, false);
 			assert.strictEqual(deps.needTextScore, false);
 		}
