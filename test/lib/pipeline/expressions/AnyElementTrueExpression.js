@@ -10,7 +10,7 @@ var anyElementTrueExpression = new AnyElementTrueExpression();
 function errMsg(expr, args, tree, expected, result) {
 	return 	"for expression " + expr +
 			" with argument " + args +
-			" full tree: " + tree +
+			" full tree: " + JSON.stringify(tree) +
 			" expected: " + expected +
 			" result: " + result;
 }
@@ -43,8 +43,7 @@ module.exports = {
 				var idGenerator = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGenerator),
 					input = [[false]],
-					obj = {$anyElementTrue:input},
-					expr = Expression.parseExpression("$anyElementTrue", obj),
+					expr = Expression.parseExpression("$anyElementTrue", input),
 					result = expr.evaluate({}),
 					expected = false,
 					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
@@ -55,8 +54,7 @@ module.exports = {
 				var idGenerator = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGenerator),
 					input = [[true]],
-					obj = {$anyElementTrue:input},
-					expr = Expression.parseExpression("$anyElementTrue", obj),
+					expr = Expression.parseExpression("$anyElementTrue", input),
 					result = expr.evaluate({}),
 					expected = true,
 					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
@@ -67,8 +65,7 @@ module.exports = {
 				var idGenerator = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGenerator),
 					input = [[true, false]],
-					obj = {$anyElementTrue:input},
-					expr = Expression.parseExpression("$anyElementTrue", obj),
+					expr = Expression.parseExpression("$anyElementTrue", input),
 					result = expr.evaluate({}),
 					expected = true,
 					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
@@ -79,8 +76,7 @@ module.exports = {
 				var idGenerator = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGenerator),
 					input = [[]],
-					obj = {$anyElementTrue:input},
-					expr = Expression.parseExpression("$anyElementTrue", obj),
+					expr = Expression.parseExpression("$anyElementTrue", input),
 					result = expr.evaluate({}),
 					expected = false,
 					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
@@ -91,8 +87,7 @@ module.exports = {
 				var idGenerator = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGenerator),
 					input = [[1]],
-					obj = {$anyElementTrue:input},
-					expr = Expression.parseExpression("$anyElementTrue", obj),
+					expr = Expression.parseExpression("$anyElementTrue", input),
 					result = expr.evaluate({}),
 					expected = true,
 					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
@@ -103,10 +98,9 @@ module.exports = {
 				var idGenerator = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGenerator),
 					input = [[0]],
-					obj = {$anyElementTrue:input},
-					expr = Expression.parseExpression("$anyElementTrue", obj),
+					expr = Expression.parseExpression("$anyElementTrue", input),
 					result = expr.evaluate({}),
-					expected = true,
+					expected = false,
 					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
 				assert.equal(result, expected, msg);
 			},
@@ -115,10 +109,9 @@ module.exports = {
 				var idGenerator = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGenerator),
 					input = [null],
-					obj = {$anyElementTrue:input},
-					expr = Expression.parseExpression("$anyElementTrue", obj);
+					expr = Expression.parseExpression("$anyElementTrue", input);
 				assert.throws(function() {
-					result = expr.evaluate({});
+					var result = expr.evaluate({});
 				});
 			}
 
