@@ -20,8 +20,8 @@ module.exports = {
 
 				"#getOpName()": {
 
-						"should return the correct op name; $setintersection": function testOpName() {
-								assert.equal(new SetIntersectionExpression([1, 2, 3], [4, 5, 6]).getOpName(), "$setintersection");
+						"should return the correct op name; $setIntersection": function testOpName() {
+								assert.equal(new SetIntersectionExpression([1, 2, 3], [4, 5, 6]).getOpName(), "$setIntersection");
 						}
 
 				},
@@ -33,7 +33,7 @@ module.exports = {
 										array2 = [6, 7, 8, 9];
 								assert.throws(function() {
 										Expression.parseOperand({
-												$setintersection: ["$array1", "$array2"]
+												$setIntersection: ["$array1", "$array2"]
 										}).evaluateInternal({
 												array1: array1,
 												array2: array2
@@ -46,7 +46,7 @@ module.exports = {
 										array2 = "not an array";
 								assert.throws(function() {
 										Expression.parseOperand({
-												$setintersection: ["$array1", "$array2"]
+												$setIntersection: ["$array1", "$array2"]
 										}).evaluateInternal({
 												array1: array1,
 												array2: array2
@@ -59,7 +59,7 @@ module.exports = {
 										array2 = "not an array";
 								assert.throws(function() {
 										Expression.parseOperand({
-												$setintersection: ["$array1", "$array2"]
+												$setIntersection: ["$array1", "$array2"]
 										}).evaluateInternal({
 												array1: array1,
 												array2: array2
@@ -77,7 +77,7 @@ module.exports = {
 												"b": "3"
 										};
 								assert.strictEqual(Expression.parseOperand({
-										$setintersection: ["$array1", "$array2"]
+										$setIntersection: ["$array1", "$array2"]
 								}).evaluateInternal({
 										array1: array1,
 										array2: array2
@@ -90,7 +90,7 @@ module.exports = {
 								var array1 = [1, 2, 3, 4, 5],
 										array2 = [2, 3, 6, 7, 8];
 								assert.strictEqual(Expression.parseOperand({
-										$setintersection: ["$array1", "$array2"]
+										$setIntersection: ["$array1", "$array2"]
 								}).evaluateInternal({
 										array1: array1,
 										array2: array2
@@ -101,7 +101,7 @@ module.exports = {
 								var array1 = [1, 2, 3, 4, 5],
 										array2 = [7, 8, 9];
 								assert.strictEqual(Expression.parseOperand({
-										$setintersection: ["$array1", "$array2"]
+										$setIntersection: ["$array1", "$array2"]
 								}).evaluateInternal({
 										array1: array1,
 										array2: array2
