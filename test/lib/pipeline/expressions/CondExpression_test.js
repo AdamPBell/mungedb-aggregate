@@ -1,6 +1,8 @@
 "use strict";
 var assert = require("assert"),
 	CondExpression = require("../../../../lib/pipeline/expressions/CondExpression"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
 
@@ -74,7 +76,8 @@ module.exports = {
 						assert.throws(function(){
 							Expression.parseOperand(expr, {});
 						});
-					}
+					};
+					this.vps = new VariablesParseState(new VariablesIdGenerator());
 				},
 				"should fail because the $cond is missing": function(){
 					this.shouldFail({$zoot:[true, 1, 0 ]}, {});
@@ -107,17 +110,17 @@ module.exports = {
 				},
 				"should evaluate true even with mixed up args": function(){
 					assert.strictEqual(
-						Expression.parseOperand({$cond:{ else: 0, then: 1, if: "$a" }}, {}).evaluate({$a: 1}),
+						Expression.parseOperand({$cond:{ else: 0, then: 1, if: "$a" }}, this.vps).evaluate({a: 1}),
 						1);
 				},
 				"should evaluate false": function(){
 					assert.strictEqual(
-						Expression.parseOperand({$cond:{ if: "$a", then: 0, else: 1}}, {}).evaluate({$a: 0}),
+						Expression.parseOperand({$cond:{ if: "$a", then: 0, else: 1}}, this.vps).evaluate({a: 0}),
 						1);
 				},
 				"should evaluate false even with mixed up args": function() {
 					assert.strictEqual(
-						Expression.parseOperand({$cond: { else: 1, then: 0, if: "$a"}}, {}).evaluate({$a: 0}),
+						Expression.parseOperand({$cond: { else: 1, then: 0, if: "$a"}}, this.vps).evaluate({a: 0}),
 						1);
 				}
 			}

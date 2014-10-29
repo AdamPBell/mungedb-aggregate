@@ -37,25 +37,16 @@ module.exports = {
 			beforeEach: function () {
 				this.vps = new VariablesParseState(new VariablesIdGenerator());
 				this.parsed = Expression.parseExpression("$ifNull", ["$a", "$b"], this.vps);
-				this.vars = new Variables(2);
-				this.vars.setValue(0, "a");
-				this.vars.setValue(1, "b");
-				this.makeParsed = function(a, b) {
-					return Expression.parseExpression("$ifNull", [a, b], this.vps);
-				}
 			},
 
 			"should return the left hand side if the left hand side is not null or undefined": function() {
-				//assert.strictEqual(this.parsed.evaluate(this.vars), 1);
-				assert.strictEqual(this.makeParsed(1, 2).evaluate(this.vars), 1);
+				assert.strictEqual(this.parsed.evaluate({a: 1, b: 2}), 1);
 			},
 			"should return the right hand side if the left hand side is null": function() {
-				//assert.strictEqual(this.parsed.evaluate({a: null, b: 2}), 2);
-				assert.strictEqual(this.makeParsed(null, 2).evaluate(this.vars), 2);
+				assert.strictEqual(this.parsed.evaluate({a: null, b: 2}), 2);
 			},
 			"should return the right hand side if the left hand side is undefined": function() {
-				//assert.strictEqual(this.parsed.evaluate({b: 2}), 2);
-				assert.strictEqual(this.makeParsed(undefined, 2).evaluate(this.vars), 2);
+				assert.strictEqual(this.parsed.evaluate({b: 2}), 2);
 			}
 		}
 	}
