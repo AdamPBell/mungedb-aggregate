@@ -17,7 +17,7 @@ module.exports = {
 			},
 			"should throw Error when constructing with args": function () {
 				assert.throws(function () {
-					new IfNullExpression();
+					new IfNullExpression(1);
 				});
 			}
 		},
@@ -32,6 +32,8 @@ module.exports = {
 
 		"#evaluateInternal()": {
 			beforeEach: function () {
+				debugger;
+				new IfNullExpression();
 				this.expr = {$ifNull:["$a", "$b"]};
 				this.parsed = Expression.parseOperand(this.expr, {});
 			},
