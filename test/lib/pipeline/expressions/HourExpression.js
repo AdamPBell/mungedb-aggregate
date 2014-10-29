@@ -26,18 +26,11 @@ module.exports = {
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new HourExpression().getFactory(), undefined);
-			}
-
-		},
-
 		"#evaluate()": {
 
 			"should return hour; 15 for 2013-02-18 3:00pm": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$hour:"$someDate"}).evaluate({someDate:new Date("2013-02-18T15:00:00.000Z")}), 15);
+				var input = [new Date("2013-02-18T15:00:00.000Z")];
+				assert.strictEqual(Expression.parseExpression("$hour", input).evaluate({}), 15);
 			}
 
 		}

@@ -26,18 +26,11 @@ module.exports = {
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new MonthExpression().getFactory(), undefined);
-			}
-
-		},
-
 		"#evaluateInternal()": {
 
 			"should return month; 2 for 2013-02-18": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$month:"$someDate"}).evaluate({someDate:new Date("2013-02-18T00:00:00.000Z")}), 2);
+				var input = [new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")];
+				assert.strictEqual(Expression.parseExpression("$month", input).evaluate({}), 2);
 			}
 
 		}

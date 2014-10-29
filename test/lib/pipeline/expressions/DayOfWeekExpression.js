@@ -26,18 +26,11 @@ module.exports = {
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new DayOfWeekExpression().getFactory(), undefined);
-			}
-
-		},
-
 		"#evaluate()": {
 
 			"should return day of week; 2 for 2013-02-18": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$dayOfWeek:"$someDate"}).evaluateInternal({someDate:new Date("2013-02-18T00:00:00.000Z")}), 2);
+				var input = [new Date("2013-02-18T00:00:00.000Z")];
+				assert.strictEqual(Expression.parseExpression("$dayOfWeek", input).evaluate({}), 2);
 			}
 
 		}

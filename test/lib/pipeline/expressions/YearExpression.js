@@ -3,7 +3,6 @@ var assert = require("assert"),
 	YearExpression = require("../../../../lib/pipeline/expressions/YearExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
-
 module.exports = {
 
 	"YearExpression": {
@@ -29,7 +28,8 @@ module.exports = {
 		"#evaluateInternal()": {
 
 			"should return year; 2013 for 2013-02-18": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$year:"$someDate"}).evaluate({someDate:new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")}), 2013);
+				var input = [new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")];
+				assert.strictEqual(Expression.parseExpression("$year", input).evaluate({}), 2013);
 			}
 
 		}

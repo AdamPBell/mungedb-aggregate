@@ -26,18 +26,11 @@ module.exports = {
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new WeekExpression().getFactory(), undefined);
-			}
-
-		},
-
 		"#evaluate()": {
 
-			"should return week; 8 for 2013-02-18": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$week:"$someDate"}).evaluate({someDate:new Date("2013-02-18T00:00:00.000Z")}), 7);
+			"should return week; 7 for 2013-02-18 (zero-based index of next Sunday's week, per mongo 2.6.5)": function testStuff(){
+				var input = [new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")];
+				assert.strictEqual(Expression.parseExpression("$week", input).evaluate({}), 7);
 			}
 
 		}
