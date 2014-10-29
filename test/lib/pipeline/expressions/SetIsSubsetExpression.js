@@ -78,6 +78,17 @@ module.exports = {
 								}), true);
 						},
 
+						"Should pass and return a true2": function testBasicAssignment(){
+							var array1 = [1, 2, 3, 4, 5],
+								array2 = [2,3],
+								input = ["$array1","$array2"],
+							 	expr = Expression.parseExpression("$setissubset", input),
+								result = expr.evaluate({}),
+								expected = true,
+								msg = errMsg("$allElementsTrue", input, expr.serialize(false), expected, result);
+							assert.equal(result, expected, msg);
+						},
+
 						"Should pass and return false": function testBasicAssignment() {
 								var array1 = [1, 2, 3, 4, 5],
 										array2 = [7, 8, 9];
