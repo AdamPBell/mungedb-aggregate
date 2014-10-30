@@ -507,6 +507,77 @@ module.exports = {
 			assert.ok( res.result.matches({'x':2}) );
 			assert.ok( ! res.result.matches({'x':8}) );
 		},
+		"should allow trees less than the maximum recursion depth": function() {
+			var parser = new MatchExpressionParser(),
+				depth = 60,
+				q = "",
+				i;
+
+			for (i = 0; i < depth/2; i++) {
+				q = q + '{"$and": [{"a":3}, {"$or": [{"b":2},';
+			}
+			q = q + '{"b": 4}';
+			for (i = 0; i < depth/2; i++) {
+				q = q + "]}]}";
+			}
+
+			var res = parser.parse(JSON.parse(q));
+			assert.strictEqual(res.code, 'OK', res.description);
+		},
+		"should error when depth limit is exceeded": function() {
+			var parser = new MatchExpressionParser(),
+				depth = 105,
+				q = "",
+				i;
+
+			for (i = 0; i < depth/2; i++) {
+				q = q + '{"$and": [{"a":3}, {"$or": [{"b":2},';
+			}
+			q = q + '{"b": 4}';
+			for (i = 0; i < depth/2; i++) {
+				q = q + "]}]}";
+			}
+
+			var res = parser.parse(JSON.parse(q));
+			assert.strictEqual(res.description.substr(0, 43), 'exceeded maximum query tree depth of 100 at');
+			assert.strictEqual(res.code, 'BAD_VALUE');
+		},
+		"should error when depth limit is reached through a $not": function() {
+			var parser = new MatchExpressionParser(),
+				depth = 105,
+				q = '{"a": ',
+				i;
+
+			for (i = 0; i < depth; i++) {
+				q = q + '{"$not": ';
+			}
+			q = q + '{"$eq": 5}';
+			for (i = 0; i < depth+1; i++) {
+				q = q + "}";
+			}
+
+			var res = parser.parse(JSON.parse(q));
+			assert.strictEqual(res.description.substr(0, 43), 'exceeded maximum query tree depth of 100 at');
+			assert.strictEqual(res.code, 'BAD_VALUE');
+		},
+		"should error when depth limit is reached through an $elemMatch": function() {
+			var parser = new MatchExpressionParser(),
+				depth = 105,
+				q = '',
+				i;
+
+			for (i = 0; i < depth; i++) {
+				q = q + '{"a": {"$elemMatch": ';
+			}
+			q = q + '{"b": 5}';
+			for (i = 0; i < depth; i++) {
+				q = q + "}}";
+			}
+
+			var res = parser.parse(JSON.parse(q));
+			assert.strictEqual(res.description.substr(0, 43), 'exceeded maximum query tree depth of 100 at');
+			assert.strictEqual(res.code, 'BAD_VALUE');
+		},
 		"Should parse $not $regex and match properly": function() {
 			var parser = new MatchExpressionParser();
 			var a = /abc/i;
@@ -517,8 +588,6 @@ module.exports = {
 			assert.ok( ! res.result.matches({'x':'ABC'}) );
 			assert.ok( res.result.matches({'x':'AC'}) );
 		}
-
-
 	}
 };
 
