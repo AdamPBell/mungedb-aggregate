@@ -3,15 +3,10 @@ var assert = require("assert"),
 	SubstrExpression = require("../../../../lib/pipeline/expressions/SubstrExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
-	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState");
-
-//TODO Replace this stub with an actual implementation of constify
-var constifyStub = function(thing) {
-		return thing;
-	},
-	expressionToJsonStub = function(thing) {
-		return thing;
-	};
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	utils = require("./utils"),
+	constify = utils.constify,
+	expressionToJson = utils.expressionToJson;
 
 module.exports = {
 
@@ -44,7 +39,7 @@ module.exports = {
 						spec = this.spec(),
 						expectedResult = this.expectedResult,
 						expression = Expression.parseOperand(spec, vps);
-					assert.deepEqual(constifyStub(spec), expressionToJsonStub(expression));
+					assert.deepEqual(constify(spec), expressionToJson(expression));
 					assert.equal(expectedResult, expression.evaluate({}));
 				};
 				this.str = undefined;
