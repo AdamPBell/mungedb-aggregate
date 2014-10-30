@@ -14,7 +14,13 @@ module.exports = {
 								assert.doesNotThrow(function() {
 										new ToLowerExpression();
 								});
-						}
+						},
+
+					"should throw Error when constructing with args": function testConstructor(){
+						assert.throws(function(){
+							new ToLowerExpression(1);
+						});
+					}
 
 				},
 
