@@ -109,17 +109,14 @@ module.exports = {
 				assert.deepEqual(a.operands[0]._fieldPath.fieldNames[1], "a");
 			},
 
-			"should not optimize an expression ending with a non-constant. This makes me sad; {$and:[1,'$a']};": function testConstantNonConstant(){
+			"should not optimize an expression ending with a non-constant. {$and:[1,'$a']};": function testConstantNonConstant(){
 				var a = Expression.parseOperand({$and:[1,'$a']}, this.vps).optimize();
-				assert.equal(a.operands.length, 2, "Both operands should remain.");
+				assert(a instanceof CoerceToBoolExpression);
+				assert(a.expression instanceof FieldPathExpression);
 
-				// The constant is in the front and as such, remains.
-				assert.equal(a.operands[0].evaluateInternal(), 1, "The constant operand should remain, inexplicably");
-
-				// This is the '$a' which cannot be optimized.
-				assert.deepEqual(a.operands[1]._fieldPath.fieldNames.length, 2);
-				assert.deepEqual(a.operands[1]._fieldPath.fieldNames[0], "CURRENT");
-				assert.deepEqual(a.operands[1]._fieldPath.fieldNames[1], "a");
+				assert.equal(a.expression._fieldPath.fieldNames.length, 2);
+				assert.equal(a.expression._fieldPath.fieldNames[0], "CURRENT");
+				assert.equal(a.expression._fieldPath.fieldNames[1], "a");
 			},
 
 			"should optimize an expression with a path and a '1'; {$and:['$a',1]}": function testNonConstantOne(){
@@ -163,56 +160,43 @@ module.exports = {
 
 			"should optimize an expression with '0', '1', and a field path; {$and:[0,1,'$a']}": function testZeroOneNonConstant(){
 				var a = Expression.parseOperand({$and:[0,1,'$a']}, this.vps).optimize();
-				assert.equal(a.operands.length, 3, "Because a non-constant is on the right, no optimization occurs. /fume");
-				assert.equal(a.operands[0].evaluateInternal(), 0);
-				assert.equal(a.operands[1].evaluateInternal(), 1);
-
-				assert.equal(a.operands[2]._fieldPath.fieldNames.length, 2);
-				assert.equal(a.operands[2]._fieldPath.fieldNames[0], "CURRENT");
-				assert.equal(a.operands[2]._fieldPath.fieldNames[1], "a");
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), false);
 			},
 
 			"should optimize an expression with '1', '1', and a field path; {$and:[1,1,'$a']}": function testOneOneNonConstant(){
 				var a = Expression.parseOperand({$and:[1,1,'$a']}, this.vps).optimize();
-				assert.equal(a.operands.length, 3, "Because a non-constant is on the right, no optimization occurs. /fume");
-				assert.equal(a.operands[0].evaluateInternal(), 1);
-				assert.equal(a.operands[1].evaluateInternal(), 1);
+				assert(a instanceof CoerceToBoolExpression);
+				assert(a.expression instanceof FieldPathExpression);
 
-				assert.equal(a.operands[2]._fieldPath.fieldNames.length, 2);
-				assert.equal(a.operands[2]._fieldPath.fieldNames[0], "CURRENT");
-				assert.equal(a.operands[2]._fieldPath.fieldNames[1], "a");
+				assert.equal(a.expression._fieldPath.fieldNames.length, 2);
+				assert.equal(a.expression._fieldPath.fieldNames[0], "CURRENT");
+				assert.equal(a.expression._fieldPath.fieldNames[1], "a");
 			},
 
 			"should optimize nested $and expressions properly and optimize out values evaluating to true; {$and:[1,{$and:[1]},'$a','$b']}": function testNested(){
 				var a = Expression.parseOperand({$and:[1,{$and:[1]},'$a','$b']}, this.vps).optimize();
-				assert.equal(a.operands.length, 4, "There should be 4 operands because optimization largely stops when the right-hand operand is a non-constant");
-				assert(a.operands[0] instanceof ConstantExpression, "But why is this even here?");
-				assert.equal(a.operands[0].evaluateInternal(), true);
-				assert(a.operands[1] instanceof ConstantExpression, "But why is this even here?");
-				assert.equal(a.operands[1].evaluateInternal(), true);
-				assert(a.operands[2] instanceof FieldPathExpression);
-				assert(a.operands[3] instanceof FieldPathExpression);
+				assert.equal(a.operands.length, 2)
+				assert(a.operands[0] instanceof FieldPathExpression);
+				assert(a.operands[1] instanceof FieldPathExpression);
 			},
 
 			"should optimize nested $and expressions containing a nested value evaluating to false; {$and:[1,{$and:[1]},'$a','$b']}": function testNested(){
 				//assert.deepEqual(Expression.parseOperand({$and:[1,{$and:[{$and:[0]}]},'$a','$b']}, this.vps).optimize().toJSON(true), {$const:false});
 				var a = Expression.parseOperand({$and:[1,{$and:[{$and:[0]}]},'$a','$b']}, this.vps).optimize();
-				assert.equal(a.operands.length, 4, "There should be 4 operands because optimization largely stops when the right-hand operand is a non-constant");
-				assert(a.operands[0] instanceof ConstantExpression, "But why is this even here?");
-				assert.equal(a.operands[0].evaluateInternal(), true);
-				assert(a.operands[1] instanceof ConstantExpression, "But why is this even here?");
-				assert.equal(a.operands[1].evaluateInternal(), false);
-				assert(a.operands[2] instanceof FieldPathExpression);
-				assert(a.operands[3] instanceof FieldPathExpression);
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), false);
 			},
 
 			"should optimize when the constants are on the right of the operand list. The rightmost is true": function(){
 				// 1, "x", and 1 are all true.  They should be optimized away.
 				var a = Expression.parseOperand({$and:['$a', 1, "x", 1]}, this.vps).optimize();
-				assert.equal(a.operands.length, 3, "The constants should have been optimized away");
-				assert(a.operands[0] instanceof FieldPathExpression, "Only the path should remain");
-				assert(a.operands[1] instanceof ConstantExpression, "Why is this here?");
-				assert(a.operands[2] instanceof ConstantExpression, "Why is this here?");
+				assert(a instanceof CoerceToBoolExpression);
+				assert(a.expression instanceof FieldPathExpression);
+
+				assert.equal(a.expression._fieldPath.fieldNames.length, 2);
+				assert.equal(a.expression._fieldPath.fieldNames[0], "CURRENT");
+				assert.equal(a.expression._fieldPath.fieldNames[1], "a");
 			},
 			"should optimize when the constants are on the right of the operand list. The rightmost is false": function(){
 				// 1, "x", and 1 are all true.  They should be optimized away.
