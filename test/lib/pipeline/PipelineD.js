@@ -56,9 +56,9 @@ module.exports = {
 				proto.getDependencies = function(deps){
 					if (!deps.testDep){
 						deps.testDep = 1;
-						return DocumentSource.GetDepsReturn.SEE_NEXT;
+						return DocumentSource.GetDepsReturn.EXHAUSTIVE;
 					}
-					return DocumentSource.GetDepsReturn.EXHAUSTIVE;
+					return DocumentSource.GetDepsReturn.SEE_NEXT;
 				};
 
 				klass.createFromJson = function(options, ctx){
@@ -72,16 +72,16 @@ module.exports = {
 
 		"prepareCursorSource": {
 
-			"should return a CursorDocumentSource": function () {
+			"should place a CursorDocumentSource in pipeline": function () {
 				var p = Pipeline.parseCommand({pipeline:[{$test:{coalesce:false}}, {$test:{coalesce:false}}], aggregate:[]}),
-					cs = PipelineD.prepareCursorSource(p, [1,2,3,4,5]);
-				assert.equal(cs.constructor, CursorDocumentSource);
+					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.equal(p.sources[0].constructor, CursorDocumentSource);
 			},
 
 			"should get projection from all sources": function () {
 				var p = Pipeline.parseCommand({pipeline:[{$test:{coalesce:false}}, {$test:{coalesce:false}}], aggregate:[]}),
-					cs = PipelineD.prepareCursorSource(p, [1,2,3,4,5]);
-				assert.deepEqual(cs._projection, {"_id":0,"testDep":1});
+					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.deepEqual(p.sources[0]._projection, {"_id":0,"testDep":1});
 			},
 
 			"should get projection's deps": function () {
@@ -104,8 +104,8 @@ module.exports = {
 					]
 				};
 				var p = Pipeline.parseCommand(cmdObj),
-					cs = PipelineD.prepareCursorSource(p, [1,2,3,4,5]);
-				assert.equal(JSON.stringify(cs._projection), JSON.stringify({_id: 1, 'a.b.c': 1, d: 1, 'e.f.g': 1}));
+					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({'a.b.c': 1, d: 1, 'e.f.g': 1, _id: 1}));
 			},
 
 			"should get group's deps": function(){
@@ -130,8 +130,8 @@ module.exports = {
 					]
 				};
 				var p = Pipeline.parseCommand(cmdObj),
-					cs = PipelineD.prepareCursorSource(p, [1,2,3,4,5]);
-				assert.equal(JSON.stringify(cs._projection), JSON.stringify({ _id: 0, a: 1, b: 1, 'x.y.z': 1 }));
+					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({ _id: 0, a: 1, b: 1, 'x.y.z': 1 }));
 			}
 		}
 	}

@@ -1,15 +1,10 @@
 "use strict";
 var assert = require("assert"),
-	AvgAccumulator = require("../../../../lib/pipeline/accumulators/AvgAccumulator"),
-	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression");
-
+	AvgAccumulator = require("../../../../lib/pipeline/accumulators/AvgAccumulator");
 
 function createAccumulator(){
-	var avgAccumulator = new AvgAccumulator();
-	avgAccumulator.addOperand(new FieldPathExpression("b") );
-	return avgAccumulator;
+	return new AvgAccumulator();
 }
-
 
 module.exports = {
 
@@ -33,7 +28,7 @@ module.exports = {
 
 		},
 
-		"#evaluate()": {
+		"#processInternal()": {
 
 			"should evaluate no documents": function testStuff(){
 				var avgAccumulator = createAccumulator();
@@ -42,7 +37,7 @@ module.exports = {
 
 			"should evaluate one document with a field that is NaN": function testStuff(){
 				var avgAccumulator = createAccumulator();
-				avgAccumulator.evaluate({b:Number("foo")});
+				avgAccumulator.processInternal(Number("foo"));
 				// NaN is unequal to itself
 				assert.notStrictEqual(avgAccumulator.getValue(), avgAccumulator.getValue());
 			},
@@ -50,7 +45,7 @@ module.exports = {
 
 			"should evaluate one document and avg it's value": function testStuff(){
 				var avgAccumulator = createAccumulator();
-				avgAccumulator.evaluate({b:5});
+				avgAccumulator.processInternal(5);
 				assert.strictEqual(avgAccumulator.getValue(), 5);
 
 			},
@@ -58,53 +53,53 @@ module.exports = {
 
 			"should evaluate and avg two ints": function testStuff(){
 				var avgAccumulator = createAccumulator();
-				avgAccumulator.evaluate({b:5});
-				avgAccumulator.evaluate({b:7});
+				avgAccumulator.processInternal(5);
+				avgAccumulator.processInternal(7);
 				assert.strictEqual(avgAccumulator.getValue(), 6);
 			},
 
 			"should evaluate and avg two ints overflow": function testStuff(){
 				var avgAccumulator = createAccumulator();
-				avgAccumulator.evaluate({b:Number.MAX_VALUE});
-				avgAccumulator.evaluate({b:Number.MAX_VALUE});
+				avgAccumulator.processInternal(Number.MAX_VALUE);
+				avgAccumulator.processInternal(Number.MAX_VALUE);
 				assert.strictEqual(Number.isFinite(avgAccumulator.getValue()), false);
 			},
 
 
 			"should evaluate and avg two negative ints": function testStuff(){
 				var avgAccumulator = createAccumulator();
-				avgAccumulator.evaluate({b:-5});
-				avgAccumulator.evaluate({b:-7});
+				avgAccumulator.processInternal(-5);
+				avgAccumulator.processInternal(-7);
 				assert.strictEqual(avgAccumulator.getValue(), -6);
 			},
 
 //TODO Not sure how to do this in Javascript
 //			"should evaluate and avg two negative ints overflow": function testStuff(){
 //				var avgAccumulator = createAccumulator();
-//				avgAccumulator.evaluate({b:Number.MIN_VALUE});
-//				avgAccumulator.evaluate({b:7});
+//				avgAccumulator.processInternal(Number.MIN_VALUE);
+//				avgAccumulator.processInternal(7);
 //				assert.strictEqual(avgAccumulator.getValue(), Number.MAX_VALUE);
 //			},
 //
 
 			"should evaluate and avg int and float": function testStuff(){
 				var avgAccumulator = createAccumulator();
-				avgAccumulator.evaluate({b:8.5});
-				avgAccumulator.evaluate({b:7});
+				avgAccumulator.processInternal(8.5);
+				avgAccumulator.processInternal(7);
 				assert.strictEqual(avgAccumulator.getValue(), 7.75);
 			},
 
 			"should evaluate and avg one Number and a NaN sum to NaN": function testStuff(){
 				var avgAccumulator = createAccumulator();
-				avgAccumulator.evaluate({b:8});
-				avgAccumulator.evaluate({b:Number("bar")});
+				avgAccumulator.processInternal(8);
+				avgAccumulator.processInternal(Number("bar"));
 				// NaN is unequal to itself
 				assert.notStrictEqual(avgAccumulator.getValue(), avgAccumulator.getValue());
 			},
 
 			"should evaluate and avg a null value to 0": function testStuff(){
 				var avgAccumulator = createAccumulator();
-				avgAccumulator.evaluate({b:null});
+				avgAccumulator.processInternal(null);
 				assert.strictEqual(avgAccumulator.getValue(), 0);
 			}
 

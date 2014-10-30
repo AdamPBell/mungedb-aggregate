@@ -23,12 +23,12 @@ module.exports = {
 
 			"should return true if nested expression is coerced to true; {$const:5}": function testEvaluateTrue(){
 				var expr = new CoerceToBoolExpression(new ConstantExpression(5));
-				assert.equal(expr.evaluate({}), true);
+				assert.equal(expr.evaluateInternal({}), true);
 			},
 
 			"should return false if nested expression is coerced to false; {$const:0}": function testEvaluateFalse(){
 				var expr = new CoerceToBoolExpression(new ConstantExpression(0));
-				assert.equal(expr.evaluate({}), false);
+				assert.equal(expr.evaluateInternal({}), false);
 			}
 
 		},

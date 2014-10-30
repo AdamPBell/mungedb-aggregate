@@ -34,14 +34,14 @@ module.exports = {
 
 		},
 
-		"#evaluate()": {
+		"#evaluateInternal()": {
 
 			"should return false for a true input; false for true": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$not:true}).evaluate({}), false);
+				assert.strictEqual(Expression.parseOperand({$not:true}).evaluateInternal({}), false);
 			},
 
 			"should return true for a false input; true for false": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$not:false}).evaluate({}), true);
+				assert.strictEqual(Expression.parseOperand({$not:false}).evaluateInternal({}), true);
 			}
 
 		}

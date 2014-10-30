@@ -1,47 +1,44 @@
 "use strict";
 var assert = require("assert"),
-	SubtractExpression = require("../../../../lib/pipeline/expressions/SubtractExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression");
+		SubtractExpression = require("../../../../lib/pipeline/expressions/SubtractExpression"),
+		Expression = require("../../../../lib/pipeline/expressions/Expression");
 
 
 module.exports = {
 
-	"SubtractExpression": {
+		"SubtractExpression": {
 
-		"constructor()": {
+				"constructor()": {
 
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new SubtractExpression();
-				});
-			}
+						"should not throw Error when constructing without args": function testConstructor() {
+								assert.doesNotThrow(function() {
+										new SubtractExpression();
+								});
+						}
 
-		},
+				},
 
-		"#getOpName()": {
+				"#getOpName()": {
 
-			"should return the correct op name; $subtract": function testOpName(){
-				assert.equal(new SubtractExpression().getOpName(), "$subtract");
-			}
+						"should return the correct op name; $subtract": function testOpName() {
+								assert.equal(new SubtractExpression().getOpName(), "$subtract");
+						}
 
-		},
+				},
 
-		"#getFactory()": {
+				"#evaluateInternal()": {
 
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new SubtractExpression().getFactory(), undefined);
-			}
+						"should return the result of subtraction between two numbers": function testStuff() {
+								assert.strictEqual(Expression.parseOperand({
+										$subtract: ["$a", "$b"]
+								}).evaluateInternal({
+										a: 35636364,
+										b: -0.5656
+								}), 35636364 - (-0.5656));
+						}
+				}
 
-		},
-
-		"#evaluate()": {
-
-			"should return the result of subtraction between two numbers": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$subtract:["$a", "$b"]}).evaluate({a:35636364, b:-0.5656}), 35636364-(-0.5656));
-			}
 		}
-
-	}
 
 };
 

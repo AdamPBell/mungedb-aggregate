@@ -83,7 +83,7 @@ module.exports = {
 		},
 
 
-		"should be able to use a $limit operator": function(next){
+		"should be able to use a limit operator": function(next){
 			testAggregate({
 				inputs: [{_id:0}, {_id:1}, {_id:2}, {_id:3}, {_id:4}, {_id:5}],
 				pipeline: [{$limit:2}],
@@ -92,7 +92,7 @@ module.exports = {
 			});
 		},
 
-		"should be able to use a $match operator": function(next){
+		"should be able to use a match operator": function(next){
 			testAggregate({
 				inputs: [{_id:0, e:1}, {_id:1, e:0}, {_id:2, e:1}, {_id:3, e:0}, {_id:4, e:1}, {_id:5, e:0}],
 				pipeline: [{$match:{e:1}}],
@@ -101,7 +101,7 @@ module.exports = {
 			});
 		},
 
-		"should be able to use a $skip operator": function(next){
+		"should be able to use a skip operator": function(next){
 			testAggregate({
 				inputs: [{_id:0}, {_id:1}, {_id:2}, {_id:3}, {_id:4}, {_id:5}],
 				pipeline: [{$skip:2}, {$skip:1}],	//testing w/ 2 ensures independent state variables
@@ -110,7 +110,7 @@ module.exports = {
 			});
 		},
 
-		"should be able to use a $skip and then a $limit operator together in the same pipeline": function(next){
+		"should be able to use a skip and then a limit operator together in the same pipeline": function(next){
 			testAggregate({
 				inputs: [{_id:0, e:1}, {_id:1, e:0}, {_id:2, e:1}, {_id:3, e:0}, {_id:4, e:1}, {_id:5, e:0}],
 				pipeline: [{$skip:2}, {$limit:1}],
@@ -119,7 +119,7 @@ module.exports = {
 			});
 		},
 
-		"should be able to construct an instance with $unwind operators properly": function(next){
+		"should be able to construct an instance with unwind operators properly": function(next){
 			testAggregate({
 				inputs: [
 					{_id:0, nodes:[
@@ -142,7 +142,8 @@ module.exports = {
 			});
 		},
 
-		"should be able to use a $project operator": function(next){
+		"should be able to use a project operator": function(next){
+			// NOTE: Test case broken until expression is fixed
 			testAggregate({
 				inputs: [{_id:0, e:1, f:23}, {_id:2, e:2, g:34}, {_id:4, e:3}],
 				pipeline: [
@@ -159,7 +160,8 @@ module.exports = {
 		},
 
 
-		"should be able to use a $project operator to exclude the _id field": function(next){
+		"should be able to use a project operator to exclude the _id field": function(next){
+			// NOTE: Test case broken until expression is fixed
 			testAggregate({
 				inputs: [{_id:0, e:1, f:23}, {_id:2, e:2, g:34}, {_id:4, e:3}],
 				pipeline: [
@@ -174,7 +176,22 @@ module.exports = {
 			});
 		},
 
-		"should be able to construct an instance with $sort operators properly (ascending)": function(next){
+		"should be able to project out a whole document and leave an empty": function(next) {
+			testAggregate({
+				inputs: [{_id:0, a:1}, {_id:1, a:2, b:1}, {_id:2, b:2, c:1}],
+				pipeline: [
+					{$project:{
+						_id:0,
+						a:1
+						//TODO: high level test of all other expression operators
+					}}
+				],
+				expected: [{a:1}, {a:2}, {}],
+				next: next
+			});
+		},
+
+		"should be able to construct an instance with sort operators properly (ascending)": function(next){
 			testAggregate({
 				inputs: [
 					{_id:3.14159}, {_id:-273.15},
@@ -191,6 +208,7 @@ module.exports = {
 		},
 
 		"should be able to construct an instance with $group operators properly": function(next){
+			// NOTE: Test case broken until expression is fixed
 			testAggregate({
 				inputs: [
 					{_id:0, a:1},
@@ -246,6 +264,7 @@ module.exports = {
 		},
 
 		"should be able to construct an instance with $group using concat": function(next){
+			// NOTE: Test case broken until expression is fixed; not sure if that concat is supposed to work
 			testAggregate({
 				inputs: [
 					{_id:0, a:null},

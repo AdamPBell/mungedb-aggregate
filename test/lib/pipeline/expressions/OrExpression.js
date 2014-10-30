@@ -34,54 +34,54 @@ module.exports = {
 
 		},
 
-		"#evaluate()": {
+		"#evaluateInternalInternal()": {
 
 			"should return false if no operors were given; {$or:[]}": function testEmpty(){
-				assert.equal(Expression.parseOperand({$or:[]}).evaluate(), false);
+				assert.equal(Expression.parseOperand({$or:[]}).evaluateInternal(), false);
 			},
 
 			"should return true if operors is one true; {$or:[true]}": function testTrue(){
-				assert.equal(Expression.parseOperand({$or:[true]}).evaluate(), true);
+				assert.equal(Expression.parseOperand({$or:[true]}).evaluateInternal(), true);
 			},
 
 			"should return false if operors is one false; {$or:[false]}": function testFalse(){
-				assert.equal(Expression.parseOperand({$or:[false]}).evaluate(), false);
+				assert.equal(Expression.parseOperand({$or:[false]}).evaluateInternal(), false);
 			},
 
 			"should return true if operors are true or true; {$or:[true,true]}": function testTrueTrue(){
-				assert.equal(Expression.parseOperand({$or:[true,true]}).evaluate(), true);
+				assert.equal(Expression.parseOperand({$or:[true,true]}).evaluateInternal(), true);
 			},
 
 			"should return true if operors are true or false; {$or:[true,false]}": function testTrueFalse(){
-				assert.equal(Expression.parseOperand({$or:[true,false]}).evaluate(), true);
+				assert.equal(Expression.parseOperand({$or:[true,false]}).evaluateInternal(), true);
 			},
 
 			"should return true if operors are false or true; {$or:[false,true]}": function testFalseTrue(){
-				assert.equal(Expression.parseOperand({$or:[false,true]}).evaluate(), true);
+				assert.equal(Expression.parseOperand({$or:[false,true]}).evaluateInternal(), true);
 			},
 
 			"should return false if operors are false or false; {$or:[false,false]}": function testFalseFalse(){
-				assert.equal(Expression.parseOperand({$or:[false,false]}).evaluate(), false);
+				assert.equal(Expression.parseOperand({$or:[false,false]}).evaluateInternal(), false);
 			},
 
 			"should return false if operors are false, false, or false; {$or:[false,false,false]}": function testFalseFalseFalse(){
-				assert.equal(Expression.parseOperand({$or:[false,false,false]}).evaluate(), false);
+				assert.equal(Expression.parseOperand({$or:[false,false,false]}).evaluateInternal(), false);
 			},
 
 			"should return false if operors are false, false, or false; {$or:[false,false,true]}": function testFalseFalseTrue(){
-				assert.equal(Expression.parseOperand({$or:[false,false,true]}).evaluate(), true);
+				assert.equal(Expression.parseOperand({$or:[false,false,true]}).evaluateInternal(), true);
 			},
 
 			"should return true if operors are 0 or 1; {$or:[0,1]}": function testZeroOne(){
-				assert.equal(Expression.parseOperand({$or:[0,1]}).evaluate(), true);
+				assert.equal(Expression.parseOperand({$or:[0,1]}).evaluateInternal(), true);
 			},
 
 			"should return false if operors are 0 or false; {$or:[0,false]}": function testZeroFalse(){
-				assert.equal(Expression.parseOperand({$or:[0,false]}).evaluate(), false);
+				assert.equal(Expression.parseOperand({$or:[0,false]}).evaluateInternal(), false);
 			},
 
 			"should return true if operor is a path String to a truthy value; {$or:['$a']}": function testFieldPath(){
-				assert.equal(Expression.parseOperand({$or:['$a']}).evaluate({a:1}), true);
+				assert.equal(Expression.parseOperand({$or:['$a']}).evaluateInternal({a:1}), true);
 			}
 
 		},

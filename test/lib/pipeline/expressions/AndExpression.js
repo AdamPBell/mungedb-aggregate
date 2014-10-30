@@ -26,13 +26,6 @@ module.exports = {
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.equal(new AndExpression().getFactory(), AndExpression);
-			}
-
-		},
 
 		"#evaluate()": {
 
@@ -96,8 +89,9 @@ module.exports = {
 				assert.deepEqual(Expression.parseOperand({$and:['$a']}).optimize().toJSON(), {$and:['$a']});
 			},
 
-			"should not optimize an expression beginning with a constant; {$and:[1,'$a']}; SERVER-6192": function testConstantNonConstant(){
+			"optimize an expression beginning with a constant; {$and:[1,'$a']};": function testConstantNonConstant(){
 				assert.deepEqual(Expression.parseOperand({$and:[1,'$a']}).optimize().toJSON(), {$and:[1,'$a']});
+				assert.notEqual(Expression.parseOperand({$and:[1,'$a']}).optimize().toJSON(), {$and:[0,'$a']});
 			},
 
 			"should optimize an expression with a path and a '1' (is entirely constant); {$and:['$a',1]}": function testNonConstantOne(){

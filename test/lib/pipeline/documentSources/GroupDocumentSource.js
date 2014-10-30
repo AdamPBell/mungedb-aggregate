@@ -1,25 +1,27 @@
 "use strict";
 var assert = require("assert"),
+	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	Cursor = require("../../../../lib/Cursor"),
-	GroupDocumentSource = require("../../../../lib/pipeline/documentSources/GroupDocumentSource");
+	GroupDocumentSource = require("../../../../lib/pipeline/documentSources/GroupDocumentSource"),
+	async = require('async');
 
 
 /**
-*   Tests if the given spec is the same as what the DocumentSource resolves to as JSON.
-*   MUST CALL WITH A DocumentSource AS THIS (e.g. checkJsonRepresentation.call(this, spec) where this is a DocumentSource and spec is the JSON used to create the source).
-**/
+ * Tests if the given spec is the same as what the DocumentSource resolves to as JSON.
+ * MUST CALL WITH A DocumentSource AS THIS (e.g. checkJsonRepresentation.call(this, spec) where this is a DocumentSource and spec is the JSON used to create the source).
+ **/
 var checkJsonRepresentation = function checkJsonRepresentation(self, spec) {
-    var rep = {};
-    self.sourceToJson(rep, true);
-    assert.deepEqual(rep, {$group:spec});
+	var rep = {};
+	self.serialize(rep, true);
+	assert.deepEqual(rep, {$group: spec});
 };
 
 /// An assertion for `ObjectExpression` instances based on Mongo's `ExpectedResultBase` class
 function assertExpectedResult(args) {
 	{// check for required args
 		if (args === undefined) throw new TypeError("missing arg: `args` is required");
-		if (args.spec && args.throw === undefined) args.throw = true; // Assume that spec only tests expect an error to be thrown 
+		if (args.spec && args.throw === undefined) args.throw = true; // Assume that spec only tests expect an error to be thrown
 		//if (args.spec === undefined) throw new Error("missing arg: `args.spec` is required");
 		if (args.expected !== undefined && args.docs === undefined) throw new Error("must provide docs with expected value");
 	}// check for required args
@@ -29,11 +31,34 @@ function assertExpectedResult(args) {
 		var gds = GroupDocumentSource.createFromJson(args.spec),
 			cwc = new CursorDocumentSource.CursorWithContext();
 		cwc._cursor = new Cursor( args.docs );
-		var cds = new CursorDocumentSource(cwc);
+		var next,
+			results = [],
+			cds = new CursorDocumentSource(cwc);
 		gds.setSource(cds);
-		var result = gds.getCurrent();
-		assert.deepEqual(result, args.expected);
-		checkJsonRepresentation(gds, args.spec);
+		async.whilst(
+			function() {
+				next !== DocumentSource.EOF;
+			},
+			function(done) {
+				gds.getNext(function(err, doc) {
+					if(err) return done(err);
+					next = doc;
+					if(next === DocumentSource.EOF) {
+						return done();
+					} else {
+						results.push(next);
+						return done();
+					}
+				});
+			},
+			function(err) {
+				assert.deepEqual(results, args.expected);
+				checkJsonRepresentation(gds, args.spec);
+				if(args.done) {
+					return args.done();
+				}
+			}
+		);
 	}else{
 		if(args.throw) {
 			assert.throws(function(){
@@ -72,14 +97,15 @@ module.exports = {
 
 			// $group _id is an empty object
 			"should not throw when _id is an empty object": function advanceTest(){
+				//NOTE: This is broken until expressions get #serialize methods
 				assertExpectedResult({spec:{_id:{}}, "throw":false});
 			},
 
 			// $group _id is specified as an invalid object expression
-			"should throw error when  _id is an invalid object expression": function testConstructor(){
+			"should throw error when _id is an invalid object expression": function testConstructor(){
 				assertExpectedResult({
 					spec:{_id:{$add:1, $and:1}},
-				});	
+				});
 			},
 
 
@@ -90,11 +116,13 @@ module.exports = {
 
 			// $group _id is the empty string
 			"should not throw when _id is an empty string": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:""}, "throw":false});
 			},
 
 			// $group _id is a string constant
 			"should not throw when _id is a string constant": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:"abc"}, "throw":false});
 			},
 
@@ -102,56 +130,60 @@ module.exports = {
 			"should throw when _id is an invalid field path": function advanceTest(){
 				assertExpectedResult({spec:{_id:"$a.."}});
 			},
-		
+
 			// $group _id is a numeric constant
 			"should not throw when _id is a numeric constant": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:2}, "throw":false});
 			},
 
 			// $group _id is an array constant
 			"should not throw when _id is an array constant": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:[1,2]}, "throw":false});
 			},
 
 			// $group _id is a regular expression (not supported)
 			"should throw when _id is a regex": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:/a/}});
 			},
 
 			// The name of an aggregate field is specified with a $ prefix
 			"should throw when aggregate field spec is specified with $ prefix": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, $foo:{$sum:1}}});
 			},
 
 			// An aggregate field spec that is not an object
 			"should throw when aggregate field spec is not an object": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:1}});
 			},
 
 			// An aggregate field spec that is not an object
 			"should throw when aggregate field spec is an empty object": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:{}}});
 			},
 
 			// An aggregate field spec with an invalid accumulator operator
 			"should throw when aggregate field spec is an invalid accumulator": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:{$bad:1}}});
 			},
 
 			// An aggregate field spec with an array argument
 			"should throw when aggregate field spec with an array as an argument": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:{$sum:[]}}});
 			},
 
 			// Multiple accumulator operators for a field
 			"should throw when aggregate field spec with multiple accumulators": function advanceTest(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:{$sum:1, $push:1}}});
 			}
-
-			//Not Implementing, not way to support this in Javascript Objects
-			// Aggregation using duplicate field names is allowed currently
-
-
 
 		},
 
@@ -163,67 +195,147 @@ module.exports = {
 			}
 		},
 
-		"#advance": {
+		"#getNext, #populate": {
+
+			// Aggregation using duplicate field names is allowed currently
+			// Note: Can't duplicate fields in javascript objects -- skipped
 
 			// $group _id is computed from an object expression
 			"should compute _id from an object expression": function testAdvance_ObjectExpression(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:{z:"$a"}},
-					expected: {_id:{z:6}}
+					expected: [{_id:{z:6}}]
 				});
 			},
 
 			// $group _id is a field path expression
 			"should compute _id from a field path expression": function testAdvance_FieldPathExpression(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:5}],
 					spec: {_id:"$a"},
-					expected: {_id:5}
+					expected: [{_id:5}]
 				});
 			},
-			
+
 			// $group _id is a field path expression
 			"should compute _id from a Date": function testAdvance_Date(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				var d = new Date();
 				assertExpectedResult({
 					docs: [{a:d}],
 					spec: {_id:"$a"},
-					expected: {_id:d}
+					expected: [{_id:d}]
 				});
 			},
 
 			// Aggregate the value of an object expression
 			"should aggregate the value of an object expression": function testAdvance_ObjectExpression(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:0, z:{$first:{x:"$a"}}},
-					expected: {_id:0, z:{x:6}}
+					expected: [{_id:0, z:{x:6}}]
 				});
 			},
 
 			// Aggregate the value of an operator expression
 			"should aggregate the value of an operator expression": function testAdvance_OperatorExpression(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:0, z:{$first:"$a"}},
-					expected: {_id:0, z:6}
+					expected: [{_id:0, z:6}]
 				});
 			},
 
 			// Aggregate the value of an operator expression
 			"should aggregate the value of an operator expression with a null id": function testAdvance_Null(){
+				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:null, z:{$first:"$a"}},
-					expected: {_id:null, z:6}
+					expected: [{_id:null, z:6}]
+				});
+			},
+
+			// A $group performed on a single document
+			"should make one group with one values": function SingleDocument() {
+				assertExpectedResult({
+					docs: [{a:1}],
+					spec: {_id:0, a:{$sum:"$a"}},
+					expected: [{_id:0, a:1}]
+				});
+			},
+
+			// A $group performed on two values for a single key
+			"should make one group with two values": function TwoValuesSingleKey() {
+				assertExpectedResult({
+					docs: [{a:1}, {a:2}],
+					spec: {_id:"$_id", a:{$push:"$a"}},
+					expected: [{_id:0, a:[1,2]}]
+				});
+			},
+
+			// A $group performed on two values with one key each.
+			"should make two groups with one value": function TwoValuesTwoKeys() {
+				assertExpectedResult({
+					docs: [{_id:0,a:1}, {_id:1,a:2}],
+					spec: {_id:"$_id", a:{$push:"$a"}},
+					expected: [{_id:0, a:[1]}, {_id:1, a:[2]}]
+				});
+			},
+
+			// A $group performed on two values with two keys each.
+			"should make two groups with two values": function FourValuesTwoKeys() {
+				assertExpectedResult({
+					docs: [{_id:0,a:1}, {_id:1,a:2}, {_id:0,a:3}, {_id:1,a:4}],
+					spec: {_id:"$_id", a:{$push:"$a"}},
+					expected: [{_id:0, a:[1, 3]}, {_id:1, a:[2, 4]}]
+				});
+			},
+
+			// A $group performed on two values with two keys each and two accumulator operations.
+			"should make two groups with two values with two accumulators": function FourValuesTwoKeysTwoAccumulators() {
+				assertExpectedResult({
+					docs: [{_id:0,a:1}, {_id:1,a:2}, {_id:0,a:3}, {_id:1,a:4}],
+					spec: {_id:"$_id", list:{$push:"$a"}, sum:{$sum:{$divide:["$a", 2]}}},
+					expected: [{_id:0, list:[1, 3], sum:2}, {_id:1, list:[2, 4], sum:3}]
+				});
+			},
+
+			// Null and undefined _id values are grouped together.
+			"should group null and undefined _id's together": function GroupNullUndefinedIds() {
+				assertExpectedResult({
+					docs: [{a:null, b:100}, {b:10}],
+					spec: {_id:"$a", sum:{$sum:"$b"}},
+					expected: [{_id:null, sum:110}]
+				});
+			},
+
+			// A complex _id expression.
+			"should group based on a complex id": function ComplexId() {
+				assertExpectedResult({
+					docs: [{a:"de", b:"ad", c:"beef", d:""}, {a:"d", b:"eadbe", c:"", d:"ef"}],
+					spec: {_id:{$concat:["$a", "$b", "$c", "$d"]}},
+					expected: [{_id:'deadbeef'}]
+				});
+			},
+
+			// An undefined accumulator value is dropped.
+			"should ignore undefined values during accumulation":function UndefinedAccumulatorValue() {
+				assertExpectedResult({
+					docs: [{}],
+					spec: {_id:0, first:{$first:"$missing"}},
+					expected: [{_id:0, first:null}]
 				});
 			}
-
 		}
 
 	}
 
 };
 
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
+if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

@@ -1,5 +1,6 @@
 "use strict";
 var assert = require("assert"),
+	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	LimitDocumentSource = require("../../../../lib/pipeline/documentSources/LimitDocumentSource");
 
 
@@ -15,6 +16,16 @@ module.exports = {
 				});
 			}
 
+		},
+
+		"#getDependencies": {
+			"limits do not create dependencies": function() {
+				var lds = LimitDocumentSource.createFromJson(1),
+					deps = {};
+
+				assert.equal(DocumentSource.GetDepsReturn.SEE_NEXT, lds.getDependencies(deps));
+				assert.equal(0, Object.keys(deps).length);
+			}
 		},
 
 		"#getSourceName()": {
@@ -47,98 +58,71 @@ module.exports = {
 
 		},
 
-		"#eof()": {
+		"#getNext()": {
 
-			"should return true if there are no more sources": function noSources(){
+			"should throw an error if no callback is given": function() {
 				var lds = new LimitDocumentSource();
-				lds.limit = 9;
-				lds.count = 0;
-				lds.source = {
-					eof: function(){
-						return true;
-					}
-				};
-				assert.equal(lds.eof(), true);
+				assert.throws(lds.getNext.bind(lds));
 			},
-			"should return true if limit is hit": function hitLimit(){
+
+			"should return the current document source": function currSource(next){
 				var lds = new LimitDocumentSource();
-				lds.limit = 9;
-				lds.count = 9;
-				lds.source = {
-					eof: function(){
-						return false;
-					}
-				};
-				assert.equal(lds.eof(), true);
+				lds.limit = 1;
+				lds.source = {getNext:function(cb){cb(null,{ item:1 });}};
+				lds.getNext(function(err,val) {
+					assert.deepEqual(val, { item:1 });
+					next();
+				});
 			},
-			"should return false if limit is not hit and there are more documents": function hitLimit(){
+
+			"should return EOF for no sources remaining": function noMoar(next){
 				var lds = new LimitDocumentSource();
 				lds.limit = 10;
-				lds.count = 9;
 				lds.source = {
-					eof: function(){
-						return false;
-					}
+					calls: 0,
+					getNext:function(cb) {
+						if (lds.source.calls)
+							return cb(null,DocumentSource.EOF);
+						lds.source.calls++;
+						return cb(null,{item:1});
+					},
+					dispose:function() { return true; }
 				};
-				assert.equal(lds.eof(), false);
-			}
-
-		},
-
-		"#getCurrent()": {
-
-			"should return the current document source": function currSource(){
-				var lds = new LimitDocumentSource();
-				lds.limit = 1;
-				lds.source = {getCurrent:function(){return { item:1 };}};
-				assert.deepEqual(lds.getCurrent(), { item:1 }); 
-			}
-
-		},
-
-		"#advance()": {
-
-			"should return true for moving to the next source": function nextSource(){
-				var lds = new LimitDocumentSource();
-				lds.count = 0;
-				lds.limit = 2;
-				lds.source = {
-					getCurrent:function(){return { item:1 };},
-					advance:function(){return true;}
-				};
-				assert.strictEqual(lds.advance(), true); 
+				lds.getNext(function(){});
+				lds.getNext(function(err,val) {
+					assert.strictEqual(val, DocumentSource.EOF);
+					next();
+				});
 			},
 
-			"should return false for no sources remaining": function noMoar(){
+			"should return EOF if we hit our limit": function noMoar(next){
 				var lds = new LimitDocumentSource();
 				lds.limit = 1;
 				lds.source = {
-					getCurrent:function(){return { item:1 };},
-					advance:function(){return false;}
+					calls: 0,
+					getNext:function(cb) {
+						if (lds.source.calls)
+							return cb(null,DocumentSource.EOF);
+						return cb(null,{item:1});
+					},
+					dispose:function() { return true; }
 				};
-				assert.strictEqual(lds.advance(), false); 
-			},
-
-			"should return false if we hit our limit": function noMoar(){
-				var lds = new LimitDocumentSource();
-				lds.limit = 1;
-				lds.source = {
-					getCurrent:function(){return { item:1 };},
-					advance:function(){return true;}
-				};
-				assert.strictEqual(lds.advance(), false); 
+				lds.getNext(function(){});
+				lds.getNext(function (err,val) {
+					assert.strictEqual(val, DocumentSource.EOF);
+					next();
+				});
 			}
 
 		},
 
-		"#sourceToJson()": {
+		"#serialize()": {
 
 			"should create an object with a key $limit and the value equal to the limit": function sourceToJsonTest(){
 				var lds = new LimitDocumentSource();
 				lds.limit = 9;
-				var t = {};
-				lds.sourceToJson(t, false);
-				assert.deepEqual(t, { "$limit": 9 });
+				var actual = lds.serialize(false);
+				assert.deepEqual(actual, { "$limit": 9 });
 			}
 
 		},
