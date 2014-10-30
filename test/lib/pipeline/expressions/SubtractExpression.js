@@ -79,8 +79,8 @@ module.exports = {
 							var idGenerator = new VariablesIdGenerator(),
 								vps = new VariablesParseState(idGenerator),
 								expr = Expression.parseOperand({$subtract:["$a", "$b"]}, vps),
-								date2 = new Date('Jan 3 1990'),
-								date1 = new Date('Jan 1 1990'),
+								date2 = new Date("Jan 3 1990"),
+								date1 = new Date("Jan 1 1990"),
 								result = expr.evaluate({a:date2, b:date1}),
 								expected = date2 - date1;
 							assert.equal(result, expected);
@@ -90,11 +90,14 @@ module.exports = {
 							var idGenerator = new VariablesIdGenerator(),
 								vps = new VariablesParseState(idGenerator),
 								expr = Expression.parseOperand({$subtract:["$a", "$b"]}, vps),
-								date2 = new Date('Jan 3 1990'),
+								date2 = new Date("Jan 3 1990"),
 								millis = 24 * 60 * 60 * 1000,
 								result = expr.evaluate({a:date2, b:millis}),
 								expected = new Date(date2 - millis);
-							assert.equal(result, expected);
+							assert.strictEqual(
+								JSON.stringify(result),
+								JSON.stringify(expected)
+							);
 						},
 
 						"should throw if left is not a date or number": function testStuff() {
