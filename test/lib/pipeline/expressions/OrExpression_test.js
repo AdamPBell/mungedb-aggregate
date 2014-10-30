@@ -1,12 +1,21 @@
 "use strict";
 var assert = require("assert"),
 	OrExpression = require("../../../../lib/pipeline/expressions/OrExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression");
+	Expression = require("../../../../lib/pipeline/expressions/Expression"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	CoerceToBoolExpression = require("../../../../lib/pipeline/expressions/CoerceToBoolExpression"),
+	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression"),
+	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator");
 
 
 module.exports = {
 
 	"OrExpression": {
+
+		beforeEach: function() {
+			this.vps = new VariablesParseState(new VariablesIdGenerator());
+		},
 
 		"constructor()": {
 
@@ -32,106 +41,138 @@ module.exports = {
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.equal(new OrExpression().getFactory(), OrExpression);
-			}
-
-		},
-
 		"#evaluateInternalInternal()": {
 
-			"should return false if no operrors were given; {$or:[]}": function testEmpty(){
-				assert.equal(Expression.parseOperand({$or:[]}).evaluateInternal(), false);
+			"should return false if no operands were given; {$or:[]}": function testEmpty(){
+				assert.equal(Expression.parseOperand({$or:[]}, this.vps).evaluate(), false);
 			},
 
-			"should return true if operrors is one true; {$or:[true]}": function testTrue(){
-				assert.equal(Expression.parseOperand({$or:[true]}).evaluateInternal(), true);
+			"should return true if operands is one true; {$or:[true]}": function testTrue(){
+				assert.equal(Expression.parseOperand({$or:[true]}, this.vps).evaluate(), true);
 			},
 
-			"should return false if operrors is one false; {$or:[false]}": function testFalse(){
-				assert.equal(Expression.parseOperand({$or:[false]}).evaluateInternal(), false);
+			"should return false if operands is one false; {$or:[false]}": function testFalse(){
+				assert.equal(Expression.parseOperand({$or:[false]}, this.vps).evaluate(), false);
 			},
 
-			"should return true if operrors are true or true; {$or:[true,true]}": function testTrueTrue(){
-				assert.equal(Expression.parseOperand({$or:[true,true]}).evaluateInternal(), true);
+			"should return true if operands are true or true; {$or:[true,true]}": function testTrueTrue(){
+				assert.equal(Expression.parseOperand({$or:[true,true]}, this.vps).evaluate(), true);
 			},
 
-			"should return true if operrors are true or false; {$or:[true,false]}": function testTrueFalse(){
-				assert.equal(Expression.parseOperand({$or:[true,false]}).evaluateInternal(), true);
+			"should return true if operands are true or false; {$or:[true,false]}": function testTrueFalse(){
+				assert.equal(Expression.parseOperand({$or:[true,false]}, this.vps).evaluate(), true);
 			},
 
-			"should return true if operrors are false or true; {$or:[false,true]}": function testFalseTrue(){
-				assert.equal(Expression.parseOperand({$or:[false,true]}).evaluateInternal(), true);
+			"should return true if operands are false or true; {$or:[false,true]}": function testFalseTrue(){
+				assert.equal(Expression.parseOperand({$or:[false,true]}, this.vps).evaluate(), true);
 			},
 
-			"should return false if operrors are false or false; {$or:[false,false]}": function testFalseFalse(){
-				assert.equal(Expression.parseOperand({$or:[false,false]}).evaluateInternal(), false);
+			"should return false if operands are false or false; {$or:[false,false]}": function testFalseFalse(){
+				assert.equal(Expression.parseOperand({$or:[false,false]}, this.vps).evaluate(), false);
 			},
 
-			"should return false if operrors are false, false, or false; {$or:[false,false,false]}": function testFalseFalseFalse(){
-				assert.equal(Expression.parseOperand({$or:[false,false,false]}).evaluateInternal(), false);
+			"should return false if operands are false, false, or false; {$or:[false,false,false]}": function testFalseFalseFalse(){
+				assert.equal(Expression.parseOperand({$or:[false,false,false]}, this.vps).evaluate(), false);
 			},
 
-			"should return false if operrors are false, false, or false; {$or:[false,false,true]}": function testFalseFalseTrue(){
-				assert.equal(Expression.parseOperand({$or:[false,false,true]}).evaluateInternal(), true);
+			"should return false if operands are false, false, or false; {$or:[false,false,true]}": function testFalseFalseTrue(){
+				assert.equal(Expression.parseOperand({$or:[false,false,true]}, this.vps).evaluate(), true);
 			},
 
-			"should return true if operrors are 0 or 1; {$or:[0,1]}": function testZeroOne(){
-				assert.equal(Expression.parseOperand({$or:[0,1]}).evaluateInternal(), true);
+			"should return true if operands are 0 or 1; {$or:[0,1]}": function testZeroOne(){
+				assert.equal(Expression.parseOperand({$or:[0,1]}, this.vps).evaluate(), true);
 			},
 
-			"should return false if operrors are 0 or false; {$or:[0,false]}": function testZeroFalse(){
-				assert.equal(Expression.parseOperand({$or:[0,false]}).evaluateInternal(), false);
+			"should return false if operands are 0 or false; {$or:[0,false]}": function testZeroFalse(){
+				assert.equal(Expression.parseOperand({$or:[0,false]}, this.vps).evaluate(), false);
 			},
 
-			"should return true if operor is a path String to a truthy value; {$or:['$a']}": function testFieldPath(){
-				assert.equal(Expression.parseOperand({$or:['$a']}).evaluateInternal({a:1}), true);
+			"should return true if operand is a path String to a truthy value; {$or:['$a']}": function testFieldPath(){
+				assert.equal(Expression.parseOperand({$or:['$a']}, this.vps).evaluate({a:1}), true);
 			}
-
 		},
 
 		"#optimize()": {
 
 			"should optimize a constant expression to a constant; {$or:[1]} == true": function testOptimizeConstantExpression(){
-				assert.deepEqual(Expression.parseOperand({$or:[1]}).optimize(), {$const:true});
+				var a = Expression.parseOperand({$or:[1]}, this.vps).optimize();
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), true);
 			},
 
 			"should not optimize a non-constant expression; {$or:['$a']}; SERVER-6192": function testNonConstant(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a']}).optimize(), {$or:['$a']});
+				var a = Expression.parseOperand({$or:['$a']}, this.vps).optimize();
+				assert(a instanceof OrExpression);
+				assert.equal(a.operands.length, 1);
 			},
 
 			"should optimize an expression with a path or a '1' (is entirely constant); {$or:['$a',1]}": function testNonConstantOne(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a',1]}).optimize(), {$const:true});
+				var a = Expression.parseOperand({$or:['$a',1]}, this.vps).optimize();
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), true);
 			},
 
 			"should optimize an expression with a field path or a '0'; {$or:['$a',0]}": function testNonConstantZero(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a',0]}).optimize(), {$and:['$a']});
+				var a = Expression.parseOperand({$or:['$a',0]}, this.vps).optimize();
+				assert(a instanceof CoerceToBoolExpression);
+				assert.equal(a.expression._fieldPath.fieldNames[1], "a");
 			},
 
 			"should optimize an expression with two field paths or '1' (is entirely constant); {$or:['$a','$b',1]}": function testNonConstantNonConstantOne(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a','$b',1]}).optimize(), {$const:true});
+				var a = Expression.parseOperand({$or:['$a','$b',1]}, this.vps).optimize();
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), true);
 			},
 
 			"should optimize an expression with two field paths or '0'; {$or:['$a','$b',0]}": function testNonConstantNonConstantZero(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a','$b',0]}).optimize(), {$or:['$a','$b']});
+				var a = Expression.parseOperand({$or:['$a','$b',0]}, this.vps).optimize();
+				assert(a instanceof OrExpression);
+				assert.equal(a.operands.length, 2);
 			},
 
 			"should optimize an expression with '0', '1', or a field path; {$or:[0,1,'$a']}": function testZeroOneNonConstant(){
-				assert.deepEqual(Expression.parseOperand({$or:[0,1,'$a']}).optimize(), {$const:true});
+				var a = Expression.parseOperand({$or:[0,1,'$a']}, this.vps).optimize();
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), true);
 			},
 
 			"should optimize an expression with '0', '0', or a field path; {$or:[0,0,'$a']}": function testZeroZeroNonConstant(){
-				assert.deepEqual(Expression.parseOperand({$or:[0,0,'$a']}).optimize(), {$and:['$a']});
+				var a = Expression.parseOperand({$or:[0,0,'$a']}, this.vps).optimize();
+				assert(a instanceof CoerceToBoolExpression);
+				assert.equal(a.expression._fieldPath.fieldNames[1], "a");
 			},
 
 			"should optimize nested $or expressions properly or optimize out values evaluating to false; {$or:[0,{$or:[0]},'$a','$b']}": function testNested(){
-				assert.deepEqual(Expression.parseOperand({$or:[0,{$or:[0]},'$a','$b']}).optimize(), {$or:['$a','$b']});
+				var a = Expression.parseOperand({$or:[0,{$or:[0]},'$a','$b']}, this.vps).optimize();
+				assert(a instanceof OrExpression);
+				assert.equal(a.operands.length, 2);
 			},
 
 			"should optimize nested $or expressions containing a nested value evaluating to false; {$or:[0,{$or:[{$or:[1]}]},'$a','$b']}": function testNestedOne(){
-				assert.deepEqual(Expression.parseOperand({$or:[0,{$or:[{$or:[1]}]},'$a','$b']}).optimize(), {$const:true});
+				var a = Expression.parseOperand({$or:[0,{$or:[{$or:[1]}]},'$a','$b']}, this.vps).optimize();
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), true);
+			},
+			// Tests below this line are extras I added.  Just 'cause.
+			"should handle a string of trues": function(){
+				var a = Expression.parseOperand({$or:[1,"x",1,1,true]}, this.vps).optimize();
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), true);
+			},
+			"should handle a string of falses": function(){
+				var a = Expression.parseOperand({$or:[0, false, 0, false, 0]}, this.vps).optimize();
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), false);
+			},
+			"should handle true + false": function(){
+				var a = Expression.parseOperand({$or:[1, 0]}, this.vps).optimize();
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), true);
+			},
+			"should handle false + true": function(){
+				var a = Expression.parseOperand({$or:[0, 1]}, this.vps).optimize();
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), true);
 			}
 
 		}
