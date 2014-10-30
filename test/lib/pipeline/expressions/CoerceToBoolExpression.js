@@ -62,7 +62,7 @@ module.exports = {
 		"#serialize": {
 
 			"should serialize as $and which will coerceToBool; '$foo'": function(){
-				var expr = new CoerceToBoolExpression(new FieldPathExpression('foo', 'a'));
+				var expr = new CoerceToBoolExpression(FieldPathExpression.create('foo'));
 				assert.deepEqual(expr.serialize(), {$and:['$foo']});
 			}
 
@@ -71,12 +71,19 @@ module.exports = {
 		"#addDependencies()": {
 
 			"should forward dependencies of nested expression": function testDependencies(){
-				var nested = new FieldPathExpression.create("a.b"),
+				var nested = FieldPathExpression.create("a.b"),
 					expr = new CoerceToBoolExpression(nested),
-					deps = new DepsTracker();
+					deps = new DepsTracker(),
+					depsArray = [];
 					expr.addDependencies(deps);
-				assert.equal(Object.keys(deps).length, 1);
-				assert.ok(deps['a.b']);
+
+					Object.keys(deps).forEach(function (key){
+						if (deps[key]){
+							depsArray.push(key);
+						}
+					});
+
+				assert.equal(depsArray.length, 1);
 			}
 
 		}
