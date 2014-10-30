@@ -5,6 +5,13 @@ var assert = require("assert"),
 	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression"),
 	DepsTracker = require("../../../../lib/pipeline/DepsTracker");
 
+function errMsg(expr, args, tree, expected, result) {
+	return "for expression " + expr +
+		" with argument " + args +
+		" full tree: " + JSON.stringify(tree) +
+		" expected: " + expected +
+		" result: " + result;
+}
 
 module.exports = {
 
@@ -52,11 +59,11 @@ module.exports = {
 		 * These tests should just work after the FieldPathExpression Stuff is ported.
 		**/
 
-		"#toJSON()": {
+		"#serialize": {
 
 			"should serialize as $and which will coerceToBool; '$foo'": function(){
-				var expr = new CoerceToBoolExpression(new FieldPathExpression('foo'));
-				assert.deepEqual(expr.toJSON(), {$and:['$foo']});
+				var expr = new CoerceToBoolExpression(new FieldPathExpression('foo', 'a'));
+				assert.deepEqual(expr.serialize(), {$and:['$foo']});
 			}
 
 		},
