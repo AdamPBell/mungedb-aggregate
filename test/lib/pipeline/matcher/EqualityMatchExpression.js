@@ -1,31 +1,15 @@
 "use strict";
 var assert = require("assert"),
 	MatchDetails = require('../../../../lib/pipeline/matcher/MatchDetails'),
-	EqualityMatchExpression = require("../../../../lib/pipeline/matcher/EqualityMatchExpression");
+	EqualityMatchExpression = require("../../../../lib/pipeline/matcher/EqualityMatchExpression"),
+	MinKey = new (function MinKey(){/*matcher does weird stuff with empty objects*/this.foo = 'bar';})(), //TODO: replace me with a real BSONType at some point
+	MaxKey = new (function MaxKey(){/*matcher does weird stuff with empty objects*/this.foo = 'bar';})(); //TODO: replace me with a real BSONType at some point
 
 
 module.exports = {
 
 	"EqualityMatchExpression": {
 
-		"should initialize equality and match numbers or numbers in arrays": function (){
-			var e = new EqualityMatchExpression();
-			var s = e.init('x', 5);
-			assert.strictEqual(s.code, 'OK');
-
-			assert.ok(e.matches({x:5}));
-			assert.ok(e.matches({x:[5]}));
-			assert.ok(e.matches({x:[1,5]}));
-			assert.ok(e.matches({x:[1,5,2]}));
-			assert.ok(e.matches({x:[5,2]}));
-
-			assert.ok(!e.matches({x:null}));
-			assert.ok(!e.matches({x:6}));
-			assert.ok(!e.matches({x:[4,2]}));
-			assert.ok(!e.matches({x:[[5]]}));
-		},
-
-//NOTE: from expression_leaf_test.cpp
 		"should match elements": function testMatchesElement(){
 			var operand = {a:5},
 				match = {a:5.0},
@@ -44,7 +28,7 @@ module.exports = {
 			var e = new EqualityMatchExpression();
 			var s = e.init('',{});
 
-			assert.strictEqual(s.code, 'BAD_VALUE');
+			assert.ok(!(s.code === 'OK'));
 		},
 		"should match a pathed number":function() {
 			var e = new EqualityMatchExpression();
@@ -87,7 +71,46 @@ module.exports = {
 			assert.ok( e.matches({}) );
 			assert.ok( e.matches({'a':null}) );
 			assert.ok( ! e.matches({'a':4}) );
+			assert.ok( e.matches({'b':4}) );
 		},
+    //// This test documents how the matcher currently works,
+    //// not necessarily how it should work ideally.
+		"should match nested nulls" : function(){
+			var e = new EqualityMatchExpression();
+			var s = e.init('a.b',null);
+		
+			assert.strictEqual(s.code, 'OK');
+			// null matches any empty object that is on a subpath of a.b
+			assert.ok( e.matches({}) );
+			assert.ok( e.matches({'a':{}}) );
+			assert.ok( e.matches({'a':[{}]}) );
+			assert.ok( e.matches({'a':{'b':null}} ) );
+			// b does not exist as an element in array under a.
+			assert.ok( !e.matches({'a':[]}) );
+			assert.ok( !e.matches({'a':[null]}) );
+			assert.ok( !e.matches({'a':[1,2]}) );
+			// a.b exists but is not null.
+			assert.ok( !e.matches({'a':{'b':4}} ) );
+			assert.ok( !e.matches({'a':{'b':{}}} ) );
+			// A non-existent field is treated same way as an empty bson object
+			debugger;
+			assert.ok( e.matches({'b':4} ) );
+		},
+		"should match MinKey" : function(){
+			var e = new EqualityMatchExpression();
+			var s = e.init('a',MinKey);
+			assert.ok( e.matches({'a': MinKey}) );
+			assert.ok( !e.matches({'a':MaxKey}) );
+			assert.ok( !e.matches({'a':4}) );
+		},
+		"should match MaxKey" : function(){
+			var e = new EqualityMatchExpression();
+			var s = e.init('a',MaxKey);
+			assert.ok( e.matches({'a':MaxKey}) );
+			assert.ok( !e.matches({'a': MinKey}) );
+			assert.ok( !e.matches({'a':4}) );
+		},
+		
 		"should match full array" : function() {
 			var e = new EqualityMatchExpression();
 			var s = e.init('a',[1,2]);
@@ -139,10 +162,8 @@ module.exports = {
 			assert.ok( ! a.equivalent(c) );
 		}
 
-
 	}
 
 };
 
 if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
-
