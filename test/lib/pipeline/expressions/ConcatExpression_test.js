@@ -14,8 +14,12 @@ module.exports = {
 				assert.doesNotThrow(function(){
 					new ConcatExpression();
 				});
+			},
+			"should throw Error when constructing with args": function testConstructor(){
+				assert.throws(function(){
+					new ConcatExpression("should die");
+				});
 			}
-
 		},
 
 		"#getOpName()": {
@@ -50,8 +54,14 @@ module.exports = {
 
 			"should return null if an operand evaluates to null; {$concat:[my,$a]}": function testNull(){
 				assert.equal(Expression.parseOperand({$concat:["my","$a"]}).evaluate({a:null}), null);
-			}
+			},
 
+			"should throw if a non-string is passed in: {$concat:[my,$a]}": function testNull(){
+				assert.throws(function(){
+					Expression.parseOperand({$concat:["my","$a"]}).evaluate({a:100});
+				});
+
+			}
 		}
 
 	}

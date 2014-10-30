@@ -15,8 +15,13 @@ module.exports = {
 				assert.doesNotThrow(function(){
 					new AddExpression();
 				});
-			}
+			},
 
+			"should throw Error when constructing with args": function testConstructor(){
+				assert.throws(function(){
+					new AddExpression(1);
+				});
+			}
 		},
 
 		"#getOpName()": {
