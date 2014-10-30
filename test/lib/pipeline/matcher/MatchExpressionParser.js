@@ -297,7 +297,18 @@ module.exports = {
 			var q = {'x':{'$in':[{'$elemMatch': 1}]}};
 
 			var res = parser.parse( q );
-			// TODO: busted
+			assert.strictEqual( res.code, 'BAD_VALUE' );
+		},
+		"Should not parse regexes that are too long": function() {
+			var parser = new MatchExpressionParser();
+			var str = (new Array(50*1000+1).join('z'));
+			var q = {'x': {'$in':[new RegExp(str)]}};
+
+			var res = parser.parse( q );
+			assert.strictEqual( res.code, 'BAD_VALUE' );
+
+			q = {'x':{'$in': [{'$regex': str}]}};
+			res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
 		},
 		"Should parse and match $regex in an $in expression": function() {
