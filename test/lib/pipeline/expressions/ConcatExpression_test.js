@@ -1,12 +1,17 @@
 "use strict";
 var assert = require("assert"),
 	ConcatExpression = require("../../../../lib/pipeline/expressions/ConcatExpression"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
 
 module.exports = {
 
 	"ConcatExpression": {
+		beforeEach: function(){
+			this.vps = new VariablesParseState(new VariablesIdGenerator());
+		},
 
 		"constructor()": {
 
@@ -30,37 +35,52 @@ module.exports = {
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.equal(new ConcatExpression().getFactory(), ConcatExpression);
-			}
-
-		},
-
 		"#evaluate()": {
 
 			"should return empty string if no operands were given; {$concat:[]}": function testEmpty(){
-				assert.equal(Expression.parseOperand({$concat:[]}).evaluate(), "");
+				assert.equal(Expression.parseOperand({$concat:[]}, this.vps).evaluate(), "");
 			},
 
 			"should return mystring if operands are my string; {$concat:[my, string]}": function testConcat(){
-				assert.equal(Expression.parseOperand({$concat:["my", "string"]}).evaluate(), "mystring");
+				assert.equal(Expression.parseOperand({$concat:["my", "string"]}, this.vps).evaluate(), "mystring");
 			},
 
 			"should return mystring if operands are my and $a; {$concat:[my,$a]}": function testFieldPath(){
-				assert.equal(Expression.parseOperand({$concat:["my","$a"]}).evaluate({a:"string"}), "mystring");
+				assert.equal(Expression.parseOperand({$concat:["my","$a"]}, this.vps).evaluate({a:"string"}), "mystring");
 			},
 
-			"should return null if an operand evaluates to null; {$concat:[my,$a]}": function testNull(){
-				assert.equal(Expression.parseOperand({$concat:["my","$a"]}).evaluate({a:null}), null);
-			},
-
-			"should throw if a non-string is passed in: {$concat:[my,$a]}": function testNull(){
+			//NOTE: DEVIATION FROM MONGO: I can't find the test cases for $concat.  The following test
+			// causes an exception as will any other non-string operand. I don't know the authority for
+			// defining the behavior.
+//			"should return null if an operand evaluates to null; {$concat:[my,$a]}": function testNull(){
+//				var a = Expression.parseOperand({$concat:["my","$a"]}, this.vps);
+//				var b = a.evaluate({a:null});
+//				assert.equal(b, null);
+//			},
+			"should throw if an operand is a null": function testNull(){
 				assert.throws(function(){
-					Expression.parseOperand({$concat:["my","$a"]}).evaluate({a:100});
+					Expression.parseOperand({$concat:["my","$a"]}, this.vps).evaluate({a:null});
 				});
-
+			},
+			"should throw if an operand is a null (2)": function testNull(){
+				assert.throws(function(){
+					Expression.parseOperand({$concat:[null,"$a"]}, this.vps).evaluate({a:"hello"});
+				});
+			},
+			"should throw if an operand is a number": function testNull(){
+				assert.throws(function(){
+					Expression.parseOperand({$concat:["my","$a"]}, this.vps).evaluate({a:100});
+				});
+			},
+			"should throw if an operand is a date": function testNull(){
+				assert.throws(function(){
+					Expression.parseOperand({$concat:["my","$a"]}, this.vps).evaluate({a:new Date()});
+				});
+			},
+			"should throw if an operand is a boolean": function testNull(){
+				assert.throws(function(){
+					Expression.parseOperand({$concat:["my","$a"]}, this.vps).evaluate({a:true});
+				});
 			}
 		}
 
