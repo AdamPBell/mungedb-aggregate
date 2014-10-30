@@ -1,8 +1,18 @@
 "use strict";
 var assert = require("assert"),
+		VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
+		VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 		SetIsSubsetExpression = require("../../../../lib/pipeline/expressions/SetIsSubsetExpression"),
 		Expression = require("../../../../lib/pipeline/expressions/Expression");
 
+
+function errMsg(expr, args, tree, expected, result) {
+	return 	"for expression " + expr +
+			" with argument " + args +
+			" full tree: " + JSON.stringify(tree) +
+			" expected: " + expected +
+			" result: " + result;
+}
 
 module.exports = {
 
@@ -10,9 +20,15 @@ module.exports = {
 
 				"constructor()": {
 
-						"should throw Error when constructing without args": function testConstructor() {
-								assert.throws(function() {
+						"should not throw Error when constructing without args": function testConstructor() {
+								assert.doesNotThrow(function() {
 										new SetIsSubsetExpression();
+								});
+						},
+
+						"should throw Error when constructing with args": function testConstructor() {
+								assert.throws(function() {
+										new SetIsSubsetExpression("someArg");
 								});
 						}
 
@@ -20,8 +36,8 @@ module.exports = {
 
 				"#getOpName()": {
 
-						"should return the correct op name; $setissubset": function testOpName() {
-								assert.equal(new SetIsSubsetExpression([1,2,3],[4,5,6]).getOpName(), "$setissubset");
+						"should return the correct op name; $setIsSubset": function testOpName() {
+								assert.equal(new SetIsSubsetExpression().getOpName(), "$setIsSubset");
 						}
 
 				},
@@ -33,7 +49,7 @@ module.exports = {
 										array2 = [6, 7, 8, 9];
 								assert.throws(function() {
 										Expression.parseOperand({
-												$setissubset: ["$array1", "$array2"]
+												$setIsSubset: ["$array1", "$array2"]
 										}).evaluateInternal({
 												array1: array1,
 												array2: array2
@@ -46,7 +62,7 @@ module.exports = {
 										array2 = "not an array";
 								assert.throws(function() {
 										Expression.parseOperand({
-												$setissubset: ["$array1", "$array2"]
+												$setIsSubset: ["$array1", "$array2"]
 										}).evaluateInternal({
 												array1: array1,
 												array2: array2
@@ -59,7 +75,7 @@ module.exports = {
 										array2 = "not an array";
 								assert.throws(function() {
 										Expression.parseOperand({
-												$setissubset: ["$array1", "$array2"]
+												$setIsSubset: ["$array1", "$array2"]
 										}).evaluateInternal({
 												array1: array1,
 												array2: array2
@@ -67,37 +83,31 @@ module.exports = {
 								});
 						},
 
-						"Should pass and return a true": function testBasicAssignment() {
-								var array1 = [1, 2, 3, 4, 5],
-										array2 = [2,3];
-								assert.strictEqual(Expression.parseOperand({
-										$setissubset: ["$array1", "$array2"]
-								}).evaluateInternal({
-										array1: array1,
-										array2: array2
-								}), true);
-						},
 
-						"Should pass and return a true2": function testBasicAssignment(){
-							var array1 = [1, 2, 3, 4, 5],
-								array2 = [2,3],
-								input = ["$array1","$array2"],
-							 	expr = Expression.parseExpression("$setissubset", input),
+						"Should pass and return a true": function testBasicAssignment(){
+							var array1 = [2,3],
+								array2 = [1, 2, 3, 4, 5],
+								input = [array1,array2],
+								idGenerator = new VariablesIdGenerator(),
+								vps = new VariablesParseState(idGenerator),
+								expr = Expression.parseExpression("$setIsSubset", input, vps),
 								result = expr.evaluate({}),
 								expected = true,
-								msg = errMsg("$allElementsTrue", input, expr.serialize(false), expected, result);
+								msg = errMsg("$setIsSubset", input, expr.serialize(false), expected, result);
 							assert.equal(result, expected, msg);
 						},
 
 						"Should pass and return false": function testBasicAssignment() {
-								var array1 = [1, 2, 3, 4, 5],
-										array2 = [7, 8, 9];
-								assert.strictEqual(Expression.parseOperand({
-										$setissubset: ["$array1", "$array2"]
-								}).evaluateInternal({
-										array1: array1,
-										array2: array2
-								}), true);
+							var array1 = [1, 2, 3, 4, 5],
+								array2 = [7, 8, 9],
+								input = [array1, array2],
+								idGenerator = new VariablesIdGenerator(),
+								vps = new VariablesParseState(idGenerator),
+								expr = Expression.parseExpression("$setIsSubset", input, vps),
+								result = expr.evaluate({}),
+								expected = false,
+								msg = errMsg("$setIsSubset", input, expr.serialize(false), expected, result);
+							assert.equal(result, expected, msg);
 						},
 
 				}
