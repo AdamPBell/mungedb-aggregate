@@ -1,7 +1,8 @@
 "use strict";
 var assert = require("assert"),
 	ModExpression = require("../../../../lib/pipeline/expressions/ModExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression");
+	Expression = require("../../../../lib/pipeline/expressions/Expression"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/Expression");
 
 
 module.exports = {
@@ -19,25 +20,15 @@ module.exports = {
 		},
 
 		"#getOpName()": {
-
 			"should return the correct op name; $mod": function testOpName(){
 				assert.equal(new ModExpression().getOpName(), "$mod");
 			}
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new ModExpression().getFactory(), undefined);
-			}
-
-		},
-
-		"#evaluate()": {
-
+		"#evaluateInternal()": {
 			"should return rhs if rhs is undefined or null": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}).evaluate({lhs:20.453, rhs:null}), null);
+				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}, new VariablesParseState()).evaluate({lhs:20.453, rhs:null}), null);
 				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}).evaluate({lhs:20.453}), undefined);
 			},
 			"should return lhs if lhs is undefined or null": function testStuff(){

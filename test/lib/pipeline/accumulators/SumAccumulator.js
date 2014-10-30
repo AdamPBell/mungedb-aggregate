@@ -1,13 +1,10 @@
 "use strict";
 var assert = require("assert"),
-	SumAccumulator = require("../../../../lib/pipeline/accumulators/SumAccumulator"),
-	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression");
+	SumAccumulator = require("../../../../lib/pipeline/accumulators/SumAccumulator");
 
 
 function createAccumulator(){
-	var sumAccumulator = new SumAccumulator();
-	sumAccumulator.addOperand(new FieldPathExpression("b") );
-	return sumAccumulator;
+	return new SumAccumulator();
 }
 
 
@@ -33,7 +30,7 @@ module.exports = {
 
 		},
 
-		"#evaluate()": {
+		"#processInternal()": {
 
 			"should evaluate no documents": function testStuff(){
 				var sumAccumulator = createAccumulator();
@@ -42,7 +39,7 @@ module.exports = {
 
 			"should evaluate one document with a field that is NaN": function testStuff(){
 				var sumAccumulator = createAccumulator();
-				sumAccumulator.evaluate({b:Number("foo")});
+				sumAccumulator.processInternal(Number("foo"));
 				// NaN is unequal to itself
 				assert.notStrictEqual(sumAccumulator.getValue(), sumAccumulator.getValue());
 			},
@@ -50,7 +47,7 @@ module.exports = {
 
 			"should evaluate one document and sum it's value": function testStuff(){
 				var sumAccumulator = createAccumulator();
-				sumAccumulator.evaluate({b:5});
+				sumAccumulator.processInternal(5);
 				assert.strictEqual(sumAccumulator.getValue(), 5);
 
 			},
@@ -58,53 +55,53 @@ module.exports = {
 
 			"should evaluate and sum two ints": function testStuff(){
 				var sumAccumulator = createAccumulator();
-				sumAccumulator.evaluate({b:5});
-				sumAccumulator.evaluate({b:7});
+				sumAccumulator.processInternal(5);
+				sumAccumulator.processInternal(7);
 				assert.strictEqual(sumAccumulator.getValue(), 12);
 			},
 
 			"should evaluate and sum two ints overflow": function testStuff(){
 				var sumAccumulator = createAccumulator();
-				sumAccumulator.evaluate({b:Number.MAX_VALUE});
-				sumAccumulator.evaluate({b:Number.MAX_VALUE});
+				sumAccumulator.processInternal(Number.MAX_VALUE);
+				sumAccumulator.processInternal(Number.MAX_VALUE);
 				assert.strictEqual(Number.isFinite(sumAccumulator.getValue()), false);
 			},
 
 
 			"should evaluate and sum two negative ints": function testStuff(){
 				var sumAccumulator = createAccumulator();
-				sumAccumulator.evaluate({b:-5});
-				sumAccumulator.evaluate({b:-7});
+				sumAccumulator.processInternal(-5);
+				sumAccumulator.processInternal(-7);
 				assert.strictEqual(sumAccumulator.getValue(), -12);
 			},
 
 //TODO Not sure how to do this in Javascript
 //			"should evaluate and sum two negative ints overflow": function testStuff(){
 //				var sumAccumulator = createAccumulator();
-//				sumAccumulator.evaluate({b:Number.MIN_VALUE});
-//				sumAccumulator.evaluate({b:7});
+//				sumAccumulator.processInternal({b:Number.MIN_VALUE});
+//				sumAccumulator.processInternal({b:7});
 //				assert.strictEqual(sumAccumulator.getValue(), Number.MAX_VALUE);
 //			},
 //
 
 			"should evaluate and sum int and float": function testStuff(){
 				var sumAccumulator = createAccumulator();
-				sumAccumulator.evaluate({b:8.5});
-				sumAccumulator.evaluate({b:7});
+				sumAccumulator.processInternal(8.5);
+				sumAccumulator.processInternal(7);
 				assert.strictEqual(sumAccumulator.getValue(), 15.5);
 			},
 
 			"should evaluate and sum one Number and a NaN sum to NaN": function testStuff(){
 				var sumAccumulator = createAccumulator();
-				sumAccumulator.evaluate({b:8});
-				sumAccumulator.evaluate({b:Number("bar")});
+				sumAccumulator.processInternal(8);
+				sumAccumulator.processInternal(Number("bar"));
 				// NaN is unequal to itself
 				assert.notStrictEqual(sumAccumulator.getValue(), sumAccumulator.getValue());
 			},
 
 			"should evaluate and sum a null value to 0": function testStuff(){
 				var sumAccumulator = createAccumulator();
-				sumAccumulator.evaluate({b:null});
+				sumAccumulator.processInternal(null);
 				assert.strictEqual(sumAccumulator.getValue(), 0);
 			}
 

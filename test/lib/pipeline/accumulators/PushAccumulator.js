@@ -1,15 +1,11 @@
 "use strict";
 var assert = require("assert"),
-	PushAccumulator = require("../../../../lib/pipeline/accumulators/PushAccumulator"),
-	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression");
+	PushAccumulator = require("../../../../lib/pipeline/accumulators/PushAccumulator");
 
 
 function createAccumulator(){
-	var accumulator = new PushAccumulator();
-	accumulator.addOperand(new FieldPathExpression("b") );
-	return accumulator;
+	return new PushAccumulator();
 }
-
 
 module.exports = {
 
@@ -33,47 +29,69 @@ module.exports = {
 
 		},
 
-		"#evaluate()": {
+		"#getFactory()": {
 
-			"should evaluate no documents and return []": function testEvaluate_None(){
+			"should return the constructor for this class": function factoryIsConstructor(){
+				assert.strictEqual(new PushAccumulator().getFactory(), PushAccumulator);
+			}
+
+		},
+
+		"#processInternal()": {
+
+			"should processInternal no documents and return []": function testprocessInternal_None(){
 				var accumulator = createAccumulator();
 				assert.deepEqual(accumulator.getValue(), []);
 			},
 
-			"should evaluate a 1 and return [1]": function testEvaluate_One(){
+			"should processInternal a 1 and return [1]": function testprocessInternal_One(){
 				var accumulator = createAccumulator();
-				accumulator.evaluate({b:1});
+				accumulator.processInternal(1);
 				assert.deepEqual(accumulator.getValue(), [1]);
 			},
 
-			"should evaluate a 1 and a 2 and return [1,2]": function testEvaluate_OneTwo(){
+			"should processInternal a 1 and a 2 and return [1,2]": function testprocessInternal_OneTwo(){
 				var accumulator = createAccumulator();
-				accumulator.evaluate({b:1});
-				accumulator.evaluate({b:2});
+				accumulator.processInternal(1);
+				accumulator.processInternal(2);
 				assert.deepEqual(accumulator.getValue(), [1,2]);
 			},
 
-			"should evaluate a 1 and a null and return [1,null]": function testEvaluate_OneNull(){
+			"should processInternal a 1 and a null and return [1,null]": function testprocessInternal_OneNull(){
 				var accumulator = createAccumulator();
-				accumulator.evaluate({b:1});
-				accumulator.evaluate({b:null});
+				accumulator.processInternal(1);
+				accumulator.processInternal(null);
 				assert.deepEqual(accumulator.getValue(), [1, null]);
 			},
 
-			"should evaluate a 1 and an undefined and return [1]": function testEvaluate_OneUndefined(){
+			"should processInternal a 1 and an undefined and return [1]": function testprocessInternal_OneUndefined(){
 				var accumulator = createAccumulator();
-				accumulator.evaluate({b:1});
-				accumulator.evaluate({b:undefined});
+				accumulator.processInternal(1);
+				accumulator.processInternal(undefined);
 				assert.deepEqual(accumulator.getValue(), [1]);
 			},
 
-			"should evaluate a 1 and a 0 and return [1,0]": function testEvaluate_OneZero(){
+			"should processInternal a 1 and a 0 and return [1,0]": function testprocessInternal_OneZero(){
 				var accumulator = createAccumulator();
-				accumulator.evaluate({b:1});
-				accumulator.evaluate({b:0});
+				accumulator.processInternal(1);
+				accumulator.processInternal(0);
 				assert.deepEqual(accumulator.getValue(), [1, 0]);
-			}
+			},
 
+			"should processInternal a 1 and a [0] and return [1,0]": function testprocessInternal_OneArrayZeroMerging(){
+				var accumulator = createAccumulator();
+				accumulator.processInternal(1);
+				accumulator.processInternal([0], true);
+				assert.deepEqual(accumulator.getValue(), [1, 0]);
+			},
+
+			"should processInternal a 1 and a 0 and throw an error if merging": function testprocessInternal_OneZeroMerging(){
+				var accumulator = createAccumulator();
+				accumulator.processInternal(1);
+				assert.throws(function() {
+					accumulator.processInternal(0, true);
+				});
+			}
 		}
 
 	}

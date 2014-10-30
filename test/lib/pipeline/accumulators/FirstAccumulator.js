@@ -1,15 +1,10 @@
 "use strict";
 var assert = require("assert"),
-	FirstAccumulator = require("../../../../lib/pipeline/accumulators/FirstAccumulator"),
-	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression");
-
+	FirstAccumulator = require("../../../../lib/pipeline/accumulators/FirstAccumulator");
 
 function createAccumulator(){
-	var firstAccumulator = new FirstAccumulator();
-	firstAccumulator.addOperand(new FieldPathExpression("a") );
-	return firstAccumulator;
+	return new FirstAccumulator();
 }
-
 
 module.exports = {
 
@@ -41,37 +36,37 @@ module.exports = {
 
 		},
 
-		"#evaluate()": {
+		"#processInternal()": {
 
-			"The accumulator evaluates no documents": function none() {
+			"The accumulator has no value": function none() {
 				// The accumulator returns no value in this case.
 				var acc = createAccumulator();
 				assert.ok(!acc.getValue());
 			},
 
-			"The accumulator evaluates one document and retains its value": function one() {
+			"The accumulator uses processInternal on one input and retains its value": function one() {
 				var acc = createAccumulator();
-				acc.evaluate({a:5});
+				acc.processInternal(5);
 				assert.strictEqual(acc.getValue(), 5);
 			},
 
-			"The accumulator evaluates one document with the field missing retains undefined": function missing() {
+			"The accumulator uses processInternal on one input with the field missing and retains undefined": function missing() {
 				var acc = createAccumulator();
-				acc.evaluate({});
+				acc.processInternal();
 				assert.strictEqual(acc.getValue(), undefined);
 			},
 
-			"The accumulator evaluates two documents and retains the value in the first": function two() {
+			"The accumulator uses processInternal on two inputs and retains the value in the first": function two() {
 				var acc = createAccumulator();
-				acc.evaluate({a:5});
-				acc.evaluate({a:7});
+				acc.processInternal(5);
+				acc.processInternal(7);
 				assert.strictEqual(acc.getValue(), 5);
 			},
 
-			"The accumulator evaluates two documents and retains the undefined value in the first": function firstMissing() {
+			"The accumulator uses processInternal on two inputs and retains the undefined value in the first": function firstMissing() {
 				var acc = createAccumulator();
-				acc.evaluate({});
-				acc.evaluate({a:7});
+				acc.processInternal();
+				acc.processInternal(7);
 				assert.strictEqual(acc.getValue(), undefined);
 			}
 		}

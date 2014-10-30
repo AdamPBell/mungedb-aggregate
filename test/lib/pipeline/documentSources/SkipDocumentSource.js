@@ -1,5 +1,9 @@
 "use strict";
 var assert = require("assert"),
+	async = require("async"),
+	Cursor = require("../../../../lib/Cursor"),
+	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
+	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	SkipDocumentSource = require("../../../../lib/pipeline/documentSources/SkipDocumentSource");
 
 
@@ -20,8 +24,8 @@ module.exports = {
 		"#getSourceName()": {
 
 			"should return the correct source name; $skip": function testSourceName(){
-				var lds = new SkipDocumentSource();
-				assert.strictEqual(lds.getSourceName(), "$skip");
+				var sds = new SkipDocumentSource();
+				assert.strictEqual(sds.getSourceName(), "$skip");
 			}
 
 		},
@@ -29,113 +33,124 @@ module.exports = {
 		"#coalesce()": {
 
 			"should return false if nextSource is not $skip": function dontSkip(){
-				var lds = new SkipDocumentSource();
-				assert.equal(lds.coalesce({}), false);
+				var sds = new SkipDocumentSource();
+				assert.equal(sds.coalesce({}), false);
 			},
 			"should return true if nextSource is $skip": function changeSkip(){
-				var lds = new SkipDocumentSource();
-				assert.equal(lds.coalesce(new SkipDocumentSource()), true);
+				var sds = new SkipDocumentSource();
+				assert.equal(sds.coalesce(new SkipDocumentSource()), true);
 			}
 
 		},
 
-		"#eof()": {
+		"#getNext()": {
 
-			"should return true if there are no more sources": function noSources(){
-				var lds = new SkipDocumentSource();
-				lds.skip = 9;
-				lds.count = 0;
-				lds.source = {
-					eof: function(){
-						return true;
-					}
-				};
-				assert.equal(lds.eof(), true);
+			"should throw an error if no callback is given": function() {
+				var sds = new SkipDocumentSource();
+				assert.throws(sds.getNext.bind(sds));
 			},
-			"should return false if skip count is not hit and there are more documents": function hitSkip(){
-				var lds = new SkipDocumentSource();
-				lds.skip = 10;
-				lds.count = 9;
-				
-				var i = 1;
-				lds.source = {
-					getCurrent:function(){return { item:i };},
-					eof: function(){return false;},
-					advance: function(){i++; return true;}
-				};
-				assert.equal(lds.eof(), false);
-			}
 
-		},
+			"should return EOF if there are no more sources": function noSources(next){
+				var sds = new SkipDocumentSource();
+				sds.skip = 3;
+				sds.count = 0;
 
-		"#getCurrent()": {
+				var expected = [
+					{val:4},
+					DocumentSource.EOF
+				];
+
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var input = [
+					{val:1},
+					{val:2},
+					{val:3},
+					{val:4},
+				];
+				cwc._cursor = new Cursor( input );
+				var cds = new CursorDocumentSource(cwc);
+				sds.setSource(cds);
+
+				async.series([
+						sds.getNext.bind(sds),
+						sds.getNext.bind(sds),
+					],
+					function(err,res) {
+						assert.deepEqual(expected, res);
+						next();
+					}
+				);
+				sds.getNext(function(err, actual) {
+					assert.equal(actual, DocumentSource.EOF);
+				});
+			},
+			"should return documents if skip count is not hit and there are more documents": function hitSkip(next){
+				var sds = SkipDocumentSource.createFromJson(1);
+
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var input = [{val:1},{val:2},{val:3}];
+				cwc._cursor = new Cursor( input );
+				var cds = new CursorDocumentSource(cwc);
+				sds.setSource(cds);
+
+				sds.getNext(function(err,actual) {
+					assert.notEqual(actual, DocumentSource.EOF);
+					assert.deepEqual(actual, {val:2});
+					next();
+				});
+			},
 
 			"should return the current document source": function currSource(){
-				var lds = new SkipDocumentSource();
-				lds.skip = 1;
-				
-				var i = 0;
-				lds.source = {
-					getCurrent:function(){return { item:i };},
-					eof: function(){return false;},
-					advance: function(){i++; return true;}
+				var sds = SkipDocumentSource.createFromJson(1);
+
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var input = [{val:1},{val:2},{val:3}];
+				cwc._cursor = new Cursor( input );
+				var cds = new CursorDocumentSource(cwc);
+				sds.setSource(cds);
+
+				sds.getNext(function(err, actual) {
+					assert.deepEqual(actual, { val:2 });
+				});
+			},
+
+			"should return false if we hit our limit": function noMoar(next){
+				var sds = new SkipDocumentSource();
+				sds.skip = 3;
+
+				var expected = [
+					{item:4},
+					DocumentSource.EOF
+				];
+
+				var i = 1;
+				sds.source = {
+					getNext:function(cb){
+						if (i>=5)
+							return cb(null,DocumentSource.EOF);
+						return cb(null, { item:i++ });
+					}
 				};
-				assert.deepEqual(lds.getCurrent(), { item:1 });
+
+				async.series([
+						sds.getNext.bind(sds),
+						sds.getNext.bind(sds),
+					],
+					function(err,res) {
+						assert.deepEqual(expected, res);
+						next();
+					}
+				);
 			}
 
 		},
 
-		"#advance()": {
-
-			"should return true for moving to the next source": function nextSource(){
-				var lds = new SkipDocumentSource();
-				lds.skip = 1;
-				
-				var i = 0;
-				lds.source = {
-					getCurrent:function(){return { item:i };},
-					eof: function(){return false;},
-					advance: function(){i++; return true;}
-				};
-				assert.strictEqual(lds.advance(), true);
-			},
-
-			"should return false for no sources remaining": function noMoar(){
-				var lds = new SkipDocumentSource();
-				lds.skip = 1;
-				
-				var i = 0;
-				lds.source = {
-					getCurrent:function(){return { item:i };},
-					eof: function(){return true;},
-					advance: function(){return false;}
-				};
-				assert.strictEqual(lds.advance(), false);
-			},
-
-			"should return false if we hit our limit": function noMoar(){
-				var lds = new SkipDocumentSource();
-				lds.skip = 3;
-				
-				var i = 0;
-				lds.source = {
-					getCurrent:function(){return { item:i };},
-					eof: function(){return i>=5;},
-					advance: function(){i++; return i<5;}
-				};
-				assert.strictEqual(lds.advance(), true);
-				assert.strictEqual(lds.advance(), false);
-			}
-
-		},
-
-		"#sourceToJson()": {
+		"#serialize()": {
 
 			"should create an object with a key $skip and the value equal to the skip": function sourceToJsonTest(){
-				var lds = new SkipDocumentSource();
-				lds.skip = 9;
-				var t = {};
-				lds.sourceToJson(t, false);
+				var sds = new SkipDocumentSource();
+				sds.skip = 9;
+				var t = sds.serialize(false);
 				assert.deepEqual(t, { "$skip": 9 });
 			}
 

@@ -26,15 +26,7 @@ module.exports = {
 
 		},
 
-		"#getFactory()": {
-
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new YearExpression().getFactory(), undefined);
-			}
-
-		},
-
-		"#evaluate()": {
+		"#evaluateInternal()": {
 
 			"should return year; 2013 for 2013-02-18": function testStuff(){
 				assert.strictEqual(Expression.parseOperand({$year:"$someDate"}).evaluate({someDate:new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")}), 2013);

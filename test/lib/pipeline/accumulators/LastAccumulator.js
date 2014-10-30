@@ -1,13 +1,9 @@
 "use strict";
 var assert = require("assert"),
-	LastAccumulator = require("../../../../lib/pipeline/accumulators/LastAccumulator"),
-	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression");
-
+	LastAccumulator = require("../../../../lib/pipeline/accumulators/LastAccumulator");
 
 function createAccumulator(){
-	var lastAccumulator = new LastAccumulator();
-	lastAccumulator.addOperand(new FieldPathExpression("b") );
-	return lastAccumulator;
+	return new LastAccumulator();
 }
 
 
@@ -33,7 +29,7 @@ module.exports = {
 
 		},
 
-		"#evaluate()": {
+		"#processInternal()": {
 
 			"should evaluate no documents": function testStuff(){
 				var lastAccumulator = createAccumulator();
@@ -43,7 +39,7 @@ module.exports = {
 
 			"should evaluate one document and retains its value": function testStuff(){
 				var lastAccumulator = createAccumulator();
-				lastAccumulator.evaluate({b:5});
+				lastAccumulator.processInternal(5);
 				assert.strictEqual(lastAccumulator.getValue(), 5);
 
 			},
@@ -51,23 +47,23 @@ module.exports = {
 
 			"should evaluate one document with the field missing retains undefined": function testStuff(){
 				var lastAccumulator = createAccumulator();
-				lastAccumulator.evaluate({});
+				lastAccumulator.processInternal();
 				assert.strictEqual(lastAccumulator.getValue(), undefined);
 			},
 
 
 			"should evaluate two documents and retains the value in the last": function testStuff(){
 				var lastAccumulator = createAccumulator();
-				lastAccumulator.evaluate({b:5});
-				lastAccumulator.evaluate({b:7});
+				lastAccumulator.processInternal(5);
+				lastAccumulator.processInternal(7);
 				assert.strictEqual(lastAccumulator.getValue(), 7);
 			},
 
 
 			"should evaluate two documents and retains the undefined value in the last": function testStuff(){
 				var lastAccumulator = createAccumulator();
-				lastAccumulator.evaluate({b:5});
-				lastAccumulator.evaluate({});
+				lastAccumulator.processInternal(5);
+				lastAccumulator.processInternal();
 				assert.strictEqual(lastAccumulator.getValue(), undefined);
 			}
 		}

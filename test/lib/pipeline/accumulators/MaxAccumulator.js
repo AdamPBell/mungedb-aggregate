@@ -1,13 +1,9 @@
 "use strict";
 var assert = require("assert"),
-	MaxAccumulator = require("../../../../lib/pipeline/accumulators/MinMaxAccumulator"),
-	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression");
-
+	MaxAccumulator = require("../../../../lib/pipeline/accumulators/MinMaxAccumulator");
 
 function createAccumulator(){
-	var maxAccumulator = MaxAccumulator.createMax();
-	maxAccumulator.addOperand(new FieldPathExpression("a") );
-	return maxAccumulator;
+	return MaxAccumulator.createMax();
 }
 
 
@@ -40,7 +36,7 @@ module.exports = {
 
 		},
 
-		"#evaluate()": {
+		"#processInternal()": {
 
 			"The accumulator evaluates no documents": function none() {
 				// The accumulator returns no value in this case.
@@ -50,27 +46,27 @@ module.exports = {
 
 			"The accumulator evaluates one document and retains its value": function one() {
 				var acc = createAccumulator();
-				acc.evaluate({a:5});
+				acc.processInternal(5);
 				assert.strictEqual(acc.getValue(), 5);
 			},
 
 			"The accumulator evaluates one document with the field missing retains undefined": function missing() {
 				var acc = createAccumulator();
-				acc.evaluate({});
+				acc.processInternal();
 				assert.strictEqual(acc.getValue(), undefined);
 			},
 
 			"The accumulator evaluates two documents and retains the maximum": function two() {
 				var acc = createAccumulator();
-				acc.evaluate({a:5});
-				acc.evaluate({a:7});
+				acc.processInternal(5);
+				acc.processInternal(7);
 				assert.strictEqual(acc.getValue(), 7);
 			},
 
 			"The accumulator evaluates two documents and retains the defined value in the first": function lastMissing() {
 				var acc = createAccumulator();
-				acc.evaluate({a:7});
-				acc.evaluate({});
+				acc.processInternal(7);
+				acc.processInternal();
 				assert.strictEqual(acc.getValue(), 7);
 			}
 		}
