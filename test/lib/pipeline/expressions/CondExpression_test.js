@@ -39,12 +39,12 @@ module.exports = {
 				"should fail if there aren't enough arguments": function() {
 					assert.throws(function(){
 						Expression.parseOperand({$cond:[1,2]}, {});
-					})
+					});
 				},
 				"should fail if there are too many arguments": function() {
 					assert.throws(function(){
 						Expression.parseOperand({$cond:[1, 2, 3, 4]}, {});
-					})
+					});
 				},
 				"should evaluate boolean expression as true, then return 1; [ true === true, 1, 0 ]": function () {
 					assert.strictEqual(Expression.parseOperand({$cond: [ true, 1, 0 ]}, {}).evaluateInternal({}), 1);
@@ -56,17 +56,17 @@ module.exports = {
 				"should fail when the 'if' position is empty": function(){
 					assert.throws(function(){
 						Expression.parseOperand({$cond:[undefined, 2, 3]}, {});
-					})
+					});
 				},
 				"should fail when the 'then' position is empty": function(){
 					assert.throws(function(){
 						Expression.parseOperand({$cond:[1, undefined, 3]}, {});
-					})
+					});
 				},
 				"should fail when the 'else' position is empty": function(){
 					assert.throws(function(){
 						Expression.parseOperand({$cond:[1, 2, undefined]}, {});
-					})
+					});
 				}
 			},
 
