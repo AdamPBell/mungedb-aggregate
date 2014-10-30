@@ -1,6 +1,10 @@
 "use strict";
 var assert = require("assert"),
 	AddExpression = require("../../../../lib/pipeline/expressions/AddExpression"),
+	Expression = require("../../../../lib/pipeline/expressions/Expression"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
+	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
 	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression");
 
 
@@ -92,10 +96,11 @@ module.exports = {
 					var v = 123.234;
 					this.expectedResult(v, v);
 				},
-				"should pass through a single date": function () {
-					var v = new Date();
-					this.expectedResult(v, v);
-				}
+//NOTE: DEVIATION FROM MONGO: We don't support dates
+//				"should pass through a single date": function () {
+//					var v = new Date();
+//					this.expectedResult(v, v);
+//				}
 			},
 
 			"TwoOperand": {
@@ -139,20 +144,38 @@ module.exports = {
 					this.compareBothWays([1.1, 2.2, 3.3], 6.6);
 				},
 
-				"should add an int and a date and get a date": function () {
-					var d = new Date();
-					this.compareBothWays([d, 10], d.getTime() + 10);
-				},
+//NOTE: DEVIATION FROM MONGO: We don't support dates
+//				"should add an int and a date and get a date": function () {
+//					var d = new Date();
+//					this.compareBothWays([d, 10], d.getTime() + 10);
+//				},
 
-				"We can't add 2 dates": function () {
-					assert(function () {
-						this.compareBothWays([new Date(), new Date()], 0);
-					});
-				}
+//NOTE: DEVIATION FROM MONGO: We don't support dates
+//				"We can't add 2 dates": function () {
+//					var d = new Date();
+//					this.compareBothWays([d, d], 0);
+//				}
+			}
+		},
+		"optimize": {
+			beforeEach: function(){
+			this.vps = new VariablesParseState(new VariablesIdGenerator());
+			},
+			"should understand a single number": function() {
+				var a = Expression.parseOperand({$add:[123]}, this.vps).optimize();
+				assert.equal(a.operands.length, 0, "The operands should have been optimized away");
+				assert(a instanceof ConstantExpression);
+				assert.equal(a.evaluateInternal(), 123);
+			},
+			"should optimize strings of numbers without regard to their order": function() {
+				var a = Expression.parseOperand({$add:[1,2,3,'$a',4,5,6]}, this.vps).optimize();
+				assert.equal(a.operands.length, 2, "The operands should have been optimized away");
+				assert(a.operands[0] instanceof FieldPathExpression);
+				assert(a.operands[1] instanceof ConstantExpression);
+				assert(a.operands[1].evaluateInternal(), 1+2+3+4+5+6);
 			}
 		}
 	}
-
 };
 
 if (!module.parent)(new (require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
