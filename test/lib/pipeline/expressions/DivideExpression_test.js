@@ -1,6 +1,8 @@
 "use strict";
 var assert = require("assert"),
 	DivideExpression = require("../../../../lib/pipeline/expressions/DivideExpression"),
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
 // Mocha one-liner to make these tests self-hosted
@@ -33,11 +35,12 @@ exports.DivideExpression = {
 
 	"#evaluate()": {
 
-		"should return the size": function() {
-			var spec = {$divide: ["$a", "$b"]},
-				vars = {a: 6, b: 2},
-				expected = 3;
-			assert.strictEqual(Expression.parseOperand(spec).evaluate(vars), expected);
+		"should divide two numbers": function() {
+			var idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand({$divide: ["$a", "$b"]}, vps),
+				input = {a: 6, b: 2};
+			assert.strictEqual(expr.evaluate(input), 3);
 		},
 
 	},
