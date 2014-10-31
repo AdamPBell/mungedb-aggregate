@@ -104,7 +104,7 @@ module.exports = {
 					expected = false,
 					msg = errMsg("$setEquals", input, expr.serialize(false), expected, result);
 				assert.equal(result, expected, msg);
-			},
+			}
 
 		}
 
