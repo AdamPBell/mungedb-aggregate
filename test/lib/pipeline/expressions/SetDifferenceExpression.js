@@ -90,7 +90,7 @@ module.exports = {
 					expected = [1, 3, 4],
 					msg = errMsg("$setDifference", input, expr.serialize(false), expected, result);
 				assert.deepEqual(result, expected, msg);
-			},
+			}
 
 		}
 
