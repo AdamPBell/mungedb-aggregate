@@ -57,6 +57,6 @@ module.exports = {
 			assert.equal(md.elemMatchKey(), key);
 		}
 	}
-}
+};
 
 if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
