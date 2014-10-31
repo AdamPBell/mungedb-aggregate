@@ -84,13 +84,13 @@ module.exports = {
 			orOp.add(sub2);
 
 			details.requestElemMatchKey();
-			assert.ok(!orOp.matchesBSON({"a":[10], 'b':[10]}, details));
+			assert.ok(!orOp.matchesJSON({"a":[10], 'b':[10]}, details));
 			assert.ok(!details.hasElemMatchKey());
 
-			assert.ok(orOp.matchesBSON({"a":[1], "b":[1, 2]}, details));
+			assert.ok(orOp.matchesJSON({"a":[1], "b":[1, 2]}, details));
 			assert.ok(!details.hasElemMatchKey());
-		
-			
+
+
 		}
 
 
