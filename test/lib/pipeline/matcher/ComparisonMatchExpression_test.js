@@ -80,14 +80,14 @@ exports.ComparisonMatchExpression = {
 		assert.ok(!e.matches({'a':[4]}),'{a:[4]} !≥ {a.b:null}');
 		assert.ok(!e.matches({'a':[{'b':4}]}),'{a:[{b:4}]} !≥ {a.b:null}');
 	},
-	"something something minkeys": function() {
+	"should match MinKeys": function() {
 		var e = new ComparisonMatchExpression('GTE');
 		assert.strictEqual(e.init('a',new MinKey()).code,'OK');
 		assert.ok(e.matches({'a':new MinKey()}),'minKey ≥ minKey');
 		assert.ok(e.matches({'a':new MaxKey()}),'maxKey ≥ minKey');
 		assert.ok(e.matches({'a':4}),'4 ≥ minKey');
 	},
-	"something something maxkeys": function() {
+	"should match MaxKeys": function() {
 		var e = new ComparisonMatchExpression('GTE');
 		assert.strictEqual(e.init('a',new MaxKey()).code,'OK');
 		assert.ok(e.matches({'a':new MaxKey()}),'maxKey ≥ maxKey');
