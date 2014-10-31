@@ -78,14 +78,14 @@ module.exports = {
 		},
 
 		'Should match and preserve elemMatchKey.': function () {
-			var e = new TypeMatchExpression()
+			var e = new TypeMatchExpression(),
 				m = new MatchDetails();
 
 			m.requestElemMatchKey();
 
 			assert.strictEqual(e.init('a.b', 2).code, 'OK');
 			
-			assert.ok(!e.matches({'a':1}, m));
+			assert.ok(!e.matches({a: 1}, m));
 			assert.ok(!m.hasElemMatchKey());
 			
 			assert.ok(e.matches({a: {b: 'string'}}, m));
@@ -97,21 +97,22 @@ module.exports = {
 
 			assert.ok(e.matches({a: [2, {b: ['string']}]}, m));
 			assert.ok(m.hasElemMatchKey());
+
 			assert.strictEqual('1', m.elemMatchKey());
 		},
 
 		'Should be equivalent.': function() {
-			var e = new TypeMatchExpression(),
-				b = new TypeMatchExpression();
+			var a = new TypeMatchExpression(),
+				b = new TypeMatchExpression(),
 				c = new TypeMatchExpression();
 
-			assert.strictEqual(e.init('a', 2).code, 'OK');
+			assert.strictEqual(a.init('a', 2).code, 'OK');
 			assert.strictEqual(b.init('a', 1).code, 'OK');
 			assert.strictEqual(c.init('b', 2).code, 'OK');
 
-			assert.ok(e.equivalent(e));
-			assert.ok(!e.equivalent(b));
-			assert.ok(!e.equivalent(c));
+			assert.ok(a.equivalent(a));
+			assert.ok(!a.equivalent(b));
+			assert.ok(!a.equivalent(c));
 		}
 	}
 };
