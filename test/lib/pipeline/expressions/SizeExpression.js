@@ -22,7 +22,7 @@ exports.SizeExpression = {
 			assert.throws(function() {
 				new SizeExpression("bad stuff");
 			});
-		},
+		}
 
 	},
 
@@ -37,7 +37,7 @@ exports.SizeExpression = {
 					b: [{c:3}]
 				};
 			assert.strictEqual(expr.evaluate(input), 2);
-		},
+		}
 
 	},
 
@@ -45,8 +45,8 @@ exports.SizeExpression = {
 
 		"should return the correct op name; $size": function testOpName() {
 			assert.equal(new SizeExpression().getOpName(), "$size");
-		},
+		}
 
-	},
+	}
 
 };
