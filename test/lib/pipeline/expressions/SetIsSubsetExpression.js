@@ -105,7 +105,7 @@ module.exports = {
 					expected = false,
 					msg = errMsg("$setIsSubset", input, expr.serialize(false), expected, result);
 				assert.equal(result, expected, msg);
-			},
+			}
 
 		}
 
