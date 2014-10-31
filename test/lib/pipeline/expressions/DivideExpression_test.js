@@ -21,15 +21,14 @@ exports.DivideExpression = {
 			assert.throws(function() {
 				new DivideExpression("bad stuff");
 			});
-		},
-
+		}
 	},
 
 	"#getOpName()": {
 
 		"should return the correct op name; $size": function() {
 			assert.equal(new DivideExpression().getOpName(), "$divide");
-		},
+		}
 
 	},
 
@@ -41,8 +40,8 @@ exports.DivideExpression = {
 				expr = Expression.parseOperand({$divide: ["$a", "$b"]}, vps),
 				input = {a: 6, b: 2};
 			assert.strictEqual(expr.evaluate(input), 3);
-		},
+		}
 
-	},
+	}
 
 };
