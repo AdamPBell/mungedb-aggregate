@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 var assert = require("assert"),
 	MatchDetails = require("../../../../lib/pipeline/matcher/MatchDetails.js"),
@@ -64,23 +64,23 @@ module.exports = {
 
 		"WithinCenter - mongo Geo function, not porting": function() {},
 
-        "ElemMatchKey": function() {
-        	var query = {"a.b":1},
-        		m = new Matcher2(query),
-        		md = new MatchDetails();
-        	md.requestElemMatchKey();
-        	assert.ok(!md.hasElemMatchKey());
-        	assert.ok(m.matches({"a":[{"b":1}]}, md));
-        	assert.ok(md.hasElemMatchKey());
-        	assert.equal("0", md.elemMatchKey());
-        },
+		"ElemMatchKey": function() {
+			var query = {"a.b":1},
+				m = new Matcher2(query),
+				md = new MatchDetails();
+			md.requestElemMatchKey();
+			assert.ok(!md.hasElemMatchKey());
+			assert.ok(m.matches({"a":[{"b":1}]}, md));
+			assert.ok(md.hasElemMatchKey());
+			assert.equal("0", md.elemMatchKey());
+		},
 
-        "WhereSimple1 - mongo MapReduce function, not available ": function() {
-        },
+		"WhereSimple1 - mongo MapReduce function, not available ": function() {
+		},
 
-        "AllTiming - mongo benchmarking function, not available": function() {
-        }
-	}
-}
+		"AllTiming - mongo benchmarking function, not available": function() {
+		}
+		}
+};
 
 if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
