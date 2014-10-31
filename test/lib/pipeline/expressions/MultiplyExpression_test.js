@@ -14,6 +14,12 @@ module.exports = {
 				assert.doesNotThrow(function(){
 					new MultiplyExpression();
 				});
+			},
+
+			"should throw Error when constructing with args": function testConstructor(){
+				assert.throws(function(){
+					new MultiplyExpression(1);
+				});
 			}
 
 		},
