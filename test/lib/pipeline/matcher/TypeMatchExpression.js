@@ -100,7 +100,7 @@ module.exports = {
 			assert.strictEqual('1', m.elemMatchKey());
 		},
 
-		'Should be equivalent': function() {
+		'Should be equivalent.': function() {
 			var e = new TypeMatchExpression(),
 				b = new TypeMatchExpression();
 				c = new TypeMatchExpression();
