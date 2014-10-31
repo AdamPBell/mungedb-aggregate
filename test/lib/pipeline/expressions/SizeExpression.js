@@ -2,6 +2,8 @@
 
 var assert = require("assert"),
 	SizeExpression = require("../../../../lib/pipeline/expressions/SizeExpression"),
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
 // Mocha one-liner to make these tests self-hosted
@@ -27,14 +29,14 @@ exports.SizeExpression = {
 	"#evaluate()": {
 
 		"should return the size": function testSize() {
-			assert.deepEqual(
-				Expression.parseOperand({$size: ["$a"]})
-					.evaluate({
-						a: [{a:1},{b:2}],
-						b: [{c:3}]
-					}),
-				[{a:1},{b:2}]
-			);
+			var idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand({$size: ["$a"]}, vps),
+				input = {
+					a: [{a:1},{b:2}],
+					b: [{c:3}]
+				};
+			assert.strictEqual(expr.evaluate(input), 2);
 		},
 
 	},
