@@ -27,7 +27,8 @@
     "alteration"
   ],
   "dependencies": {
-    "async": "*"
+    "async": "*",
+    "xregexp": "*"
   },
   "devDependencies": {
     "mocha": "*",
