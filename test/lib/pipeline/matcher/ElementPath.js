@@ -5,9 +5,6 @@ var assert = require("assert"),
 module.exports = {
 	"ElementPath": {
 		
-		//skipped since ElementPath does not implement _matches anymore
-		
-		/*
 		"Should find the item at the path": function() {
 			var p = new ElementPath(),
 				doc = {"x":4, "a":5},
@@ -140,8 +137,6 @@ module.exports = {
 			};
 			p._matches(doc, null, checker);
 		}
-	*/
-
 	}
 };
 
