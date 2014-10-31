@@ -12,7 +12,9 @@
     "Kyle P Davis <KDavis@riverainc.com>",
     "Phil Murray <PMurray@riverainc.com>",
     "Spencer Rathbun <SRathbun@riverainc.com>",
-    "Tony Ennis <TEnnis@riverainc.com>"
+    "Tony Ennis <TEnnis@riverainc.com>",
+    "Scott Munday <SMunday@riverainc.com>",
+    "David Aebersold <DAebersold@riverainc.com>"
   ],
   "main": "./mungedb-aggregate.js",
   "scripts": {
