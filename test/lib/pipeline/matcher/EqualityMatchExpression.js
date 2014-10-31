@@ -66,7 +66,7 @@ module.exports = {
 		"should match null" : function() {
 			var e = new EqualityMatchExpression();
 			var s = e.init('a',null);
-		
+
 			assert.strictEqual(s.code, 'OK');
 			assert.ok( e.matches({}) );
 			assert.ok( e.matches({'a':null}) );
@@ -78,7 +78,7 @@ module.exports = {
 		"should match nested nulls" : function(){
 			var e = new EqualityMatchExpression();
 			var s = e.init('a.b',null);
-		
+
 			assert.strictEqual(s.code, 'OK');
 			// null matches any empty object that is on a subpath of a.b
 			assert.ok( e.matches({}) );
@@ -93,7 +93,6 @@ module.exports = {
 			assert.ok( !e.matches({'a':{'b':4}} ) );
 			assert.ok( !e.matches({'a':{'b':{}}} ) );
 			// A non-existent field is treated same way as an empty bson object
-			debugger;
 			assert.ok( e.matches({'b':4} ) );
 		},
 		"should match MinKey" : function(){
@@ -110,7 +109,7 @@ module.exports = {
 			assert.ok( !e.matches({'a': MinKey}) );
 			assert.ok( !e.matches({'a':4}) );
 		},
-		
+
 		"should match full array" : function() {
 			var e = new EqualityMatchExpression();
 			var s = e.init('a',[1,2]);
@@ -151,7 +150,7 @@ module.exports = {
 			var a = new EqualityMatchExpression();
 			var b = new EqualityMatchExpression();
 			var c = new EqualityMatchExpression();
-			
+
 
 			assert.strictEqual( a.init('a',5).code, 'OK' );
 			assert.strictEqual( b.init('a',5).code, 'OK' );
