@@ -9,16 +9,16 @@ module.exports = {
 		"should match an element": function (){
 			var e = new ExistsMatchExpression();
 			var s = e.init('a');
-			
+
 			assert.strictEqual(s.code, 'OK');
 			assert.ok( e.matches({'a':5}) );
 			assert.ok( e.matches({'a':null}) );
-			assert.ok( ! e.matches({'a':{}}) );	
+			assert.ok( ! e.matches({'a':{}}) );
 		},
 		"should match a boolean":function() {
 			var e = new ExistsMatchExpression();
 			var s = e.init('a');
-			
+
 			assert.strictEqual( s.code, 'OK' );
 			assert.ok( e.matches({'a':5}) );
 			assert.ok( ! e.matches({}) );
@@ -27,7 +27,7 @@ module.exports = {
 		"should match a number":function() {
 			var e = new ExistsMatchExpression();
 			var s = e.init('a');
-			
+
 			assert.strictEqual( s.code, 'OK' );
 			assert.ok( e.matches({'a':1}) );
 			assert.ok( e.matches({'a':null}) );
@@ -36,9 +36,9 @@ module.exports = {
 		"should match an array":function() {
 			var e = new ExistsMatchExpression();
 			var s = e.init('a');
-			
+
 			assert.strictEqual( s.code, 'OK' );
-			assert.ok( e.matches({'a':[4,5.5]}) );	
+			assert.ok( e.matches({'a':[4,5.5]}) );
 		},
 		"should yield an elemMatchKey":function() {
 			var e = new ExistsMatchExpression();
@@ -49,7 +49,7 @@ module.exports = {
 
 			assert.ok( ! e.matches({'a':1}, m) );
 			assert.ok( ! m.hasElemMatchKey() );
-			
+
 			assert.ok( e.matches({'a':{'b':6}}));
 			assert.ok( ! m.hasElemMatchKey() );
 
