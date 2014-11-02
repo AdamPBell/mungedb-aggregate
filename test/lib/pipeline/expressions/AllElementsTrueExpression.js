@@ -1,9 +1,19 @@
 "use strict";
 var assert = require("assert"),
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	AllElementsTrueExpression = require("../../../../lib/pipeline/expressions/AllElementsTrueExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
 var allElementsTrueExpression = new AllElementsTrueExpression();
+
+function errMsg(expr, args, tree, expected, result) {
+	return 	"for expression " + expr +
+			" with argument " + args +
+			" full tree: " + JSON.stringify(tree) +
+			" expected: " + expected +
+			" result: " + result;
+}
 
 module.exports = {
 
@@ -11,8 +21,8 @@ module.exports = {
 
 		"constructor()": {
 
-			"should not throw Error when constructing without args": function testConstructor() {
-				assert.doesNotThrow(function() {
+			"should not throw Error when constructing without args": function testConstructor(){
+				assert.doesNotThrow(function(){
 					new AllElementsTrueExpression();
 				});
 			}
@@ -21,46 +31,100 @@ module.exports = {
 
 		"#getOpName()": {
 
-			"should return the correct op name; $allElements": function testOpName() {
+			"should return the correct op name; $allElements": function testOpName(){
 				assert.equal(new AllElementsTrueExpression().getOpName(), "$allElementsTrue");
 			}
 
 		},
 
-		"#evaluateInternal()": {
+		"integration": {
 
-			"should return error if parameter is empty:": function testEmpty() {
+			"JustFalse": function JustFalse(){
+				var idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					input = [[false]],
+				 	expr = Expression.parseExpression("$allElementsTrue", input),
+					result = expr.evaluate({}),
+					expected = false,
+					msg = errMsg("$allElementsTrue", input, expr.serialize(false), expected, result);
+				assert.equal(result, expected, msg);
+			},
+
+			"JustTrue": function JustTrue(){
+				var idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					input = [[true]],
+					expr = Expression.parseExpression("$allElementsTrue", input),
+					result = expr.evaluate({}),
+					expected = true,
+					msg = errMsg("$allElementsTrue", input, expr.serialize(false), expected, result);
+				assert.equal(result, expected, msg);
+			},
+
+			"OneTrueOneFalse": function OneTrueOneFalse(){
+				var idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					input = [[true, false]],
+					expr = Expression.parseExpression("$allElementsTrue", input),
+					result = expr.evaluate({}),
+					expected = false,
+					msg = errMsg("$allElementsTrue", input, expr.serialize(false), expected, result);
+				assert.equal(result, expected, msg);
+			},
+
+			"OneFalseOneTrue": function OneTrueOneFalse(){
+				var idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					input = [[false, true]],
+					expr = Expression.parseExpression("$allElementsTrue", input),
+					result = expr.evaluate({}),
+					expected = false,
+					msg = errMsg("$allElementsTrue", input, expr.serialize(false), expected, result);
+				assert.equal(result, expected, msg);
+			},
+
+			"Empty": function Empty(){
+				var idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					input = [[]],
+					expr = Expression.parseExpression("$allElementsTrue", input),
+					result = expr.evaluate({}),
+					expected = false,
+					msg = errMsg("$allElementsTrue", input, expr.serialize(false), expected, result);
+				assert.equal(result, expected, msg);
+			},
+
+			"TrueViaInt": function TrueViaInt(){
+				var idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					input = [[1]],
+					expr = Expression.parseExpression("$allElementsTrue", input),
+					result = expr.evaluate({}),
+					expected = true,
+					msg = errMsg("$allElementsTrue", input, expr.serialize(false), expected, result);
+				assert.equal(result, expected, msg);
+			},
+
+			"FalseViaInt": function FalseViaInt(){
+				var idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					input = [[0]],
+					expr = Expression.parseExpression("$allElementsTrue", input),
+					result = expr.evaluate({}),
+					expected = false,
+					msg = errMsg("$allElementsTrue", input, expr.serialize(false), expected, result);
+				assert.equal(result, expected, msg);
+			},
+
+			"Null": function FalseViaInt(){
+				var idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					input = [null],
+					expr = Expression.parseExpression("$allElementsTrue", input);
 				assert.throws(function() {
-					allElementsTrueExpression.evaluateInternal("asdf");
+					var result = expr.evaluate({});
 				});
-			},
-
-			"should return error if parameter is not an array": function testNonArray() {
-				assert.throws(function() {
-					allElementsTrueExpression.evaluateInternal("This is not an array");
-				});
-			},
-
-			"should return false if first element is false; [false, true, true true]": function testFirstFalse() {
-				assert.equal(allElementsTrueExpression.evaluateInternal(
-					Expression.parseOperand({
-						$allElementsTrue: [false, true, true, true]
-					}).evaluate()), false);
-			},
-
-			"should return false if last element is false; [true, true, true, false]": function testLastFalse() {
-				assert.equal(allElementsTrueExpression.evaluateInternal(
-					Expression.parseOperand({
-						$allElementsTrue: [true, true, true, false]
-					}).evaluate()), false);
-			},
-
-			"should return true if all elements are true; [true,true,true,true]": function testAllTrue() {
-				assert.equal(allElementsTrueExpression.evaluateInternal(
-					Expression.parseOperand({
-						$allElementsTrue: [true, true, true, true]
-					}).evaluate()), true);
-			},
+			}
 
 		}
 
