@@ -33,7 +33,8 @@
     "mocha": "*",
     "jshint": "*",
     "jscoverage": "*",
-    "jscheckstyle": "*"
+    "jscheckstyle": "*",
+    "bson": "0.2.15"
   },
   "license": "AGPL",
   "private": true,
