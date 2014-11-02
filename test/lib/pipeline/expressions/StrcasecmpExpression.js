@@ -64,7 +64,7 @@ exports.StrcasecmpExpression = {
 
 	"#evaluate()": {
 
-		"should return 'ab' == 'AB' (w/ null begin)": function NullBegin() {
+		"should return '_ab' == '_AB' (w/ null begin)": function NullBegin() {
 			new ExpectedResultBase({
 				a: "\0ab",
 				b: "\0AB",
@@ -72,7 +72,7 @@ exports.StrcasecmpExpression = {
 			}).run();
 		},
 
-		"should return 'ab' == 'aB' (w/ null end)": function NullEnd() {
+		"should return 'ab_' == 'aB_' (w/ null end)": function NullEnd() {
 			new ExpectedResultBase({
 				a: "ab\0",
 				b: "aB\0",
@@ -80,7 +80,7 @@ exports.StrcasecmpExpression = {
 			}).run();
 		},
 
-		"should return 'aa' < 'aB' (w/ null middle)": function NullMiddleLt() {
+		"should return 'a_a' < 'a_B' (w/ null middle)": function NullMiddleLt() {
 			new ExpectedResultBase({
 				a: "a\0a",
 				b: "a\0B",
@@ -88,7 +88,7 @@ exports.StrcasecmpExpression = {
 			}).run();
 		},
 
-		"should return 'ab' == 'aB' (w/ null middle)": function NullMiddleEq() {
+		"should return 'a_b' == 'a_B' (w/ null middle)": function NullMiddleEq() {
 			new ExpectedResultBase({
 				a: "a\0b",
 				b: "a\0B",
@@ -96,7 +96,7 @@ exports.StrcasecmpExpression = {
 			}).run();
 		},
 
-		"should return 'ac' > 'aB' (w/ null middle)": function NullMiddleGt() {
+		"should return 'a_c' > 'a_B' (w/ null middle)": function NullMiddleGt() {
 			new ExpectedResultBase({
 				a: "a\0c",
 				b: "a\0B",
