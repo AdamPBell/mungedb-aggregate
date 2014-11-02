@@ -1,60 +1,109 @@
 "use strict";
 var assert = require("assert"),
 	StrcasecmpExpression = require("../../../../lib/pipeline/expressions/StrcasecmpExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression");
+	Expression = require("../../../../lib/pipeline/expressions/Expression"),
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	utils = require("./utils"),
+	constify = utils.constify,
+	expressionToJson = utils.expressionToJson;
 
+var TestBase = function TestBase(overrides) {
+		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
+		for (var key in overrides)
+			this[key] = overrides[key];
+	},
+	ExpectedResultBase = (function() {
+		var klass = function ExpectedResultBase() {
+			base.apply(this, arguments);
+		}, base = TestBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.run = function(){
+			this.assertResult(this.expectedResult, this.spec());
+			this.assertResult(-this.expectedResult, this.reverseSpec());
+		};
+		proto.spec = function() { return {$strcasecmp:[this.a, this.b]}; };
+		proto.reverseSpec = function() { return {$strcasecmp:[this.b, this.a]}; };
+		proto.assertResult = function(expectedResult, spec) {
+			var specElement = spec,
+				idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expression = Expression.parseOperand(specElement, vps);
+			assert.deepEqual(constify(spec), expressionToJson(expression));
+			assert.equal(expectedResult, expression.evaluate({}));
+		};
+		return klass;
+	})();
 
-module.exports = {
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-	"StrcasecmpExpression": {
+exports.StrcasecmpExpression = {
 
-		"constructor()": {
+	"constructor()": {
 
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new StrcasecmpExpression();
-				});
-			}
-
+		"should construct instance": function() {
+			assert(new StrcasecmpExpression() instanceof StrcasecmpExpression);
+			assert(new StrcasecmpExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $strcasecmp": function testOpName(){
-				assert.equal(new StrcasecmpExpression().getOpName(), "$strcasecmp");
-			}
-
+		"should error if given args": function() {
+			assert.throws(function() {
+				new StrcasecmpExpression("bad stuff");
+			});
 		},
 
-		"#getFactory()": {
+	},
 
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new StrcasecmpExpression().getFactory(), undefined);
-			}
+	"#getOpName()": {
 
+		"should return the correct op name; $strcasecmp": function(){
+			assert.equal(new StrcasecmpExpression().getOpName(), "$strcasecmp");
 		},
 
-		"#evaluateInternal()": {
+	},
 
-			"should return 0 if the strings are equivalent and begin with a null character": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$strcasecmp:["$a", "$b"]}).evaluateInternal({a:"\0ab", b:"\0AB"}), 0);
-			},
-			"should return 0 if the strings are equivalent and end with a null character": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$strcasecmp:["$a", "$b"]}).evaluateInternal({a:"ab\0", b:"AB\0"}), 0);
-			},
-			"should return -1 if the left hand side is less than the right hand side and both contain a null character": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$strcasecmp:["$a", "$b"]}).evaluateInternal({a:"a\0a", b:"A\0B"}), -1);
-			},
-			"should return 0 if the strings are equivalent and both contain a null character": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$strcasecmp:["$a", "$b"]}).evaluateInternal({a:"a\0b", b:"A\0B"}), 0);
-			},
-			"should return 1 if the left hand side is greater than the right hand side and both contain a null character": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$strcasecmp:["$a", "$b"]}).evaluateInternal({a:"a\0c", b:"A\0B"}), 1);
-			}
-		}
+	"#evaluate()": {
 
-	}
+		"should return 'ab' == 'AB' (w/ null begin)": function NullBegin() {
+			new ExpectedResultBase({
+				a: "\0ab",
+				b: "\0AB",
+				expectedResult: 0,
+			}).run();
+		},
+
+		"should return 'ab' == 'aB' (w/ null end)": function NullEnd() {
+			new ExpectedResultBase({
+				a: "ab\0",
+				b: "aB\0",
+				expectedResult: 0,
+			}).run();
+		},
+
+		"should return 'aa' < 'aB' (w/ null middle)": function NullMiddleLt() {
+			new ExpectedResultBase({
+				a: "a\0a",
+				b: "a\0B",
+				expectedResult: -1,
+			}).run();
+		},
+
+		"should return 'ab' == 'aB' (w/ null middle)": function NullMiddleEq() {
+			new ExpectedResultBase({
+				a: "a\0b",
+				b: "a\0B",
+				expectedResult: 0,
+			}).run();
+		},
+
+		"should return 'ac' > 'aB' (w/ null middle)": function NullMiddleGt() {
+			new ExpectedResultBase({
+				a: "a\0c",
+				b: "a\0B",
+				expectedResult: 1,
+			}).run();
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
