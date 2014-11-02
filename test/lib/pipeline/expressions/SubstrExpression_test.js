@@ -8,91 +8,102 @@ var assert = require("assert"),
 	constify = utils.constify,
 	expressionToJson = utils.expressionToJson;
 
-module.exports = {
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-	"SubstrExpression": {
+var TestBase = function TestBase(overrides) {
+		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
+		for (var key in overrides)
+			this[key] = overrides[key];
+	},
+	ExpectedResultBase = (function() {
+		var klass = function ExpectedResultBase() {
+			base.apply(this, arguments);
+		}, base = TestBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.run = function(){
+			var specElement = this.spec(),
+				idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand(specElement, vps);
+			assert.deepEqual(constify(specElement), expressionToJson(expr));
+			assert.deepEqual(this.expectedResult, expr.evaluate({}));
+		};
+		proto.spec = function() { return {$substr:[this.str, this.offset, this.length]}; };
+		return klass;
+	})();
 
-		"constructor()": {
+exports.SubstrExpression = {
 
-			"should not throw Error when constructing without args": function testConstructor() {
-				assert.doesNotThrow(function() {
-					new SubstrExpression();
-				});
-			}
+	"constructor()": {
 
+		"should construct instance": function() {
+			assert(new SubstrExpression() instanceof SubstrExpression);
+			assert(new SubstrExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $substr": function testOpName() {
-				assert.equal(new SubstrExpression().getOpName(), "$substr");
-			}
-
+		"should error if given args": function() {
+			assert.throws(function() {
+				new SubstrExpression("bad stuff");
+			});
 		},
 
-		"evaluate": {
+	},
 
-			"before": function before() {
-				this.run = function run() {
-					var idGenerator = new VariablesIdGenerator(),
-						vps = new VariablesParseState(idGenerator),
-						spec = this.spec(),
-						expectedResult = this.expectedResult,
-						expression = Expression.parseOperand(spec, vps);
-					assert.deepEqual(constify(spec), expressionToJson(expression));
-					assert.equal(expectedResult, expression.evaluate({}));
-				};
-				this.str = undefined;
-				this.offset = undefined;
-				this.length = undefined;
-				this.expectedResult = undefined;
-				this.spec = function spec() {return {$substr:[this.str, this.offset, this.length]}; };
-			},
+	"#getOpName()": {
 
-			"FullNull": function FullNull() {
-				this.str = "a\0b";
-				this.offset = 0;
-				this.length = 3;
-				this.expectedResult = this.str;
-				this.run();
-			},
+		"should return the correct op name; $substr": function() {
+			assert.equal(new SubstrExpression().getOpName(), "$substr");
+		},
 
-			"BeginAtNull": function BeginAtNull() {
-				this.str = "a\0b";
-				this.offset = 1;
-				this.length = 2;
-				this.expectedResult = "\0b";
-				this.run();
-			},
+	},
 
-			"EndAtNull": function EndAtNull() {
-				this.str = "a\0b";
-				this.offset = 0;
-				this.length = 2;
-				this.expectedResult = "a\0";
-				this.run();
-			},
+	"evaluate": {
 
-			"DropBeginningNull": function DropBeginningNull() {
-				this.str = "\0b";
-				this.offset = 1;
-				this.length = 1;
-				this.expectedResult = "b";
-				this.run();
-			},
+		"should return full string (if contains null)": function FullNull() {
+			new ExpectedResultBase({
+				str: "a\0b",
+				offset: 0,
+				length: 3,
+				get expectedResult(){ return this.str; },
+			}).run();
+		},
 
-			"DropEndingNull": function DropEndingNull() {
-				this.str = "a\0";
-				this.offset = 0;
-				this.length = 1;
-				this.expectedResult = "a";
-				this.run();
-			},
+		"should return tail of string (if begin at null)": function BeginAtNull() {
+			new ExpectedResultBase({
+				str: "a\0b",
+				offset: 1,
+				length: 2,
+				expectedResult: "\0b",
+			}).run();
+		},
 
+		"should return head of string (if end at null)": function EndAtNull() {
+			new ExpectedResultBase({
+				str: "a\0b",
+				offset: 0,
+				length: 2,
+				expectedResult: "a\0",
+			}).run();
+		},
 
-		}
-	}
+		"should return tail of string (if head has null) ": function DropBeginningNull() {
+			new ExpectedResultBase({
+				str: "\0b",
+				offset: 1,
+				length: 1,
+				expectedResult: "b",
+			}).run();
+		},
+
+		"should return head of string (if tail has null)": function DropEndingNull() {
+			new ExpectedResultBase({
+				str: "a\0",
+				offset: 0,
+				length: 1,
+				expectedResult: "a",
+			}).run();
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
