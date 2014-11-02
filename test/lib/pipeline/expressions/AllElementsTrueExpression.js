@@ -87,7 +87,7 @@ exports.AllElementsTrueExpression = {
 					input: [[false]],
 					expected: {
 						$allElementsTrue: false,
-						// $anyElementsTrue: false,
+						// $anyElementTrue: false,
 					}
 				}
 			}).run();
@@ -99,7 +99,7 @@ exports.AllElementsTrueExpression = {
 					input: [[true]],
 					expected: {
 						$allElementsTrue: true,
-						// $anyElementsTrue: true,
+						// $anyElementTrue: true,
 					}
 				}
 			}).run();
@@ -111,7 +111,7 @@ exports.AllElementsTrueExpression = {
 					input: [[true, false]],
 					expected: {
 						$allElementsTrue: false,
-						// $anyElementsTrue: true,
+						// $anyElementTrue: true,
 					}
 				}
 			}).run();
@@ -123,7 +123,7 @@ exports.AllElementsTrueExpression = {
 					input: [[]],
 					expected: {
 						$allElementsTrue: true,
-						// $anyElementsTrue: false,
+						// $anyElementTrue: false,
 					}
 				}
 			}).run();
@@ -135,7 +135,7 @@ exports.AllElementsTrueExpression = {
 					input: [[1]],
 					expected: {
 						$allElementsTrue: true,
-						// $anyElementsTrue: true,
+						// $anyElementTrue: true,
 					}
 				}
 			}).run();
@@ -147,7 +147,7 @@ exports.AllElementsTrueExpression = {
 					input: [[0]],
 					expected: {
 						$allElementsTrue: false,
-						// $anyElementsTrue: false,
+						// $anyElementTrue: false,
 					}
 				}
 			}).run();
@@ -159,7 +159,7 @@ exports.AllElementsTrueExpression = {
 					input: [null],
 					error: [
 						"$allElementsTrue",
-						// "$anyElementsTrue",
+						// "$anyElementTrue",
 					]
 				}
 			}).run();
