@@ -3,53 +3,42 @@ var assert = require("assert"),
 	SecondExpression = require("../../../../lib/pipeline/expressions/SecondExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+exports.SecondExpression = {
 
-	"SecondExpression": {
+	"constructor()": {
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new SecondExpression();
-				});
-			}
-
+		"should create instance": function() {
+			assert(new SecondExpression() instanceof SecondExpression);
+			assert(new SecondExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $second": function testOpName(){
-				assert.equal(new SecondExpression().getOpName(), "$second");
-			}
-
+		"should error if given invalid args": function() {
+			assert.throws(function() {
+				new SecondExpression("bad stuff");
+			});
 		},
 
-		"#getFactory()": {
+	},
 
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new SecondExpression().getFactory(), undefined);
-			}
+	"#getOpName()": {
 
+		"should return the correct op name; $second": function() {
+			assert.equal(new SecondExpression().getOpName(), "$second");
 		},
 
-		"#evaluate()": {
+	},
 
-			"should return the current second in the date; 19 for 2013-02-18 11:24:19 EST": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$second:"$someDate"}).evaluate({someDate:new Date("2013-02-18T11:24:19.000Z")}), 19);
-			}
+	"#evaluate()": {
 
-				/*
-			"should return the leap second in the date; 60 for June 30, 2012 at 23:59:60 UTC": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$second:"$someDate"}).evaluate({someDate:new Date("June 30, 2012 at 23:59:60 UTC")}), 60);
-			}
+		"should return second; 53 for 2014-11-01T19:31:53.819Z": function() {
+			var operands = [new Date("2014-11-01T19:31:53.819Z")],
+				expr = Expression.parseExpression("$second", operands);
+			assert.strictEqual(expr.evaluate({}), 53);
+		},
 
-				*/
-		}
-
-	}
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
