@@ -3,40 +3,42 @@ var assert = require("assert"),
 	DayOfYearExpression = require("../../../../lib/pipeline/expressions/DayOfYearExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+exports.DayOfYearExpression = {
 
-	"DayOfYearExpression": {
+	"constructor()": {
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new DayOfYearExpression();
-				});
-			}
-
+		"should create instance": function() {
+			assert(new DayOfYearExpression() instanceof DayOfYearExpression);
+			assert(new DayOfYearExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $dayOfYear": function testOpName(){
-				assert.equal(new DayOfYearExpression().getOpName(), "$dayOfYear");
-			}
-
+		"should error if given invalid args": function() {
+			assert.throws(function() {
+				new DayOfYearExpression("bad stuff");
+			});
 		},
 
-		"#evaluate()": {
+	},
 
-			"should return day of year; 49 for 2013-02-18": function testStuff(){
-				var input = [new Date("2013-02-18T00:00:00.000Z")];
-				assert.strictEqual(Expression.parseExpression("$dayOfYear", input).evaluate({}), 49);
-			}
+	"#getOpName()": {
 
-		}
+		"should return the correct op name; $dayOfYear": function() {
+			assert.equal(new DayOfYearExpression().getOpName(), "$dayOfYear");
+		},
 
-	}
+	},
+
+	"#evaluate()": {
+
+		"should return day of year; 305 for 2014-11-01T19:31:53.819Z": function() {
+			var operands = [new Date("2014-11-01T19:31:53.819Z")],
+				expr = Expression.parseExpression("$dayOfYear", operands);
+			assert.strictEqual(expr.evaluate({}), 305);
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

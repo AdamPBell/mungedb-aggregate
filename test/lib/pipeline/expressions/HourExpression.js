@@ -3,40 +3,42 @@ var assert = require("assert"),
 	HourExpression = require("../../../../lib/pipeline/expressions/HourExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+exports.HourExpression = {
 
-	"HourExpression": {
+	"constructor()": {
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new HourExpression();
-				});
-			}
-
+		"should create instance": function() {
+			assert(new HourExpression() instanceof HourExpression);
+			assert(new HourExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $hour": function testOpName(){
-				assert.equal(new HourExpression().getOpName(), "$hour");
-			}
-
+		"should error if given invalid args": function() {
+			assert.throws(function() {
+				new HourExpression("bad stuff");
+			});
 		},
 
-		"#evaluate()": {
+	},
 
-			"should return hour; 15 for 2013-02-18 3:00pm": function testStuff(){
-				var input = [new Date("2013-02-18T15:00:00.000Z")];
-				assert.strictEqual(Expression.parseExpression("$hour", input).evaluate({}), 15);
-			}
+	"#getOpName()": {
 
-		}
+		"should return the correct op name; $hour": function() {
+			assert.equal(new HourExpression().getOpName(), "$hour");
+		},
 
-	}
+	},
+
+	"#evaluate()": {
+
+		"should return hour; 19 for 2014-11-01T19:31:53.819Z": function() {
+			var operands = [new Date("2014-11-01T19:31:53.819Z")],
+				expr = Expression.parseExpression("$hour", operands);
+			assert.strictEqual(expr.evaluate({}), 19);
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

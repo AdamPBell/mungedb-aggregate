@@ -3,39 +3,42 @@ var assert = require("assert"),
 	YearExpression = require("../../../../lib/pipeline/expressions/YearExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
-module.exports = {
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-	"YearExpression": {
+exports.YearExpression = {
 
-		"constructor()": {
+	"constructor()": {
 
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new YearExpression();
-				});
-			}
-
+		"should create instance": function() {
+			assert(new YearExpression() instanceof YearExpression);
+			assert(new YearExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $year": function testOpName(){
-				assert.equal(new YearExpression().getOpName(), "$year");
-			}
-
+		"should error if given invalid args": function() {
+			assert.throws(function() {
+				new YearExpression("bad stuff");
+			});
 		},
 
-		"#evaluateInternal()": {
+	},
 
-			"should return year; 2013 for 2013-02-18": function testStuff(){
-				var input = [new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")];
-				assert.strictEqual(Expression.parseExpression("$year", input).evaluate({}), 2013);
-			}
+	"#getOpName()": {
 
-		}
+		"should return the correct op name; $year": function() {
+			assert.equal(new YearExpression().getOpName(), "$year");
+		},
 
-	}
+	},
+
+	"#evaluate()": {
+
+		"should return year; 2014 for 2014-11-01T19:31:53.819Z": function() {
+			var operands = [new Date("2014-11-01T19:31:53.819Z")],
+				expr = Expression.parseExpression("$year", operands);
+			assert.strictEqual(expr.evaluate({}), 2014);
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

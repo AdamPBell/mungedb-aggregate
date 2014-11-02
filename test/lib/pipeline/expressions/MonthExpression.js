@@ -3,40 +3,42 @@ var assert = require("assert"),
 	MonthExpression = require("../../../../lib/pipeline/expressions/MonthExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+exports.MonthExpression = {
 
-	"MonthExpression": {
+	"constructor()": {
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new MonthExpression();
-				});
-			}
-
+		"should create instance": function() {
+			assert(new MonthExpression() instanceof MonthExpression);
+			assert(new MonthExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $month": function testOpName(){
-				assert.equal(new MonthExpression().getOpName(), "$month");
-			}
-
+		"should error if given invalid args": function() {
+			assert.throws(function() {
+				new MonthExpression("bad stuff");
+			});
 		},
 
-		"#evaluateInternal()": {
+	},
 
-			"should return month; 2 for 2013-02-18": function testStuff(){
-				var input = [new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")];
-				assert.strictEqual(Expression.parseExpression("$month", input).evaluate({}), 2);
-			}
+	"#getOpName()": {
 
-		}
+		"should return the correct op name; $month": function() {
+			assert.equal(new MonthExpression().getOpName(), "$month");
+		},
 
-	}
+	},
+
+	"#evaluate()": {
+
+		"should return month; 11 for 2014-11-01T19:31:53.819Z": function() {
+			var operands = [new Date("2014-11-01T19:31:53.819Z")],
+				expr = Expression.parseExpression("$month", operands);
+			assert.strictEqual(expr.evaluate({}), 11);
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

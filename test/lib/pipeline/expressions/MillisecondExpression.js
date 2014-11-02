@@ -3,50 +3,42 @@ var assert = require("assert"),
 	MillisecondExpression = require("../../../../lib/pipeline/expressions/MillisecondExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
-module.exports = {
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-	"MillisecondExpression": {
+exports.MillisecondExpression = {
 
-		"constructor()": {
+	"constructor()": {
 
-			"should not throw Error when constructing without args": function testConstructor() {
-				assert.doesNotThrow(function() {
-					new MillisecondExpression();
-				});
-			}
-
+		"should create instance": function() {
+			assert(new MillisecondExpression() instanceof MillisecondExpression);
+			assert(new MillisecondExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $millisecond": function testOpName(){
-				assert.equal(new MillisecondExpression().getOpName(), "$millisecond");
-			}
-
+		"should error if given invalid args": function() {
+			assert.throws(function() {
+				new MillisecondExpression("bad stuff");
+			});
 		},
 
-		"#evaluate()": {
+	},
 
-			"should return the current millisecond in the date; 456 for 2013-02-18 11:24:19 EST": function testStuff() {
-				var input = [new Date("2013-02-18T11:24:19.456Z")];
-				assert.strictEqual(Expression.parseExpression("$millisecond", input).evaluate({}), 456);
+	"#getOpName()": {
 
-				// assert.strictEqual(Expression.parseOperand({
-				// 						$millisecond: "$someDate"
-				// 				}).evaluate({
-				// 						someDate: new Date("2013-02-18T11:24:19.456Z")
-				// 				}), 456);
-				// 		}
-						/*
-			"should return the leap millisecond in the date; 60 for June 30, 2012 at 23:59:60 UTC": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$millisecond:"$someDate"}).evaluate({someDate:new Date("June 30, 2012 at 23:59:60 UTC")}), 60);
-			}
-				*/
-			}
-		}
+		"should return the correct op name; $millisecond": function() {
+			assert.equal(new MillisecondExpression().getOpName(), "$millisecond");
+		},
 
-	}
+	},
+
+	"#evaluate()": {
+
+		"should return millisecond; 819 for 2014-11-01T19:31:53.819Z": function() {
+			var operands = [new Date("2014-11-01T19:31:53.819Z")],
+				expr = Expression.parseExpression("$millisecond", operands);
+			assert.strictEqual(expr.evaluate({}), 819);
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

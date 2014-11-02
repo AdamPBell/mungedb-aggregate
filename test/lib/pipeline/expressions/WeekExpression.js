@@ -3,40 +3,42 @@ var assert = require("assert"),
 	WeekExpression = require("../../../../lib/pipeline/expressions/WeekExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+exports.WeekExpression = {
 
-	"WeekExpression": {
+	"constructor()": {
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new WeekExpression();
-				});
-			}
-
+		"should create instance": function() {
+			assert(new WeekExpression() instanceof WeekExpression);
+			assert(new WeekExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $week": function testOpName(){
-				assert.equal(new WeekExpression().getOpName(), "$week");
-			}
-
+		"should error if given invalid args": function() {
+			assert.throws(function() {
+				new WeekExpression("bad stuff");
+			});
 		},
 
-		"#evaluate()": {
+	},
 
-			"should return week; 7 for 2013-02-18 (zero-based index of next Sunday's week, per mongo 2.6.5)": function testStuff(){
-				var input = [new Date("Mon Feb 18 2013 00:00:00 GMT-0500 (EST)")];
-				assert.strictEqual(Expression.parseExpression("$week", input).evaluate({}), 7);
-			}
+	"#getOpName()": {
 
-		}
+		"should return the correct op name; $week": function() {
+			assert.equal(new WeekExpression().getOpName(), "$week");
+		},
 
-	}
+	},
+
+	"#evaluate()": {
+
+		"should return week; 7 for 2014-11-01T19:31:53.819Z": function() {
+			var operands = [new Date("2014-11-01T19:31:53.819Z")],
+				expr = Expression.parseExpression("$week", operands);
+			assert.strictEqual(expr.evaluate({}), 43);
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
