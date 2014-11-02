@@ -8,87 +8,102 @@ var assert = require("assert"),
 	constify = utils.constify,
 	expressionToJson = utils.expressionToJson;
 
-module.exports = {
+var TestBase = function TestBase(overrides) {
+		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
+		for (var key in overrides)
+			this[key] = overrides[key];
+	},
+	ExpectedResultBase = (function() {
+		var klass = function ExpectedResultBase() {
+			base.apply(this, arguments);
+		}, base = TestBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.run = function(){
+			this.assertResult(this.expectedResult, this.spec());
+			this.assertResult(-this.expectedResult, this.reverseSpec());
+		};
+		proto.spec = function() { return {$strcasecmp:[this.a, this.b]}; };
+		proto.reverseSpec = function() { return {$strcasecmp:[this.b, this.a]}; };
+		proto.assertResult = function(expectedResult, spec) {
+			var specElement = spec,
+				idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expression = Expression.parseOperand(specElement, vps);
+			assert.deepEqual(constify(spec), expressionToJson(expression));
+			assert.equal(expectedResult, expression.evaluate({}));
+		};
+		return klass;
+	})();
 
-	"StrcasecmpExpression": {
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-		"constructor()": {
+exports.StrcasecmpExpression = {
 
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new StrcasecmpExpression();
-				});
-			}
+	"constructor()": {
 
+		"should construct instance": function() {
+			assert(new StrcasecmpExpression() instanceof StrcasecmpExpression);
+			assert(new StrcasecmpExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $strcasecmp": function testOpName(){
-				assert.equal(new StrcasecmpExpression().getOpName(), "$strcasecmp");
-			}
-
+		"should error if given args": function() {
+			assert.throws(function() {
+				new StrcasecmpExpression("bad stuff");
+			});
 		},
 
-		"evaluate": {
+	},
 
-			"before": function before() {
-				this.run = function run() {
-					this.assertResult(this.expectedResult, this.spec());
-					this.assertResult(-this.expectedResult, this.reverseSpec());
-				};
-				this.a = undefined;
-				this.b = undefined;
-				this.expectedResult = undefined;
-				this.spec = function spec() {return {$strcasecmp:[this.a, this.b]}; };
-				this.reverseSpec = function reverseSpec() {return {$strcasecmp:[this.b, this.a]}; };
-				this.assertResult = function assertResult(expectedResult, spec) {
-					var idGenerator = new VariablesIdGenerator(),
-						vps = new VariablesParseState(idGenerator),
-						expression = Expression.parseOperand(spec, vps);
-					assert.deepEqual(constify(spec), expressionToJson(expression));
-					assert.equal(expectedResult, expression.evaluate({}));
-				};
-			},
+	"#getOpName()": {
 
-			"NullBegin": function NullBegin() {
-				this.a = "\0ab";
-				this.b = "\0AB";
-				this.expectedResult = 0;
-				this.run();
-			},
+		"should return the correct op name; $strcasecmp": function(){
+			assert.equal(new StrcasecmpExpression().getOpName(), "$strcasecmp");
+		},
 
-			"NullEnd": function NullEnd() {
-				this.a = "ab\0";
-				this.b = "AB\0";
-				this.expectedResult = 0;
-				this.run();
-			},
+	},
 
-			"NullMiddleLt": function NullMiddleLt() {
-				this.a = "a\0a";
-				this.b = "A\0B";
-				this.expectedResult = -1;
-				this.run();
-			},
+	"#evaluate()": {
 
-			"NullMiddleEq": function NullMiddleEq() {
-				this.a = "a\0b";
-				this.b = "a\0B";
-				this.expectedResult = 0;
-				this.run();
-			},
+		"should return 'ab' == 'AB' (w/ null begin)": function NullBegin() {
+			new ExpectedResultBase({
+				a: "\0ab",
+				b: "\0AB",
+				expectedResult: 0,
+			}).run();
+		},
 
-			"NullMiddleGt": function NullMiddleGt() {
-				this.a = "a\0c";
-				this.b = "a\0B";
-				this.expectedResult = 1;
-				this.run();
-			}
-		}
+		"should return 'ab' == 'aB' (w/ null end)": function NullEnd() {
+			new ExpectedResultBase({
+				a: "ab\0",
+				b: "aB\0",
+				expectedResult: 0,
+			}).run();
+		},
 
-	}
+		"should return 'aa' < 'aB' (w/ null middle)": function NullMiddleLt() {
+			new ExpectedResultBase({
+				a: "a\0a",
+				b: "a\0B",
+				expectedResult: -1,
+			}).run();
+		},
+
+		"should return 'ab' == 'aB' (w/ null middle)": function NullMiddleEq() {
+			new ExpectedResultBase({
+				a: "a\0b",
+				b: "a\0B",
+				expectedResult: 0,
+			}).run();
+		},
+
+		"should return 'ac' > 'aB' (w/ null middle)": function NullMiddleGt() {
+			new ExpectedResultBase({
+				a: "a\0c",
+				b: "a\0B",
+				expectedResult: 1,
+			}).run();
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
