@@ -73,7 +73,7 @@ exports.AllElementsTrueExpression = {
 
 	"#getOpName()": {
 
-		"should return the correct op name; $allElements": function() {
+		"should return the correct op name; $allElementsTrue": function() {
 			assert.equal(new AllElementsTrueExpression().getOpName(), "$allElementsTrue");
 		},
 
