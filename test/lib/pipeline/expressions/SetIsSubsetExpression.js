@@ -122,6 +122,10 @@ module.exports = {
 
 			"should ignore dups in the source": function(){
 				this.compare([1,2,1], [1,2], true);
+			},
+
+			"should know the difference between a number and a string": function(){
+				this.compare([1], ["1"], true);
 			}
 
 		}
