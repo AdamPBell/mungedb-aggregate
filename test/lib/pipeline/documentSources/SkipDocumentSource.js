@@ -21,6 +21,15 @@ module.exports = {
 
 		},
 
+		'#create()': {
+			'should create a direct copy of a SkipDocumentSource created through the constructor': function () {
+				var sds1 = new SkipDocumentSource(),
+					sds2 = SkipDocumentSource.create();
+
+				assert.strictEqual(JSON.stringify(sds1), JSON.stringify(sds2));
+			}
+		},
+
 		"#getSourceName()": {
 
 			"should return the correct source name; $skip": function testSourceName(){
@@ -28,6 +37,24 @@ module.exports = {
 				assert.strictEqual(sds.getSourceName(), "$skip");
 			}
 
+		},
+
+		'#getSkip()': {
+			'should return the skips': function () {
+				var sds = new SkipDocumentSource();
+
+				assert.strictEqual(sds.getSkip(), 0);
+			}
+		},
+
+		'#setSkip()': {
+			'should return the skips': function () {
+				var sds = new SkipDocumentSource();
+
+				sds.setSkip(10);
+
+				assert.strictEqual(sds.getSkip(), 10);
+			}
 		},
 
 		"#coalesce()": {
@@ -164,9 +191,31 @@ module.exports = {
 				assert.strictEqual(t.skip, 5);
 			}
 
+		},
+
+		'#getDependencies()': {
+			'should return 1 (GET_NEXT)': function () {
+				var sds = new SkipDocumentSource();
+
+				assert.strictEqual(sds.getDependencies(), 1); // Hackish. We may be getting an enum in somewhere.
+			}
+		},
+
+		'#getShardSource()': {
+			'should return the instance of the SkipDocumentSource': function () {
+				var sds = new SkipDocumentSource();
+
+				assert.strictEqual(sds.getShardSource(), null);
+			}
+		},
+
+		'#getRouterSource()': {
+			'should return null': function () {
+				var sds = new SkipDocumentSource();
+
+				assert.strictEqual(sds.getRouterSource(), sds);
+			}
 		}
-
-
 	}
 
 };
