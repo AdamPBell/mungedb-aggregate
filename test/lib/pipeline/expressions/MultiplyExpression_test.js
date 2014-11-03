@@ -63,6 +63,14 @@ module.exports = {
 				});
 			},
 
+			"should handle a null operand": function(){
+				assert.strictEqual(Expression.parseOperand({$multiply: [2, null]}, this.vps).evaluate(), null);
+			},
+
+			"should handle an undefined operand": function(){
+				assert.strictEqual(Expression.parseOperand({$multiply: [2, undefined]}, this.vps).evaluate(), null);
+			},
+
 			"should multiply mixed numbers": function () {
 				assert.strictEqual(Expression.parseOperand({$multiply: [2.1, 3, 4.4]}, this.vps).evaluate(), 2.1 * 3 * 4.4);
 			},
