@@ -53,6 +53,11 @@ module.exports = {
 				var b = a.evaluate({a:null});
 				assert.equal(b, null);
 			},
+			"should return null if an operand evaluates to undefined; {$concat:[my,$a]}": function testNull(){
+				var a = Expression.parseOperand({$concat:["my","$a"]}, this.vps);
+				var b = a.evaluate({a:undefined});
+				assert.equal(b, null);
+			},
 			"should throw if an operand is a number": function testNull(){
 				assert.throws(function(){
 					Expression.parseOperand({$concat:["my","$a"]}, this.vps).evaluate({a:100});
