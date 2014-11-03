@@ -2,8 +2,9 @@
 var assert = require("assert"),
 	MatchDetails = require('../../../../lib/pipeline/matcher/MatchDetails'),
 	EqualityMatchExpression = require("../../../../lib/pipeline/matcher/EqualityMatchExpression"),
-	MinKey = new (function MinKey(){/*matcher does weird stuff with empty objects*/this.foo = 'bar';})(), //TODO: replace me with a real BSONType at some point
-	MaxKey = new (function MaxKey(){/*matcher does weird stuff with empty objects*/this.foo = 'bar';})(); //TODO: replace me with a real BSONType at some point
+	// TODO: replace the following with a real BSONTypes at some point
+	MinKey = new (function MinKey(){/*matcher does weird stuff with empty objects*/this.foo = 'bar';})(), // jshint ignore:line
+	MaxKey = new (function MaxKey(){/*matcher does weird stuff with empty objects*/this.foo = 'bar';})(); // jshint ignore:line
 
 
 module.exports = {
@@ -28,7 +29,7 @@ module.exports = {
 			var e = new EqualityMatchExpression();
 			var s = e.init('',{});
 
-			assert.ok(!(s.code === 'OK'));
+			assert.ok(s.code !== 'OK');
 		},
 		"should match a pathed number":function() {
 			var e = new EqualityMatchExpression();
@@ -84,7 +85,7 @@ module.exports = {
 			assert.ok( e.matches({}) );
 			assert.ok( e.matches({'a':{}}) );
 			assert.ok( e.matches({'a':[{}]}) );
-			
+
 			assert.ok( e.matches({'a':{'b':null}} ) );
 			// b does not exist as an element in array under a.
 			assert.ok( !e.matches({'a':[]}) );
