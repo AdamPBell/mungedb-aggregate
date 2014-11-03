@@ -96,12 +96,13 @@ module.exports = {
 
 			"Should work when both sets are empty": function() {
 				this.checkIntersectionBothWays([], [], []);
+			},
+
+			"Should return a null when an array is null": function() {
+				this.checkIntersectionBothWays(null, [1], null);
 			}
-
 		}
-
 	}
-
 };
 
 if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
