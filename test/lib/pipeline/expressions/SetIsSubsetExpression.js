@@ -1,8 +1,8 @@
 "use strict";
 var assert = require("assert"),
+	SetIsSubsetExpression = require("../../../../lib/pipeline/expressions/SetIsSubsetExpression"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
-	SetIsSubsetExpression = require("../../../../lib/pipeline/expressions/SetIsSubsetExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
 // Mocha one-liner to make these tests self-hosted
