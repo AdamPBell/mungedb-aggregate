@@ -44,6 +44,22 @@ module.exports = {
 
 		"#evaluateInternal()": {
 
+			beforeEach: function () {
+				this.compare = function (array1, array2, expected) {
+					var input = [array1, array2],
+						idGenerator = new VariablesIdGenerator(),
+						vps = new VariablesParseState(idGenerator),
+						expr = Expression.parseExpression("$setEquals", input, vps),
+						result = expr.evaluate({}),
+						msg = errMsg("$setEquals", input, expr.serialize(false), expected, result);
+					assert.equal(result, expected, msg);
+				};
+				this.compareBothWays = function(array1, array2, expected) {
+					this.compare(array1, array2, expected);
+					this.compare(array2, array1, expected);
+				}
+			},
+
 			"Should fail if array1 is not an array": function testArg1() {
 				var array1 = "not an array",
 					array2 = [6, 7, 8, 9],
@@ -81,29 +97,19 @@ module.exports = {
 			},
 
 			"Should pass and array1 should equal array2": function testBasicAssignment(){
-				var array1 = [1, 2, 3, 5, 4],
-					array2 = [1, 3, 2, 4, 5],
-					input = [array1,array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setEquals", input, vps),
-					result = expr.evaluate({}),
-					expected = true,
-					msg = errMsg("$setEquals", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
+				this.compareBothWays([1, 2, 3, 5, 4],[1, 3, 2, 4, 5], true);
 			},
 
 			"Should pass and array1 should not equal array2": function testBasicAssignment(){
-				var array1 = [1, 2, 3, 4],
-					array2 = [1, 3, 2, 4, 5],
-					input = [array1,array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setEquals", input, vps),
-					result = expr.evaluate({}),
-					expected = false,
-					msg = errMsg("$setEquals", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
+				this.compareBothWays([1, 2, 3, 4],[1, 3, 2, 4, 5], false);
+			},
+
+			"Should respect empty sets": function(){
+				this.compareBothWays([1],[], false);
+			},
+
+			"Should match empty sets": function(){
+				this.compareBothWays([],[], true);
 			}
 
 		}
