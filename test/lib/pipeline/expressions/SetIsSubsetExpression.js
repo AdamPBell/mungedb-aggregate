@@ -56,7 +56,6 @@ module.exports = {
 				});
 			},
 
-
 			"Should fail if array2 is not an array": function testArg2() {
 				var array1 = [1, 2, 3, 4],
 					array2 = "not an array",
