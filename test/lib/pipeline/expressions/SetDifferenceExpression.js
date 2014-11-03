@@ -43,8 +43,20 @@ module.exports = {
 
 		"#evaluateInternal()": {
 
+			beforeEach: function(){
+				this.compare = function(array1, array2, expected) {
+					var input = [array1,array2],
+						idGenerator = new VariablesIdGenerator(),
+						vps = new VariablesParseState(idGenerator),
+						expr = Expression.parseExpression("$setDifference", input, vps),
+						result = expr.evaluate({}),
+						msg = errMsg("$setDifference", input, expr.serialize(false), expected, result);
+					assert.deepEqual(JSON.stringify(result), JSON.stringify(expected), msg);
+				}
+			},
+
 			"Should fail if array1 is not an array": function testArg2() {
-				var array1 = "not and array",
+				var array1 = "not an array",
 					array2 = [1, 2, 3, 4],
 					input = [array1,array2],
 					idGenerator = new VariablesIdGenerator(),
@@ -80,16 +92,31 @@ module.exports = {
 			},
 
 			"Should pass and return difference between the arrays": function testBasicAssignment(){
-				var array1 = [1, 9, 2, 3, 4, 5],
-					array2 = [5, 6, 7, 2, 8, 9],
-					input = [array1,array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setDifference", input, vps),
-					result = expr.evaluate({}),
-					expected = [1, 3, 4],
-					msg = errMsg("$setDifference", input, expr.serialize(false), expected, result);
-				assert.deepEqual(result, expected, msg);
+				this.compare([1, 9, 2, 3, 4, 5], [5, 6, 7, 2, 8, 9], [1, 3, 4]);
+			},
+
+			"Should handle an empty array 1": function(){
+				this.compare([], [5, 6, 7, 2, 8, 9], []);
+			},
+
+			"should handle an empty array 2": function() {
+				this.compare([1, 2, 3, "4"], [], [1, 2, 3, "4"]);
+			},
+
+			"should know the difference between a string and a number": function(){
+				this.compare([1, 2], [1, "2"], [2]);
+			},
+
+			"should handle a null for Array1": function() {
+				this.compare(null, [], null);
+			},
+
+			"should handle a null for Array2": function() {
+				this.compare([], null, null);
+			},
+
+			"should handle duplicates in array1": function() {
+				this.compare([1,1], [], [1]);
 			}
 
 		}
