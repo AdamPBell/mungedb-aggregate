@@ -48,24 +48,10 @@ module.exports = {
 			"should return mystring if operands are my and $a; {$concat:[my,$a]}": function testFieldPath(){
 				assert.equal(Expression.parseOperand({$concat:["my","$a"]}, this.vps).evaluate({a:"string"}), "mystring");
 			},
-
-			//NOTE: DEVIATION FROM MONGO: I can't find the test cases for $concat.  The following test
-			// causes an exception as will any other non-string operand. I don't know the authority for
-			// defining the behavior.
-//			"should return null if an operand evaluates to null; {$concat:[my,$a]}": function testNull(){
-//				var a = Expression.parseOperand({$concat:["my","$a"]}, this.vps);
-//				var b = a.evaluate({a:null});
-//				assert.equal(b, null);
-//			},
-			"should throw if an operand is a null": function testNull(){
-				assert.throws(function(){
-					Expression.parseOperand({$concat:["my","$a"]}, this.vps).evaluate({a:null});
-				});
-			},
-			"should throw if an operand is a null (2)": function testNull(){
-				assert.throws(function(){
-					Expression.parseOperand({$concat:[null,"$a"]}, this.vps).evaluate({a:"hello"});
-				});
+			"should return null if an operand evaluates to null; {$concat:[my,$a]}": function testNull(){
+				var a = Expression.parseOperand({$concat:["my","$a"]}, this.vps);
+				var b = a.evaluate({a:null});
+				assert.equal(b, null);
 			},
 			"should throw if an operand is a number": function testNull(){
 				assert.throws(function(){
