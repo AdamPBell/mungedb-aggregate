@@ -44,6 +44,18 @@ module.exports = {
 
 		"#evaluateInternal()": {
 
+			beforeEach: function() {
+				this.compare = function(array1, array2, expected) {
+					var input = [array1, array2],
+						idGenerator = new VariablesIdGenerator(),
+						vps = new VariablesParseState(idGenerator),
+						expr = Expression.parseExpression("$setIsSubset", input, vps),
+						result = expr.evaluate({}),
+						msg = errMsg("$setIsSubset", input, expr.serialize(false), expected, result);
+					assert.equal(result, expected, msg);
+				}
+			},
+
 			"Should fail if array1 is not an array": function testArg1() {
 				var array1 = "not an array",
 					array2 = [6, 7, 8, 9],
@@ -80,30 +92,36 @@ module.exports = {
 				});
 			},
 
-			"Should pass and return a true": function testBasicAssignment(){
-				var array1 = [2,3],
-					array2 = [1, 2, 3, 4, 5],
-					input = [array1,array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setIsSubset", input, vps),
-					result = expr.evaluate({}),
-					expected = true,
-					msg = errMsg("$setIsSubset", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
+			"Should pass and return a true": function(){
+				this.compare([2, 3], [1, 2, 3, 4, 5], true);
 			},
 
-			"Should pass and return false": function testBasicAssignment() {
-				var array1 = [1, 2, 3, 4, 5],
-					array2 = [7, 8, 9],
-					input = [array1, array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setIsSubset", input, vps),
-					result = expr.evaluate({}),
-					expected = false,
-					msg = errMsg("$setIsSubset", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
+			"Should pass and return false": function() {
+				this.compare([1, 2, 3, 4, 5], [7, 8, 9], false);
+			},
+
+			"Should return false when the 1st array is not empty and the 2nd array is": function() {
+				this.compare([1, 2, 3, 4, 5], [], false);
+			},
+
+			"Should return true if an 1st array is empty and the 2nd is not": function () {
+				this.compare([],[1, 2, 3, 4, 5], true);
+			},
+
+			"Should return true if both are empty": function () {
+				this.compare([],[],true);
+			},
+
+			"should not consider a non-nested source array the same as a nested object array": function() {
+				this.compare([1], [[1]], false);
+			},
+
+			"should not consider a nested source the same as an unnested object array": function(){
+				this.compare([[1]], [1], false);
+			},
+
+			"should ignore dups in the source": function(){
+				this.compare([1,2,1], [1,2], true);
 			}
 
 		}
