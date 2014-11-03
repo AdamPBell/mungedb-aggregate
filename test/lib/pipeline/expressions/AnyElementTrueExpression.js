@@ -5,120 +5,166 @@ var assert = require("assert"),
 	AnyElementTrueExpression = require("../../../../lib/pipeline/expressions/AnyElementTrueExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
-var anyElementTrueExpression = new AnyElementTrueExpression();
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-function errMsg(expr, args, tree, expected, result) {
-	return 	"for expression " + expr +
-			" with argument " + args +
-			" full tree: " + JSON.stringify(tree) +
-			" expected: " + expected +
-			" result: " + result;
-}
-
-module.exports = {
-
-	"AnyElementTrueExpression": {
-
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new AnyElementTrueExpression();
-				});
+var ExpectedResultBase = (function() {
+	var klass = function ExpectedResultBase(overrides) {
+		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
+		for (var key in overrides)
+			this[key] = overrides[key];
+	}, proto = klass.prototype;
+	proto.run = function() {
+		var spec = this.getSpec,
+			args = spec.input;
+		if (spec.expected !== undefined && spec.expected !== null) {
+			var fields = spec.expected;
+			for (var fieldFirst in fields) {
+				var fieldSecond = fields[fieldFirst],
+					expected = fieldSecond;
+					// obj = {<fieldFirst>: args}; //NOTE: DEVIATION FROM MONGO: see parseExpression below
+				var idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					expr = Expression.parseExpression(fieldFirst, args, vps),
+					result = expr.evaluate({}),
+					errMsg = "for expression " + fieldFirst +
+							" with argument " + JSON.stringify(args) +
+							" full tree " + JSON.stringify(expr.serialize(false)) +
+							" expected: " + JSON.stringify(expected) +
+							" but got: " + JSON.stringify(result);
+				assert.deepEqual(result, expected, errMsg);
+				//TODO test optimize here
 			}
-
-		},
-
-		"#getOpName()": {
-
-			"should return the correct op name; $anyElement": function testOpName(){
-				assert.equal(new AnyElementTrueExpression().getOpName(), "$anyElementTrue");
-			}
-
-		},
-
-		"integration": {
-
-			"JustFalse": function JustFalse(){
-				var idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					input = [[false]],
-					expr = Expression.parseExpression("$anyElementTrue", input),
-					result = expr.evaluate({}),
-					expected = false,
-					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
-			},
-
-			"JustTrue": function JustTrue(){
-				var idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					input = [[true]],
-					expr = Expression.parseExpression("$anyElementTrue", input),
-					result = expr.evaluate({}),
-					expected = true,
-					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
-			},
-
-			"OneTrueOneFalse": function OneTrueOneFalse(){
-				var idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					input = [[true, false]],
-					expr = Expression.parseExpression("$anyElementTrue", input),
-					result = expr.evaluate({}),
-					expected = true,
-					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
-			},
-
-			"Empty": function Empty(){
-				var idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					input = [[]],
-					expr = Expression.parseExpression("$anyElementTrue", input),
-					result = expr.evaluate({}),
-					expected = false,
-					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
-			},
-
-			"TrueViaInt": function TrueViaInt(){
-				var idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					input = [[1]],
-					expr = Expression.parseExpression("$anyElementTrue", input),
-					result = expr.evaluate({}),
-					expected = true,
-					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
-			},
-
-			"FalseViaInt": function FalseViaInt(){
-				var idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					input = [[0]],
-					expr = Expression.parseExpression("$anyElementTrue", input),
-					result = expr.evaluate({}),
-					expected = false,
-					msg = errMsg("$anyElementTrue", input, expr.serialize(false), expected, result);
-				assert.equal(result, expected, msg);
-			},
-
-			"Null": function FalseViaInt(){
-				var idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					input = [null],
-					expr = Expression.parseExpression("$anyElementTrue", input);
-				assert.throws(function() {
-					var result = expr.evaluate({});
-				});
-			}
-
 		}
+		if (spec.error !== undefined && spec.error !== null) {
+			var asserters = spec.error,
+				n = asserters.length;
+			for (var i = 0; i < n; ++i) {
+				// var obj2 = {<asserters[i]>: args}; //NOTE: DEVIATION FROM MONGO: see parseExpression below
+				var idGenerator2 = new VariablesIdGenerator(),
+					vps2 = new VariablesParseState(idGenerator2);
+				assert.throws(function() {
+					// NOTE: parse and evaluatation failures are treated the same
+					expr = Expression.parseExpression(asserters[i], args, vps2);
+					expr.evaluate({});
+				}); // jshint ignore:line
+			}
+		}
+	};
+	return klass;
+})();
 
-	}
+exports.AnyElementTrueExpression = {
+
+	"constructor()": {
+
+		"should construct instance": function() {
+			assert(new AnyElementTrueExpression() instanceof AnyElementTrueExpression);
+			assert(new AnyElementTrueExpression() instanceof Expression);
+		},
+
+		"should error if given args": function() {
+			assert.throws(function() {
+				new AnyElementTrueExpression("bad stuff");
+			});
+		},
+
+	},
+
+	"#getOpName()": {
+
+		"should return the correct op name; $anyElementTrue": function() {
+			assert.equal(new AnyElementTrueExpression().getOpName(), "$anyElementTrue");
+		},
+
+	},
+
+	"#evaluate()": {
+
+		"should return false if just false": function JustFalse() {
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[false]],
+					expected: {
+						// $allElementsTrue: false,
+						$anyElementTrue: false,
+					}
+				}
+			}).run();
+		},
+
+		"should return true if just true": function JustTrue() {
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[true]],
+					expected: {
+						// $allElementsTrue: true,
+						$anyElementTrue: true,
+					}
+				}
+			}).run();
+		},
+
+		"should return false if one true and one false": function OneTrueOneFalse() {
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[true, false]],
+					expected: {
+						// $allElementsTrue: false,
+						$anyElementTrue: true,
+					}
+				}
+			}).run();
+		},
+
+		"should return true if empty": function Empty() {
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[]],
+					expected: {
+						// $allElementsTrue: true,
+						$anyElementTrue: false,
+					}
+				}
+			}).run();
+		},
+
+		"should return true if truthy int": function TrueViaInt() {
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1]],
+					expected: {
+						// $allElementsTrue: true,
+						$anyElementTrue: true,
+					}
+				}
+			}).run();
+		},
+
+		"should return false if falsy int": function FalseViaInt() {
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[0]],
+					expected: {
+						// $allElementsTrue: false,
+						$anyElementTrue: false,
+					}
+				}
+			}).run();
+		},
+
+		"should error if given null instead of array": function FalseViaInt() {
+			new ExpectedResultBase({
+				getSpec: {
+					input: [null],
+					error: [
+						// "$allElementsTrue",
+						"$anyElementTrue",
+					]
+				}
+			}).run();
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
