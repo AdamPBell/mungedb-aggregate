@@ -79,7 +79,7 @@ module.exports = {
 				});
 			},
 
-			"Should pass and return [1, 2, 3, 4, 5, 8, 9]": function testBasicAssignment(){
+			"Should pass and return [1, 2, 3, 4, 5, 8, 9]": function(){
 				var array1 = [1, 2, 3, 9, 8],
 					array2 = [1, 2, 3, 4, 5],
 					input = [array1,array2],
@@ -92,7 +92,7 @@ module.exports = {
 				assert.deepEqual(result, expected, msg);
 			},
 
-			"Should pass and return [1, 2, 3, 4, 5, 7]": function testBasicAssignment() {
+			"Should pass and return [1, 2, 3, 4, 5, 7]": function() {
 				var array1 = [2, 4],
 					array2 = [1, 2, 3, 4, 5],
 					array3 = [7, 2, 1],
@@ -107,7 +107,7 @@ module.exports = {
 				assert.deepEqual(result, expected, msg);
 			},
 
-			"Should pass and return [1, 2, 7]": function testBasicAssignment() {
+			"Should pass and return [1, 2, 7]": function() {
 				var array1 = [],
 					array2 = [],
 					array3 = [7, 2, 1],
@@ -120,7 +120,20 @@ module.exports = {
 					expected = [1, 2, 7],
 					msg = errMsg("$setUnion", input, expr.serialize(false), expected, result);
 				assert.deepEqual(result, expected, msg);
-			}
+			},
+
+			"Should recognize a null array and return null because of it": function(){
+				var array1 = [1, 2, 3, 9, 8],
+					array2 = null,
+					input = [array1,array2],
+					idGenerator = new VariablesIdGenerator(),
+					vps = new VariablesParseState(idGenerator),
+					expr = Expression.parseExpression("$setUnion", input, vps),
+					result = expr.evaluate({}),
+					expected = null,
+					msg = errMsg("$setUnion", input, expr.serialize(false), expected, result);
+				assert.deepEqual(result, expected, msg);
+			},
 
 		}
 
