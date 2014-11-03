@@ -95,6 +95,8 @@ module.exports = {
 			assert.ok( !e.matches({'a':{'b':{}}} ) );
 			// A non-existent field is treated same way as an empty bson object
 			assert.ok( e.matches({'b':4} ) );
+
+			assert.ok( e.matches({"b":"stuff"}) );
 		},
 		"should match MinKey" : function(){
 			var e = new EqualityMatchExpression();
@@ -126,7 +128,7 @@ module.exports = {
 			var s = e.init('a.b.c.d',3);
 
 			assert.strictEqual(s.code, 'OK');
-//			assert.ok( e.matches({a:{b:[{c:[{d:1},{d:2}]},{c:[{d:3}]}]}}) );
+			assert.ok( e.matches({a:{b:[{c:[{d:1},{d:2}]},{c:[{d:3}]}]}}) );
 		},
 		"should handle elemMatchKey":function() {
 			var e = new EqualityMatchExpression();
