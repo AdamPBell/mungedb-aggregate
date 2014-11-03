@@ -4,6 +4,7 @@ var assert = require("assert"),
 
 module.exports = {
 	"ElementPath": {
+		
 		"Should find the item at the path": function() {
 			var p = new ElementPath(),
 				doc = {"x":4, "a":5},
@@ -136,10 +137,7 @@ module.exports = {
 			};
 			p._matches(doc, null, checker);
 		}
-
-
 	}
 };
 
 if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
-
