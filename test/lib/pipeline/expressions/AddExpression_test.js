@@ -86,11 +86,11 @@ module.exports = {
 				},
 
 				"should pass through a single null": function nullSupport() {
-					this.expectedResult(null, 0);
+					this.expectedResult(null, null);
 				},
 
 				"should pass through a single undefined": function undefinedSupport() {
-					this.expectedResult(undefined, 0);
+					this.expectedResult(undefined, null);
 				},
 				"should pass through a single float": function () {
 					var v = 123.234;
@@ -129,11 +129,11 @@ module.exports = {
 				},
 
 				"should add a number and a null": function numberAndNull() {
-					this.compareBothWays([1, null], 1);
+					this.compareBothWays([1, null], null);
 				},
 
 				"should add a number and an undefined": function numberAndUndefined() {
-					this.compareBothWays([1, undefined], 1);
+					this.compareBothWays([1, undefined], null);
 				},
 
 				"should add several numbers": function () {
