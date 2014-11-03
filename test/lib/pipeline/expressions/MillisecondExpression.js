@@ -1,59 +1,44 @@
 "use strict";
 var assert = require("assert"),
-		MillisecondExpression = require("../../../../lib/pipeline/expressions/MillisecondExpression"),
-		Expression = require("../../../../lib/pipeline/expressions/Expression");
+	MillisecondExpression = require("../../../../lib/pipeline/expressions/MillisecondExpression"),
+	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+exports.MillisecondExpression = {
 
-		"MillisecondExpression": {
+	"constructor()": {
 
-				"constructor()": {
+		"should create instance": function() {
+			assert(new MillisecondExpression() instanceof MillisecondExpression);
+			assert(new MillisecondExpression() instanceof Expression);
+		},
 
-						"should not throw Error when constructing without args": function testConstructor() {
-								assert.doesNotThrow(function() {
-										new MillisecondExpression();
-								});
-						}
+		"should error if given invalid args": function() {
+			assert.throws(function() {
+				new MillisecondExpression("bad stuff");
+			});
+		},
 
-				},
+	},
 
-				"#getOpName()": {
+	"#getOpName()": {
 
-						"should return the correct op name; $millisecond": function testOpName() {
-								assert.equal(new MillisecondExpression().getOpName(), "$millisecond");
-						}
+		"should return the correct op name; $millisecond": function() {
+			assert.equal(new MillisecondExpression().getOpName(), "$millisecond");
+		},
 
-				},
+	},
 
-				"#getFactory()": {
+	"#evaluate()": {
 
-						"should return the constructor for this class": function factoryIsConstructor() {
-								assert.strictEqual(new MillisecondExpression().getFactory(), undefined);
-						}
+		"should return millisecond; 819 for 2014-11-01T19:31:53.819Z": function() {
+			var operands = [new Date("2014-11-01T19:31:53.819Z")],
+				expr = Expression.parseExpression("$millisecond", operands);
+			assert.strictEqual(expr.evaluate({}), 819);
+		},
 
-				},
-
-				"#evaluate()": {
-
-						"should return the current millisecond in the date; 19 for 2013-02-18 11:24:19 EST": function testStuff() {
-								assert.strictEqual(Expression.parseOperand({
-										$millisecond: "$someDate"
-								}).evaluate({
-										someDate: new Date("2013-02-18T11:24:19.456Z")
-								}), 456);
-						}
-
-						/*
-			"should return the leap millisecond in the date; 60 for June 30, 2012 at 23:59:60 UTC": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$millisecond:"$someDate"}).evaluate({someDate:new Date("June 30, 2012 at 23:59:60 UTC")}), 60);
-			}
-
-				*/
-				}
-
-		}
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
