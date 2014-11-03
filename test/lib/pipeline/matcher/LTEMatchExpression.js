@@ -43,7 +43,7 @@ module.exports = {
 			var s = e.init('a',[5]);
 
 			assert.strictEqual(s.code, 'OK');
-			assert.ok( ! e.matches({'a':[4]}) );
+			assert.ok(e.matches({'a':[4]}) );
 		},
 		"should not match null" : function() {
 			var e = new LTEMatchExpression();
