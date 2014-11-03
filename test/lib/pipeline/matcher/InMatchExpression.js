@@ -4,7 +4,7 @@ var assert = require("assert"),
 	InMatchExpression = require("../../../../lib/pipeline/matcher/InMatchExpression"),
 	// TODO: replace the following with a real BSONTypes at some point
 	MinKey = new (function MinKey(){/*matcher does weird stuff with empty objects*/this.foo = 'bar';})(), // jshint ignore:line
-	MaxKey = new (function MaxKey(){/*matcher does weird stuff with empty objects*/this.foo = 'bar';})(); // jshint ignore:line;
+	MaxKey = new (function MaxKey(){/*matcher does weird stuff with empty objects*/this.foo = 'bar';})(); // jshint ignore:line
 
 
 module.exports = {
@@ -13,11 +13,11 @@ module.exports = {
 			var e = new InMatchExpression();
 			var s = e.init('a');
 			assert.strictEqual( s.code,'OK' );
-			
+
 			e.getArrayFilterEntries().addEquality(1);
-			
-			assert.ok( e.matchesSingleElement(1) );	
-			assert.ok( ! e.matchesSingleElement(2) );			
+
+			assert.ok( e.matchesSingleElement(1) );
+			assert.ok( ! e.matchesSingleElement(2) );
 		},
 		"should not match with an empty array": function() {
 			var e = new InMatchExpression();
@@ -32,7 +32,7 @@ module.exports = {
 			var e = new InMatchExpression();
 			var s = e.init('a');
 			assert.strictEqual( s.code,'OK' );
-		
+
 			e.getArrayFilterEntries().addEquality(1);
 			e.getArrayFilterEntries().addEquality('r');
 			e.getArrayFilterEntries().addEquality(true);
@@ -47,9 +47,9 @@ module.exports = {
 			var e = new InMatchExpression();
 			var s = e.init('a');
 			assert.strictEqual( s.code,'OK' );
-		
+
 			e.getArrayFilterEntries().addEquality(5);
-			
+
 			assert.ok( e.matches({'a':5}) );
 			assert.ok( ! e.matches({'a':4}) );
 		},
@@ -59,7 +59,7 @@ module.exports = {
 			assert.strictEqual( s.code,'OK' );
 
 			e.getArrayFilterEntries().addEquality(5);
-			
+
 			assert.ok( e.matches({'a':[5,6]}) );
 			assert.ok( ! e.matches({'a':[6,7]}) );
 			assert.ok( ! e.matches({'a':[[5]]}) );
@@ -70,7 +70,7 @@ module.exports = {
 			assert.strictEqual( s.code,'OK' );
 
 			e.getArrayFilterEntries().addEquality(null);
-			
+
 			assert.ok( e.matches({}) );
 			assert.ok( e.matches({'a':null}) );
 			assert.ok( ! e.matches({'a':4}) );
@@ -81,7 +81,7 @@ module.exports = {
 			var e = new InMatchExpression();
 			var s = e.init('a');
 			assert.strictEqual( s.code,'OK' );
-			
+
 			assert( e.getArrayFilterEntries().addEquality(undefined) !== 'OK' );
 		},
 		"should match MinKey": function() {
@@ -95,7 +95,7 @@ module.exports = {
 			assert.ok( ! e.matches({'a':MaxKey}) );
 			assert.ok( ! e.matches({'a':4}) );
 		},
-		"should match MaxKey": function() {	
+		"should match MaxKey": function() {
 			var e = new InMatchExpression();
 			var s = e.init('a');
 			assert.strictEqual( s.code,'OK' );
@@ -126,7 +126,7 @@ module.exports = {
 			var m = new MatchDetails();
 
 			assert.strictEqual( s.code,'OK' );
-			
+
 			e.getArrayFilterEntries().addEquality(5);
 			e.getArrayFilterEntries().addEquality(2);
 			m.requestElemMatchKey();
@@ -137,7 +137,7 @@ module.exports = {
 			assert.ok( e.matches({'a':[1,2,5]}, m ));
 			assert.ok( m.hasElemMatchKey() );
 			assert.strictEqual( m.elemMatchKey(), '1' );
-		
+
 		}
 
 	}
