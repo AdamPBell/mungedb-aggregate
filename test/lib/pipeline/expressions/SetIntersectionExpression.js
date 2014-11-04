@@ -1,108 +1,325 @@
 "use strict";
 var assert = require("assert"),
-	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
-	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	SetIntersectionExpression = require("../../../../lib/pipeline/expressions/SetIntersectionExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression");
+	ExpectedResultBase = require("./SetExpectedResultBase");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-function errMsg(expr, args, tree, expected, result) {
-	return 	"for expression " + expr +
-		" with argument " + args +
-		" full tree: " + JSON.stringify(tree) +
-		" expected: " + expected +
-		" result: " + result;
-}
+exports.SetIntersectionExpression = {
 
-module.exports = {
+	"constructor()": {
 
-	"SetIntersectionExpression": {
-
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor() {
-				assert.doesNotThrow(function() {
-						new SetIntersectionExpression();
-				});
-			},
-
-			"should throw Error when constructing with args": function testConstructor() {
-				assert.throws(function() {
-						new SetIntersectionExpression("someArg");
-				});
-			}
-
+		"should not throw Error when constructing without args": function() {
+			assert.doesNotThrow(function() {
+				new SetIntersectionExpression();
+			});
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $setIntersection": function testOpName() {
-				assert.equal(new SetIntersectionExpression().getOpName(), "$setIntersection");
-			}
-
+		"should throw Error when constructing with args": function() {
+			assert.throws(function() {
+				new SetIntersectionExpression("someArg");
+			});
 		},
 
-		"#evaluateInternal()": {
+	},
 
-			beforeEach: function(){
-				this.vps = new VariablesParseState(new VariablesIdGenerator());
-				this.checkNotArray = function(array1, array2) {
-					var input = [array1,array2],
-						expr = Expression.parseExpression("$setIntersection", input, this.vps);
-					assert.throws(function() {
-						expr.evaluate({});
-					});
-				};
-				this.checkIntersection = function(array1, array2, expected) {
-					var input = [array1,array2],
-						expr = Expression.parseExpression("$setIntersection", input, this.vps),
-						result = expr.evaluate({}),
-						msg = errMsg("$setIntersection", input, expr.serialize(false), expected, result);
-					assert.deepEqual(result, expected, msg);
-				};
-				this.checkIntersectionBothWays = function(array1, array2, expected) {
-					this.checkIntersection(array1, array2, expected);
-					this.checkIntersection(array2, array1, expected);
-				};
-			},
+	"#getOpName()": {
 
-			"Should fail if array1 is not an array": function testArg1() {
-				this.checkNotArray("not an array", [6, 7, 8, 9]);
-			},
-
-			"Should fail if array2 is not an array": function testArg2() {
-				this.checkNotArray([1, 2, 3, 4], "not an array");
-			},
-
-			"Should fail if both are not an array": function testArg1andArg2() {
-				this.checkNotArray("not an array","not an array");
-			},
-
-			"Should pass and return [2, 3]": function testBasicAssignment(){
-				this.checkIntersectionBothWays([2,3], [1, 2, 3, 4, 5], [2, 3]);
-			},
-
-			"Should pass and return []": function() {
-				this.checkIntersectionBothWays([1, 2, 3, 4, 5], [7, 8, 9], []);
-			},
-
-			"Should handle when a set is empty": function() {
-				this.checkIntersectionBothWays([], [7, 8, 9], []);
-			},
-
-			"Should work when we touch the ends": function() {
-				this.checkIntersectionBothWays([7, 9], [7, 8, 9], [7, 9]);
-			},
-
-			"Should work when both sets are empty": function() {
-				this.checkIntersectionBothWays([], [], []);
-			},
-
-			"Should return a null when an array is null": function() {
-				this.checkIntersectionBothWays(null, [1], null);
-			}
+		"should return the correct op name; $setIntersection": function() {
+			assert.equal(new SetIntersectionExpression().getOpName(), "$setIntersection");
 		}
-	}
-};
 
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
+	},
+
+	"#evaluate()": {
+
+		"should handle when sets are the same": function Same(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [1, 2]],
+					expected: {
+						// $setIsSubset: true,
+						// $setEquals: true,
+						$setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 2nd set has redundant items": function Redundant(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [1, 2, 2]],
+					expected: {
+						// $setIsSubset: true,
+						// $setEquals: true,
+						$setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the both sets have redundant items": function DoubleRedundant(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 1, 2], [1, 2, 2]],
+					expected: {
+						// $setIsSubset: true,
+						// $setEquals: true,
+						$setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 1st set is a superset": function Super(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [1]],
+					expected: {
+						// $setIsSubset: false,
+						// $setEquals: false,
+						$setIntersection: [1],
+						// $setUnion: [1, 2],
+						// $setDifference: [2],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 2nd set is a superset and has redundant items": function SuperWithRedundant(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2, 2], [1]],
+					expected: {
+						// $setIsSubset: false,
+						// $setEquals: false,
+						$setIntersection: [1],
+						// $setUnion: [1, 2],
+						// $setDifference: [2],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 1st set is a subset": function Sub(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1], [1, 2]],
+					expected: {
+						// $setIsSubset: true,
+						// $setEquals: false,
+						$setIntersection: [1],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the sets are the same but backwards": function SameBackwards(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [2, 1]],
+					expected: {
+						// $setIsSubset: true,
+						// $setEquals: true,
+						$setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the sets do not overlap": function NoOverlap(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [8, 4]],
+					expected: {
+						// $setIsSubset: false,
+						// $setEquals: false,
+						$setIntersection: [],
+						// $setUnion: [1, 2, 4, 8],
+						// $setDifference: [1, 2],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the sets do overlap": function Overlap(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [8, 2, 4]],
+					expected: {
+						// $setIsSubset: false,
+						// $setEquals: false,
+						$setIntersection: [2],
+						// $setUnion: [1, 2, 4, 8],
+						// $setDifference: [1],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 2nd set is null": function LastNull(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], null],
+					expected: {
+						$setIntersection: null,
+						// $setUnion: null,
+						// $setDifference: null,
+					},
+					error: [
+						// "$setEquals"
+						// "$setIsSubset"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the 1st set is null": function FirstNull(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [null, [1, 2]],
+					expected: {
+						$setIntersection: null,
+						// $setUnion: null,
+						// $setDifference: null,
+					},
+					error: [
+						// "$setEquals"
+						// "$setIsSubset"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has no args": function NoArg(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [],
+					expected: {
+						$setIntersection: [],
+						// $setUnion: [],
+					},
+					error: [
+						// "$setEquals"
+						// "$setIsSubset"
+						// "$setDifference"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has one arg": function OneArg(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2]],
+					expected: {
+						$setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+					},
+					error: [
+						// "$setEquals"
+						// "$setIsSubset"
+						// "$setDifference"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has empty arg": function EmptyArg(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2]],
+					expected: {
+						$setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+					},
+					error: [
+						// "$setEquals"
+						// "$setIsSubset"
+						// "$setDifference"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has empty left arg": function LeftArgEmpty(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[]],
+					expected: {
+						$setIntersection: [],
+						// $setUnion: [],
+					},
+					error: [
+						// "$setEquals"
+						// "$setIsSubset"
+						// "$setDifference"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has empty right arg": function RightArgEmpty(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], []],
+					expected: {
+						$setIntersection: [],
+						// $setUnion: [1, 2],
+						// $setIsSubset: false,
+						// $setEquals: false,
+						// $setDifference: [1, 2],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the input has many args": function ManyArgs(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[8, 3], ["asdf", "foo"], [80.3, 34], [], [80.3, "foo", 11, "yay"]],
+					expected: {
+						$setIntersection: [],
+						// $setEquals: false,
+						// $setUnion: [3, 8, 11, 34, 80.3, "asdf", "foo", "yay"],
+					},
+					error: [
+						// "$setIsSubset",
+						// "$setDifference",
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has many args that are equal sets": function ManyArgsEqual(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2, 4], [1, 2, 2, 4], [4, 1, 2], [2, 1, 1, 4]],
+					expected: {
+						$setIntersection: [1, 2, 4],
+						// $setEquals: true,
+						// $setUnion: [1, 2, 4],
+					},
+					error: [
+						// "$setIsSubset",
+						// "$setDifference",
+					],
+				},
+			}).run();
+		},
+
+	},
+
+};
