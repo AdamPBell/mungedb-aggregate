@@ -154,8 +154,11 @@ module.exports = {
 					var x = Expression.parseOperand(
 						{$let: { vars: { total: { $add: [ '$price', '$tax' ] },	discounted: { $cond: { if: '$applyDiscount', then: 0.9, else: 1 } }}, in: { $multiply: [ '$$total', '$$discounted' ] }}},
 						this.vps).optimize();
-					var y = x.evaluate(new Variables(10, {price: 90, tax: .05}));
-					assert.equal(y, 100);
+					var y;
+					y = x.evaluate(new Variables(10, {price: 90, tax: .05}));
+					assert.equal(y, 90.05);
+					y = x.evaluate(new Variables(10, {price: 90, tax: .05, applyDiscount: 1}));
+					assert.equal(y, 90.05 * .9);
 				}
 			},
 		}
