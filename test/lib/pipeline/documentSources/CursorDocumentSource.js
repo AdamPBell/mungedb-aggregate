@@ -141,33 +141,6 @@ module.exports = {
 				cds.setProjection({a:1}, {a:true});
 				assert.deepEqual(cds._projection, {a:1});
 				assert.deepEqual(cds._dependencies, {a:true});
-			},
-
-			"should throw an error if projection is already set": function (){
-				var cds = getCursorDocumentSource();
-				cds.setProjection({a:1}, {});
-				assert.throws(function() {
-					cds.setProjection({a:1}, {});
-				});
-			},
-
-			"should project properly": function(next) {
-				var cds = getCursorDocumentSource([{a:1},{a:2,b:3},{c:4,d:5}]);
-				cds.setProjection({a:1}, {a:true});
-				assert.deepEqual(cds._projection, {a:1});
-				assert.deepEqual(cds._dependencies, {a:true});
-
-				async.series([
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-					],
-					function(err,res) {
-						assert.deepEqual([{a:1},{a:2},{},null], res);
-						next();
-					}
-				);
 			}
 
 		}
