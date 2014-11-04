@@ -3,6 +3,7 @@ var assert = require("assert"),
 
 	LetExpression = require("../../../../lib/pipeline/expressions/LetExpression"),
 	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression"),
+	MultiplyExpression = require("../../../../lib/pipeline/expressions/MultiplyExpression"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
@@ -90,26 +91,50 @@ module.exports = {
 			},
 
 			"#optimize()": {
+
+				beforeEach: function () {
+					this.testMultOpt = function (expr) {
+						assert(expr._subExpression instanceof ConstantExpression, "Expected the $multiply to be optimized to a constant. Saw '" + expr._subExpression.constructor.name + "'");
+						assert.equal(expr._subExpression.operands.length, 0, "Expected no operands, saw " + expr._subExpression.operands.length);
+						assert(expr._subExpression.getValue(), 6, "Expected the multiply to optimize to 6");
+					};
+					this.testVarOpt = function (expr) {
+
+					}
+				},
+
 				"should optimize subexpressions if there are no variables": function () {
-					assert(false);
+					var x = Expression.parseOperand({$let: {vars: [], in: {$multiply: [2,3]}}}, this.vps).optimize();
+					this.testMultOpt(x);
 				},
 				"should optimize variables": function () {
-					assert(false);
+					var x = Expression.parseOperand({$let: {vars: ["a", "b"], in: {$const: 6}}}, this.vps).optimize();
+					this.testVarOpt(x);
 				},
 				"should optimize subexpressions if there are variables": function () {
-					assert(false);
+					var x = Expression.parseOperand({$let: {vars: ["a", "b"], in: {$multiply: [2,3]}}}, this.vps).optimize();
+					this.testVarOpt(x);
+					this.testMultOpt(x);
 				}
 			},
 			"#serialize()": {
 				"should serialize variables and the subexpression": function () {
+					var s = Expression.parseOperand({$let: {vars: ["a", "b"], in: {$multiply: [2,3]}}}, this.vps).serialize("zoot");
+					assert.deepEqual(JSON.stringify(s), '{"$let":{"vars":{"a":{"value":["a","b"],"operands":[]},"b":{"value":["a","b"],"operands":[]}},"in":{"$multiply":[{"$const":2},{"$const":3}]}}}');
+				}
+			},
+
+			"#evaluateInternal()": {
+				"should perform the evaluation for variables and the subexpression": function () {
 					assert(false);
 				}
 			},
-			"#evaluateInternal()": {
-				"should preform the evaluation for variables and the subexpression": function () {
-					assert(false);
+
+			"#addDependencies()": {
+				"should add dependencies": function(){
+
 				}
-			}
+			},
 		}
 	}
 };
