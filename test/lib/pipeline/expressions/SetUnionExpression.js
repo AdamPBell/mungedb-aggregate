@@ -1,144 +1,325 @@
 "use strict";
 var assert = require("assert"),
-	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
-	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	SetUnionExpression = require("../../../../lib/pipeline/expressions/SetUnionExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression");
+	ExpectedResultBase = require("./SetExpectedResultBase");
 
-function errMsg(expr, args, tree, expected, result) {
-	return "for expression " + expr +
-		" with argument " + args +
-		" full tree: " + JSON.stringify(tree) +
-		" expected: " + expected +
-		" result: " + result;
-}
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+exports.SetUnionExpression = {
 
-	"SetUnionExpression": {
+	"constructor()": {
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor() {
-				assert.doesNotThrow(function() {
-						new SetUnionExpression();
-				});
-			},
-
-			"should throw Error when constructing with args": function testConstructor() {
-				assert.throws(function() {
-						new SetUnionExpression("someArg");
-				});
-			}
-
+		"should not throw Error when constructing without args": function() {
+			assert.doesNotThrow(function() {
+				new SetUnionExpression();
+			});
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $setUnion": function testOpName() {
-				assert.equal(new SetUnionExpression().getOpName(), "$setUnion");
-			}
-
+		"should throw Error when constructing with args": function() {
+			assert.throws(function() {
+				new SetUnionExpression("someArg");
+			});
 		},
 
-		"#evaluateInternal()": {
+	},
 
-			"Should fail if array1 is not an array": function testArg1() {
-				var array1 = "not an array",
-					array2 = [6, 7, 8, 9],
-					input = [array1,array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setUnion", input, vps);
-				assert.throws(function () {
-					expr.evaluate({});
-				});
-			},
+	"#getOpName()": {
 
-			"Should fail if array2 is not an array": function testArg2() {
-				var array1 = [1, 2, 3, 4],
-					array2 = "not an array",
-					input = [array1,array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setUnion", input, vps);
-				assert.throws(function () {
-					expr.evaluate({});
-				});
-			},
-
-			"Should fail if both are not an array": function testArg1andArg2() {
-				var array1 = "not an array",
-					array2 = "not an array",
-					input = [array1,array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setUnion", input, vps);
-				assert.throws(function () {
-					expr.evaluate({});
-				});
-			},
-
-			"Should pass and return [1, 2, 3, 4, 5, 8, 9]": function(){
-				var array1 = [1, 2, 3, 9, 8],
-					array2 = [1, 2, 3, 4, 5],
-					input = [array1,array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setUnion", input, vps),
-					result = expr.evaluate({}),
-					expected = [1, 2, 3, 4, 5, 8, 9],
-					msg = errMsg("$setUnion", input, expr.serialize(false), expected, result);
-				assert.deepEqual(result, expected, msg);
-			},
-
-			"Should pass and return [1, 2, 3, 4, 5, 7]": function() {
-				var array1 = [2, 4],
-					array2 = [1, 2, 3, 4, 5],
-					array3 = [7, 2, 1],
-					array4 = [],
-					input = [array1,array2,array3, array4],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setUnion", input, vps),
-					result = expr.evaluate({}),
-					expected = [1, 2, 3, 4, 5, 7],
-					msg = errMsg("$setUnion", input, expr.serialize(false), expected, result);
-				assert.deepEqual(result, expected, msg);
-			},
-
-			"Should pass and return [1, 2, 7]": function() {
-				var array1 = [],
-					array2 = [],
-					array3 = [7, 2, 1],
-					array4 = [],
-					input = [array1,array2,array3, array4],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setUnion", input, vps),
-					result = expr.evaluate({}),
-					expected = [1, 2, 7],
-					msg = errMsg("$setUnion", input, expr.serialize(false), expected, result);
-				assert.deepEqual(result, expected, msg);
-			},
-
-			"Should recognize a null array and return null because of it": function(){
-				var array1 = [1, 2, 3, 9, 8],
-					array2 = null,
-					input = [array1,array2],
-					idGenerator = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGenerator),
-					expr = Expression.parseExpression("$setUnion", input, vps),
-					result = expr.evaluate({}),
-					expected = null,
-					msg = errMsg("$setUnion", input, expr.serialize(false), expected, result);
-				assert.deepEqual(result, expected, msg);
-			},
-
+		"should return the correct op name; $setUnion": function() {
+			assert.equal(new SetUnionExpression().getOpName(), "$setUnion");
 		}
 
-	}
+	},
+
+	"#evaluate()": {
+
+		"should handle when sets are the same": function Same(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [1, 2]],
+					expected: {
+						$setIsSubset: true,
+						// $setEquals: true,
+						// $setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 2nd set has redundant items": function Redundant(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [1, 2, 2]],
+					expected: {
+						$setIsSubset: true,
+						// $setEquals: true,
+						// $setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the both sets have redundant items": function DoubleRedundant(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 1, 2], [1, 2, 2]],
+					expected: {
+						$setIsSubset: true,
+						// $setEquals: true,
+						// $setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 1st set is a superset": function Super(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [1]],
+					expected: {
+						$setIsSubset: false,
+						// $setEquals: false,
+						// $setIntersection: [1],
+						// $setUnion: [1, 2],
+						// $setDifference: [2],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 2nd set is a superset and has redundant items": function SuperWithRedundant(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2, 2], [1]],
+					expected: {
+						$setIsSubset: false,
+						// $setEquals: false,
+						// $setIntersection: [1],
+						// $setUnion: [1, 2],
+						// $setDifference: [2],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 1st set is a subset": function Sub(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1], [1, 2]],
+					expected: {
+						$setIsSubset: true,
+						// $setEquals: false,
+						// $setIntersection: [1],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the sets are the same but backwards": function SameBackwards(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [2, 1]],
+					expected: {
+						$setIsSubset: true,
+						// $setEquals: true,
+						// $setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+						// $setDifference: [],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the sets do not overlap": function NoOverlap(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [8, 4]],
+					expected: {
+						$setIsSubset: false,
+						// $setEquals: false,
+						// $setIntersection: [],
+						// $setUnion: [1, 2, 4, 8],
+						// $setDifference: [1, 2],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the sets do overlap": function Overlap(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], [8, 2, 4]],
+					expected: {
+						$setIsSubset: false,
+						// $setEquals: false,
+						// $setIntersection: [2],
+						// $setUnion: [1, 2, 4, 8],
+						// $setDifference: [1],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the 2nd set is null": function LastNull(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], null],
+					expected: {
+						// $setIntersection: null,
+						// $setUnion: null,
+						// $setDifference: null,
+					},
+					error: [
+						// "$setEquals"
+						"$setIsSubset"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the 1st set is null": function FirstNull(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [null, [1, 2]],
+					expected: {
+						// $setIntersection: null,
+						// $setUnion: null,
+						// $setDifference: null,
+					},
+					error: [
+						// "$setEquals"
+						"$setIsSubset"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has no args": function NoArg(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [],
+					expected: {
+						// $setIntersection: [],
+						// $setUnion: [],
+					},
+					error: [
+						// "$setEquals"
+						"$setIsSubset"
+						// "$setDifference"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has one arg": function OneArg(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2]],
+					expected: {
+						// $setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+					},
+					error: [
+						// "$setEquals"
+						"$setIsSubset"
+						// "$setDifference"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has empty arg": function EmptyArg(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2]],
+					expected: {
+						// $setIntersection: [1, 2],
+						// $setUnion: [1, 2],
+					},
+					error: [
+						// "$setEquals"
+						"$setIsSubset"
+						// "$setDifference"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has empty left arg": function LeftArgEmpty(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[]],
+					expected: {
+						// $setIntersection: [],
+						// $setUnion: [],
+					},
+					error: [
+						// "$setEquals"
+						"$setIsSubset"
+						// "$setDifference"
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has empty right arg": function RightArgEmpty(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2], []],
+					expected: {
+						// $setIntersection: [],
+						// $setUnion: [1, 2],
+						$setIsSubset: false,
+						// $setEquals: false,
+						// $setDifference: [1, 2],
+					},
+				},
+			}).run();
+		},
+
+		"should handle when the input has many args": function ManyArgs(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[8, 3], ["asdf", "foo"], [80.3, 34], [], [80.3, "foo", 11, "yay"]],
+					expected: {
+						// $setIntersection: [],
+						// $setEquals: false,
+						// $setUnion: [3, 8, 11, 34, 80.3, "asdf", "foo", "yay"],
+					},
+					error: [
+						"$setIsSubset",
+						// "$setDifference",
+					],
+				},
+			}).run();
+		},
+
+		"should handle when the input has many args that are equal sets": function ManyArgsEqual(){
+			new ExpectedResultBase({
+				getSpec: {
+					input: [[1, 2, 4], [1, 2, 2, 4], [4, 1, 2], [2, 1, 1, 4]],
+					expected: {
+						// $setIntersection: [1, 2, 4],
+						// $setEquals: true,
+						// $setUnion: [1, 2, 4],
+					},
+					error: [
+						"$setIsSubset",
+						// "$setDifference",
+					],
+				},
+			}).run();
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
