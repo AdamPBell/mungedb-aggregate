@@ -96,9 +96,9 @@ module.exports = {
 						assert(expr._subExpression.getValue(), expected, "Expected the multiply to optimize to "+expected+" but saw "+expr._subExpression.getValue());
 					};
 					this.testVarOpt = function (expr, expected) {
-						assert(expr._subExpression instanceof ConstantExpression, "Expected the $multiply to be optimized to a constant. Saw '" + expr._subExpression.constructor.name + "'");
-						assert.equal(expr._subExpression.operands.length, 0, "Expected no operands, saw " + expr._subExpression.operands.length);
-						assert(expr._subExpression.getValue(), expected, "Expected the multiply to optimize to "+expected+" but saw "+expr._subExpression.getValue());
+						var here = expr._variables[0].a._expressions.a;
+						assert(here instanceof ConstantExpression, "Expected the $multiply to be optimized to a constant. Saw '" + here.constructor.name + "'");
+						assert(here.getValue(), expected, "Expected the multiply to optimize to "+expected+" but saw "+here.getValue());
 					};
 				},
 
@@ -118,15 +118,17 @@ module.exports = {
 			},
 			"#serialize()": {
 				"should serialize variables and the subexpression": function () {
-					var s = Expression.parseOperand({$let: {vars: ["a", "b"], in: {$multiply: [2,3]}}}, this.vps).serialize("zoot");
-					assert.deepEqual(JSON.stringify(s), '{"$let":{"vars":{"a":{"value":["a","b"],"operands":[]},"b":{"value":["a","b"],"operands":[]}},"in":{"$multiply":[{"$const":2},{"$const":3}]}}}');
+					var s = Expression.parseOperand({$let: {vars: {a:{$const:1}, b:{$const:2}}, in: {$multiply: [2,3]}}}, this.vps).optimize().serialize("zoot");
+					var expected = '{"$let":{"vars":{"a":{"excludeId":false,"_atRoot":false,"_expressions":{"a":{"value":1,"operands":[]},"b":{"value":2,"operands":[]}},"_order":["a","b"]},"b":{"excludeId":false,"_atRoot":false,"_expressions":{"a":{"value":1,"operands":[]},"b":{"value":2,"operands":[]}},"_order":["a","b"]}},"in":{"$const":6}}}';
+					assert.deepEqual(JSON.stringify(s), expected);
 				}
 			},
 
 			"#evaluateInternal()": {
 				"should perform the evaluation for variables and the subexpression": function () {
-					var x = Expression.parseOperand({$let: {vars: ["a"], in: 2}}, this.vps);
-					x.evaluate(this.vps);
+					var x = Expression.parseOperand({$let: {vars: {a: '$in1', b: '$in2'}, in: { $multiply: ["$$a", "$$b"] }}}, this.vps).optimize(),
+						vars = new Variables(2, {});
+					var	y = x.evaluate(new Variables(10, {in1: 6, in2: 7}));
 					assert(x);
 				}
 			},
