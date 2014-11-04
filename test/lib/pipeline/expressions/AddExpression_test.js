@@ -1,7 +1,7 @@
 "use strict";
 var assert = require("assert"),
-	AddExpression = require("../../../../lib/pipeline/expressions/AddExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression"),
+	AddExpression = require("../../../../lib/pipeline/expressions/AddExpression"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
