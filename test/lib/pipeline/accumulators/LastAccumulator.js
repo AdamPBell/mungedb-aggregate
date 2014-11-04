@@ -2,73 +2,100 @@
 var assert = require("assert"),
 	LastAccumulator = require("../../../../lib/pipeline/accumulators/LastAccumulator");
 
-function createAccumulator(){
-	return new LastAccumulator();
-}
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
+exports.LastAccumulator = {
 
-module.exports = {
+	".constructor()": {
 
-	"LastAccumulator": {
-
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new LastAccumulator();
-				});
-			}
-
+		"should create instance of Accumulator": function() {
+			assert(new LastAccumulator() instanceof LastAccumulator);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $last": function testOpName(){
-				assert.strictEqual(new LastAccumulator().getOpName(), "$last");
-			}
-
+		"should throw error if called with args": function() {
+			assert.throws(function() {
+				new LastAccumulator(123);
+			});
 		},
 
-		"#processInternal()": {
+	},
 
-			"should evaluate no documents": function testStuff(){
-				var lastAccumulator = createAccumulator();
-				assert.strictEqual(lastAccumulator.getValue(), undefined);
-			},
+	".create()": {
 
+		"should return an instance of the accumulator": function() {
+			assert(LastAccumulator.create() instanceof LastAccumulator);
+		},
 
-			"should evaluate one document and retains its value": function testStuff(){
-				var lastAccumulator = createAccumulator();
-				lastAccumulator.processInternal(5);
-				assert.strictEqual(lastAccumulator.getValue(), 5);
+	},
 
-			},
+	"#process()": {
 
+		"should return undefined if no inputs evaluated": function testNone() {
+			var acc = LastAccumulator.create();
+			assert.strictEqual(acc.getValue(), undefined);
+		},
 
-			"should evaluate one document with the field missing retains undefined": function testStuff(){
-				var lastAccumulator = createAccumulator();
-				lastAccumulator.processInternal();
-				assert.strictEqual(lastAccumulator.getValue(), undefined);
-			},
+		"should return value for one input": function testOne() {
+			var acc = LastAccumulator.create();
+			acc.process(5);
+			assert.strictEqual(acc.getValue(), 5);
+		},
 
+		"should return missing for one missing input": function testMissing() {
+			var acc = LastAccumulator.create();
+			acc.process(undefined);
+			assert.strictEqual(acc.getValue(), undefined);
+		},
 
-			"should evaluate two documents and retains the value in the last": function testStuff(){
-				var lastAccumulator = createAccumulator();
-				lastAccumulator.processInternal(5);
-				lastAccumulator.processInternal(7);
-				assert.strictEqual(lastAccumulator.getValue(), 7);
-			},
+		"should return last of two inputs": function testTwo() {
+			var acc = LastAccumulator.create();
+			acc.process(5);
+			acc.process(7);
+			assert.strictEqual(acc.getValue(), 7);
+		},
 
+		"should return last of two inputs (even if last is missing)": function testFirstMissing() {
+			var acc = LastAccumulator.create();
+			acc.process(7);
+			acc.process(undefined);
+			assert.strictEqual(acc.getValue(), undefined);
+		},
 
-			"should evaluate two documents and retains the undefined value in the last": function testStuff(){
-				var lastAccumulator = createAccumulator();
-				lastAccumulator.processInternal(5);
-				lastAccumulator.processInternal();
-				assert.strictEqual(lastAccumulator.getValue(), undefined);
-			}
-		}
+	},
 
-	}
+	"#getValue()": {
+
+		"should get value the same for shard and router": function() {
+			var acc = LastAccumulator.create();
+			assert.strictEqual(acc.getValue(false), acc.getValue(true));
+			acc.process(123);
+			assert.strictEqual(acc.getValue(false), acc.getValue(true));
+		},
+
+	},
+
+	"#reset()": {
+
+		"should reset to missing": function() {
+			var acc = LastAccumulator.create();
+			assert.strictEqual(acc.getValue(), undefined);
+			acc.process(123);
+			assert.notEqual(acc.getValue(), undefined);
+			acc.reset();
+			assert.strictEqual(acc.getValue(), undefined);
+			assert.strictEqual(acc.getValue(true), undefined);
+		},
+
+	},
+
+	"#getOpName()": {
+
+		"should return the correct op name; $last": function() {
+			assert.equal(new LastAccumulator().getOpName(), "$last");
+		},
+
+	},
 
 };
 
