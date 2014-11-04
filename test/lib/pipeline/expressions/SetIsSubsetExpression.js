@@ -20,7 +20,7 @@ exports.SetIsSubsetExpression = {
 			assert.throws(function() {
 				new SetIsSubsetExpression("someArg");
 			});
-		}
+		},
 
 	},
 
@@ -28,7 +28,7 @@ exports.SetIsSubsetExpression = {
 
 		"should return the correct op name; $setIsSubset": function() {
 			assert.equal(new SetIsSubsetExpression().getOpName(), "$setIsSubset");
-		}
+		},
 
 	},
 

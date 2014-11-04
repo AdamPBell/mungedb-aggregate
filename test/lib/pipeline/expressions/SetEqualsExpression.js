@@ -20,7 +20,7 @@ exports.SetEqualsExpression = {
 			assert.throws(function() {
 				new SetEqualsExpression("someArg");
 			});
-		}
+		},
 
 	},
 
@@ -28,7 +28,7 @@ exports.SetEqualsExpression = {
 
 		"should return the correct op name; $setEquals": function() {
 			assert.equal(new SetEqualsExpression().getOpName(), "$setEquals");
-		}
+		},
 
 	},
 
