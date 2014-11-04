@@ -65,56 +65,55 @@ module.exports = {
 				"should throw if any of the arguments to $let are not 'in' or 'var'": function () {
 					this.dieForTheRightReason({$let: {vars: 1, in: 2, zoot:3}}, /16875/);
 				},
-				"should throw if the var name is not writable": function () {
-					this.dieForTheRightReason({$let: {vars: ["$$bad$$"], in: 2}}, /16867/);
+				"should throw if the var name is not writable (1)": function () {
+					this.dieForTheRightReason({$let: {vars: {a:"@"}, in: 2}}, /FieldPath: '@' doesn't start with a \$; uassert code 16873/);
+				},
+				"should throw if the var name is not writable (2)": function () {
+					this.dieForTheRightReason({$let: {vars: {a:"$$"}, in: 2}}, /empty variable names are not allowed; uassert code 16869/);
 				},
 				"should return a Let expression": function () {
-					var x = Expression.parseOperand({$let: {vars: ["a"], in: 2}}, this.vps);
+					var x = Expression.parseOperand({$let: {vars: {a:{$const:123}}, in: 2}}, this.vps);
 					assert(x instanceof LetExpression);
 					assert(x._subExpression instanceof ConstantExpression);
 					assert(x._subExpression.getValue() == 2);
-					assert(x._variables[0].a instanceof ConstantExpression);
-					assert(x._variables[0].a.getValue()[0] === 'a');
+					assert(x._variables[0].a._expressions.a instanceof ConstantExpression);
+					assert.equal(x._variables[0].a._expressions.a.getValue(), 123, "Expected to see 123, but instead saw "+x._variables[0].a._expressions.a.getValue());
 				},
 				"should show we collect multiple vars": function() {
-					var x = Expression.parseOperand({$let: {vars: ["a", "b", "c"], in: 2}}, this.vps);
-					assert.deepEqual(x._variables[0].a.getValue(), ['a','b','c']);
-					assert.deepEqual(x._variables[1].b.getValue(), ['a','b','c']);
-					assert.deepEqual(x._variables[2].c.getValue(), ['a','b','c']);
+					var x = Expression.parseOperand({$let: {vars: {a:{$const:1}, b:{$const:2}, c:{$const:3}}, in: 2}}, this.vps);
+					assert.deepEqual(x._variables[0].a._expressions.a.getValue(), 1);
+					assert.deepEqual(x._variables[1].b._expressions.b.getValue(), 2);
+					assert.deepEqual(x._variables[2].c._expressions.c.getValue(), 3);
 				},
-				"should show we require vars to be wrapped in an array.": function () {
-					var self = this;
-					assert.throws(function () {
-						Expression.parseOperand({$let: {vars: "a", in: 2}}, self.vps);
-					}, /TypeError: Object a has no method 'forEach'/);
-				}
 			},
 
 			"#optimize()": {
 
 				beforeEach: function () {
-					this.testMultOpt = function (expr) {
+					this.testInOpt = function (expr, expected) {
 						assert(expr._subExpression instanceof ConstantExpression, "Expected the $multiply to be optimized to a constant. Saw '" + expr._subExpression.constructor.name + "'");
 						assert.equal(expr._subExpression.operands.length, 0, "Expected no operands, saw " + expr._subExpression.operands.length);
-						assert(expr._subExpression.getValue(), 6, "Expected the multiply to optimize to 6");
+						assert(expr._subExpression.getValue(), expected, "Expected the multiply to optimize to "+expected+" but saw "+expr._subExpression.getValue());
 					};
-					this.testVarOpt = function (expr) {
-
-					}
+					this.testVarOpt = function (expr, expected) {
+						assert(expr._subExpression instanceof ConstantExpression, "Expected the $multiply to be optimized to a constant. Saw '" + expr._subExpression.constructor.name + "'");
+						assert.equal(expr._subExpression.operands.length, 0, "Expected no operands, saw " + expr._subExpression.operands.length);
+						assert(expr._subExpression.getValue(), expected, "Expected the multiply to optimize to "+expected+" but saw "+expr._subExpression.getValue());
+					};
 				},
 
 				"should optimize subexpressions if there are no variables": function () {
-					var x = Expression.parseOperand({$let: {vars: [], in: {$multiply: [2,3]}}}, this.vps).optimize();
-					this.testMultOpt(x);
+					var x = Expression.parseOperand({$let: {vars: {}, in: {$multiply: [2,3]}}}, this.vps).optimize();
+					this.testInOpt(x, 6);
 				},
 				"should optimize variables": function () {
-					var x = Expression.parseOperand({$let: {vars: ["a", "b"], in: {$const: 6}}}, this.vps).optimize();
-					this.testVarOpt(x);
+					var x = Expression.parseOperand({$let: {vars: {a: {$multiply:[5,4]}}, in: {$const: 6}}}, this.vps).optimize();
+					this.testVarOpt(x, 20);
 				},
 				"should optimize subexpressions if there are variables": function () {
-					var x = Expression.parseOperand({$let: {vars: ["a", "b"], in: {$multiply: [2,3]}}}, this.vps).optimize();
-					this.testVarOpt(x);
-					this.testMultOpt(x);
+					var x = Expression.parseOperand({$let: {vars: {a: {$multiply:[5,4]}}, in: {$multiply: [2,3]}}}, this.vps).optimize();
+					this.testInOpt(x, 6);
+					this.testVarOpt(x, 20);
 				}
 			},
 			"#serialize()": {
@@ -126,13 +125,23 @@ module.exports = {
 
 			"#evaluateInternal()": {
 				"should perform the evaluation for variables and the subexpression": function () {
-					assert(false);
+					var x = Expression.parseOperand({$let: {vars: ["a"], in: 2}}, this.vps);
+					x.evaluate(this.vps);
+					assert(x);
 				}
 			},
 
 			"#addDependencies()": {
 				"should add dependencies": function(){
-
+					assert(false, "unimplemented");
+				}
+			},
+			"The Guantlet": {
+				"example from http://docs.mongodb.org/manual/reference/operator/aggregation/let/": function () {
+					var x = Expression.parseOperand(
+						"$let: { vars: { total: { $add: [ '$price', '$tax' ] },	discounted: { $cond: { if: '$applyDiscount', then: 0.9, else: 1 } }}, in: { $multiply: [ '$$total', '$$discounted' ] }",
+						this.vps).optimize().evaluate({price: 90, tax: .05});
+					assertEqual(x.getValue(), 100);
 				}
 			},
 		}
