@@ -197,7 +197,7 @@ module.exports = {
 			'should return 1 (GET_NEXT)': function () {
 				var sds = new SkipDocumentSource();
 
-				assert.strictEqual(sds.getDependencies(), 1); // Hackish. We may be getting an enum in somewhere.
+				assert.strictEqual(sds.getDependencies(), DocumentSource.GetDepsReturn.SEE_NEXT); // Hackish. We may be getting an enum in somewhere.
 			}
 		},
 
