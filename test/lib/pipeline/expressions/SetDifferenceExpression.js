@@ -20,7 +20,7 @@ exports.SetDifferenceExpression = {
 			assert.throws(function() {
 				new SetDifferenceExpression("someArg");
 			});
-		}
+		},
 
 	},
 
@@ -28,7 +28,7 @@ exports.SetDifferenceExpression = {
 
 		"should return the correct op name; $setDifference": function() {
 			assert.equal(new SetDifferenceExpression().getOpName(), "$setDifference");
-		}
+		},
 
 	},
 

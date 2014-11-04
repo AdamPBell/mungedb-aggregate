@@ -33,7 +33,7 @@ var ExpectedResultBase = module.exports = (function() { //jshint ignore:line
 				}
 				var errMsg = "for expression " + fieldFirst +
 					" with argument " + JSON.stringify(args) +
-					" full tree " + JSON.stringify(expr.serialize(false)) +
+					" full tree: " + JSON.stringify(expr.serialize(false)) +
 					" expected: " + JSON.stringify(expected) +
 					" but got: " + JSON.stringify(result);
 				assert.deepEqual(result, expected, errMsg);
