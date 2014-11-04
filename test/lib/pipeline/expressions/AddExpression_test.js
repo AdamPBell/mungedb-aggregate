@@ -61,12 +61,11 @@ var TestBase = function TestBase(overrides) {
 		};
 		proto._reverse = false;
 		return klass;
-	})()
+	})();
 
 exports.AddExpression = {
 
 	"constructor()": {
-
 
 		"should construct instance": function() {
 			assert(new AddExpression() instanceof AddExpression);
