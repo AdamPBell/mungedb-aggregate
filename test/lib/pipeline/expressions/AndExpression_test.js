@@ -186,7 +186,7 @@ exports.AndExpression = {
 
 	"#optimize()": {
 
-		"should optimize a constant expression": function OptimizeConstantExpression() {
+		"should optimize a constant expression": function testOptimizeConstantExpression() {
 			/** A constant expression is optimized to a constant. */
 			new OptimizeBase({
 				spec: {$and:[1]},
@@ -194,14 +194,14 @@ exports.AndExpression = {
 			}).run();
 		},
 
-		"should not optimize a non constant": function NonConstant() {
+		"should not optimize a non constant": function testNonConstant() {
 			/** A non constant expression is not optimized. */
 			new NoOptimizeBase({
 				spec: {$and:["$a"]},
 			}).run();
 		},
 
-		"should optimize if begins with a single truthy constant": function ConstantNonConstantTrue() {
+		"should optimize truthy constant and truthy expression": function testConstantNonConstantTrue() {
 			/** An expression beginning with a single constant is optimized. */
 			new OptimizeBase({
 				spec: {$and:[1,"$a"]},
@@ -210,14 +210,14 @@ exports.AndExpression = {
 			// note: using $and as serialization of ExpressionCoerceToBool rather than ExpressionAnd
 		},
 
-		"should optimize if begins with a single falsey constant": function ConstantNonConstantFalse() {
+		"should optimize falsy constant and truthy expression": function testConstantNonConstantFalse() {
 			new OptimizeBase({
 				spec: {$and:[0,"$a"]},
 				expectedOptimized: {$const:false},
 			}).run();
 		},
 
-		"should optimize away any truthy constant expressions": function NonConstantOne() {
+		"should optimize truthy expression and truthy constant": function testNonConstantOne() {
 			/** An expression with a field path and '1'. */
 			new OptimizeBase({
 				spec: {$and:["$a",1]},
@@ -225,7 +225,7 @@ exports.AndExpression = {
 			}).run();
 		},
 
-		"should optimize to false if contains non-truthy constant expressions": function NonConstantZero() {
+		"should optimize truthy expression and falsy constant": function testNonConstantZero() {
 			/** An expression with a field path and '0'. */
 			new OptimizeBase({
 				spec: {$and:["$a",0]},
@@ -233,7 +233,7 @@ exports.AndExpression = {
 			}).run();
 		},
 
-		"should optimize away any truthy constant expressions (and 2 field paths)": function NonConstantNonConstantOne() {
+		"should optimize truthy expression, falsy expression, and truthy constant": function testNonConstantNonConstantOne() {
 			/** An expression with two field paths and '1'. */
 			new OptimizeBase({
 				spec: {$and:["$a","$b",1]},
@@ -241,7 +241,7 @@ exports.AndExpression = {
 			}).run();
 		},
 
-		"should optimize to false if contains non-truthy constant expressions (and 2 field paths)": function NonConstantNonConstantZero() {
+		"should optimize truthy expression, falsy expression, and falsy constant": function testNonConstantNonConstantZero() {
 			/** An expression with two field paths and '0'. */
 			new OptimizeBase({
 				spec: {$and:["$a","$b",0]},
@@ -249,7 +249,7 @@ exports.AndExpression = {
 			}).run();
 		},
 
-		"should optimize to false if [0,1,'$a']": function ZeroOneNonConstant() {
+		"should optimize to false if [0,1,'$a']": function testZeroOneNonConstant() {
 			/** An expression with '0', '1', and a field path. */
 			new OptimizeBase({
 				spec: {$and:[0,1,"$a"]},
@@ -257,7 +257,7 @@ exports.AndExpression = {
 			}).run();
 		},
 
-		"should optimize to '$a' if [1,1,'$a']": function OneOneNonConstant() {
+		"should optimize to {$and:'$a'} if [1,1,'$a']": function testOneOneNonConstant() {
 			/** An expression with '1', '1', and a field path. */
 			new OptimizeBase({
 				spec: {$and:[1,1,"$a"]},
@@ -265,7 +265,7 @@ exports.AndExpression = {
 			}).run();
 		},
 
-		"should optimize away nested truthy $and": function Nested() {
+		"should optimize away nested truthy $and expressions": function testNested() {
 			/** Nested $and expressions. */
 			new OptimizeBase({
 				spec: {$and:[1, {$and:[1]}, "$a", "$b"]},
@@ -273,7 +273,7 @@ exports.AndExpression = {
 			}).run();
 		},
 
-		"should optimize to false if nested falsey $and": function NestedZero() {
+		"should optimize to false if nested falsey $and expressions": function testNestedZero() {
 			/** Nested $and expressions containing a nested value evaluating to false. */
 			new OptimizeBase({
 				spec: {$and:[1, {$and:[ {$and:[0]} ]}, "$a", "$b"]},
