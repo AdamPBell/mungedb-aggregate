@@ -7,6 +7,8 @@ module.exports = {
 
 	"DocumentSource": {
 
+		"should be tested via subclasses": function() {}
+
 	}
 
 };
