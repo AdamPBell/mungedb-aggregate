@@ -66,7 +66,7 @@ module.exports = {
 				"should throw if there is no input parameter to $let": function () {
 					this.dieForTheRightReason({$let: {vars: 1, noIn: 2}}, /16877/);
 				},
-				"should throw if any of the arguments to $let are not 'in' or 'var'": function () {
+				"should throw if any of the arguments to $let are not 'in' or 'vars'": function () {
 					this.dieForTheRightReason({$let: {vars: 1, in: 2, zoot:3}}, /16875/);
 				},
 				"should throw if the var name is not writable (1)": function () {
@@ -85,6 +85,8 @@ module.exports = {
 				},
 				"should show we collect multiple vars": function() {
 					var x = Expression.parseOperand({$let: {vars: {a:{$const:1}, b:{$const:2}, c:{$const:3}}, in: 2}}, this.vps);
+					//TODO Kyle, this is the epitome of why I think the data structures are screwy. Put a break on the
+					//next line and look at x.
 					assert.deepEqual(x._variables[0].a._expressions.a.getValue(), 1);
 					assert.deepEqual(x._variables[1].b._expressions.b.getValue(), 2);
 					assert.deepEqual(x._variables[2].c._expressions.c.getValue(), 3);
