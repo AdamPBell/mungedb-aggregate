@@ -56,7 +56,7 @@ module.exports = {
 		},
 		"should match dot notation null" : function() {
 			var e = new GTMatchExpression();
-			var s = e.init("a",null);
+			var s = e.init("a.b",null);
 
 			assert.strictEqual(s.code, "OK");
 			assert.ok( !e.matchesJSON({}) );
@@ -64,7 +64,6 @@ module.exports = {
 			assert.ok( ! e.matchesJSON({"a":4}) );
 			assert.ok( ! e.matchesJSON({"a":{}}) );
 			assert.ok( ! e.matchesJSON({"a":[{b:null}]}) );
-			assert.ok( ! e.matchesJSON({"a":[{a:4},{b:4}]}) );
 			assert.ok( ! e.matchesJSON({"a":[{a:4},{b:4}]}) );
 			assert.ok( ! e.matchesJSON({"a":[4]}) );
 			assert.ok( ! e.matchesJSON({"a":[{b:4}]}) );
