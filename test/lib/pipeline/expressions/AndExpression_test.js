@@ -56,18 +56,13 @@ var TestBase = function TestBase(overrides) {
 		var klass = function NoOptimizeBase() {
 			base.apply(this, arguments);
 		}, base = OptimizeBase, proto = klass.prototype = Object.create(base.prototype);
-		proto.expectedOptimized = function(){
+		proto.expectedOptimized = function() {
 			return constify(this.spec instanceof Function ? this.spec() : this.spec);
 		};
 		return klass;
 	})();
 
 exports.AndExpression = {
-
-													//TODO: remove this ...
-														beforeEach: function() {
-															this.vps = new VariablesParseState(new VariablesIdGenerator());
-														},
 
 	"constructor()": {
 
@@ -91,7 +86,6 @@ exports.AndExpression = {
 		}
 
 	},
-
 
 	"#evaluate()": {
 
