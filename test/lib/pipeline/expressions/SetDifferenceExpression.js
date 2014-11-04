@@ -309,7 +309,7 @@ exports.SetDifferenceExpression = {
 					input: [[1, 2, 4], [1, 2, 2, 4], [4, 1, 2], [2, 1, 1, 4]],
 					expected: {
 						// $setIntersection: [1, 2, 4],
-						// $setEquals: false,
+						// $setEquals: true,
 						// $setUnion: [1, 2, 4],
 					},
 					error: [
