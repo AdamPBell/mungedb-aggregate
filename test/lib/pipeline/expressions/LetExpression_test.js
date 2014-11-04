@@ -1,11 +1,13 @@
 "use strict";
 var assert = require("assert"),
 
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
 	LetExpression = require("../../../../lib/pipeline/expressions/LetExpression"),
 	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression"),
 	MultiplyExpression = require("../../../../lib/pipeline/expressions/MultiplyExpression"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	Variables = require("../../../../lib/pipeline/expressions/Variables"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
@@ -126,24 +128,34 @@ module.exports = {
 
 			"#evaluateInternal()": {
 				"should perform the evaluation for variables and the subexpression": function () {
-					var x = Expression.parseOperand({$let: {vars: {a: '$in1', b: '$in2'}, in: { $multiply: ["$$a", "$$b"] }}}, this.vps).optimize(),
-						vars = new Variables(2, {});
+					var x = Expression.parseOperand({$let: {vars: {a: '$in1', b: '$in2'}, in: { $multiply: ["$$a", "$$b"] }}}, this.vps).optimize();
 					var	y = x.evaluate(new Variables(10, {in1: 6, in2: 7}));
-					assert(x);
+					assert.equal(y, 42);
 				}
 			},
 
 			"#addDependencies()": {
 				"should add dependencies": function(){
-					assert(false, "unimplemented");
+					var expr = Expression.parseOperand({$let: {vars: {a: {$multiply:['$a','$b']}}, in: {$multiply: ['$c','$d']}}}, this.vps);
+					var deps = new DepsTracker();
+					expr.addDependencies(deps);
+					assert.equal(Object.keys(deps.fields).length, 4);
+					assert('a' in deps.fields);
+					assert('b' in deps.fields);
+					assert('c' in deps.fields);
+					assert('d' in deps.fields);
+					assert.strictEqual(deps.needWholeDocument, false);
+					assert.strictEqual(deps.needTextScore, false);
 				}
 			},
+
 			"The Guantlet": {
 				"example from http://docs.mongodb.org/manual/reference/operator/aggregation/let/": function () {
 					var x = Expression.parseOperand(
-						"$let: { vars: { total: { $add: [ '$price', '$tax' ] },	discounted: { $cond: { if: '$applyDiscount', then: 0.9, else: 1 } }}, in: { $multiply: [ '$$total', '$$discounted' ] }",
-						this.vps).optimize().evaluate({price: 90, tax: .05});
-					assertEqual(x.getValue(), 100);
+						{$let: { vars: { total: { $add: [ '$price', '$tax' ] },	discounted: { $cond: { if: '$applyDiscount', then: 0.9, else: 1 } }}, in: { $multiply: [ '$$total', '$$discounted' ] }}},
+						this.vps).optimize();
+					var y = x.evaluate(new Variables(10, {price: 90, tax: .05}));
+					assert.equal(y, 100);
 				}
 			},
 		}
