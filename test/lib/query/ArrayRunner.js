@@ -1,7 +1,7 @@
 "use strict";
 var assert = require("assert"),
-	Runner = require("../../lib/Runner"),
-	ArrayRunner = require("../../lib/ArrayRunner");
+	Runner = require("../../../lib/query/Runner"),
+	ArrayRunner = require("../../../lib/query/ArrayRunner");
 
 module.exports = {
 

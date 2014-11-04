@@ -5,7 +5,7 @@ var assert = require("assert"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	LimitDocumentSource = require("../../../../lib/pipeline/documentSources/LimitDocumentSource"),
 	SkipDocumentSource = require("../../../../lib/pipeline/documentSources/SkipDocumentSource"),
-	ArrayRunner = require("../../../../lib/ArrayRunner");
+	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
 var getCursorDocumentSource = function(values) {
 	values = values || [1,2,3,4,5];
