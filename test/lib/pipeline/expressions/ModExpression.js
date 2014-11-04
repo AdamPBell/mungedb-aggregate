@@ -1,53 +1,80 @@
 "use strict";
 var assert = require("assert"),
 	ModExpression = require("../../../../lib/pipeline/expressions/ModExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression"),
-	VariablesParseState = require("../../../../lib/pipeline/expressions/Expression");
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+exports.ModExpression = {
 
-	"ModExpression": {
+	"constructor()": {
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new ModExpression();
-				});
-			}
-
+		"should construct instance": function() {
+			assert(new ModExpression() instanceof ModExpression);
+			assert(new ModExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-			"should return the correct op name; $mod": function testOpName(){
-				assert.equal(new ModExpression().getOpName(), "$mod");
-			}
-
+		"should error if given args": function() {
+			assert.throws(function() {
+				new ModExpression("bad stuff");
+			});
 		},
 
-		"#evaluateInternal()": {
-			"should return rhs if rhs is undefined or null": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}, new VariablesParseState()).evaluate({lhs:20.453, rhs:null}), null);
-				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}).evaluate({lhs:20.453}), undefined);
-			},
-			"should return lhs if lhs is undefined or null": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}).evaluate({lhs:null, rhs:20.453}), null);
-				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}).evaluate({rhs:20.453}), undefined);
-			},
-			"should return undefined if rhs is 0": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}).evaluate({lhs:20.453, rhs:0}), undefined);
-			},
-			"should return proper mod of rhs and lhs if both are numbers": function testStuff(){
-				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}).evaluate({lhs:234.4234, rhs:45}), 234.4234 % 45);
-				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}).evaluate({lhs:0, rhs:45}), 0 % 45);
-				assert.strictEqual(Expression.parseOperand({$mod:["$lhs", "$rhs"]}).evaluate({lhs:-6, rhs:-0.5}), -6 % -0.5);
-			}
+	},
 
-		}
+	"#getOpName()": {
 
-	}
+		"should return the correct op name; $mod": function() {
+			assert.equal(new ModExpression().getOpName(), "$mod");
+		},
+
+	},
+
+	"#evaluate()": {
+
+		"should return modulus of two numbers": function() {
+			var idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand({$mod: ["$a", "$b"]}, vps),
+				input = {a: 6, b: 2};
+			assert.strictEqual(expr.evaluate(input), 0);
+		},
+
+		"should return null if first is null": function() {
+			var idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand({$mod: ["$a", "$b"]}, vps),
+				input = {a: null, b: 2};
+			assert.strictEqual(expr.evaluate(input), null);
+		},
+
+		"should return null if first is undefined": function() {
+			var idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand({$mod: ["$a", "$b"]}, vps),
+				input = {a: undefined, b: 2};
+			assert.strictEqual(expr.evaluate(input), null);
+		},
+
+		"should return null if second is null": function() {
+			var idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand({$mod: ["$a", "$b"]}, vps),
+				input = {a: 11, b: null};
+			assert.strictEqual(expr.evaluate(input), null);
+		},
+
+		"should return null if second is undefined": function() {
+			var idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand({$mod: ["$a", "$b"]}, vps),
+				input = {a: 42, b: undefined};
+			assert.strictEqual(expr.evaluate(input), null);
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
