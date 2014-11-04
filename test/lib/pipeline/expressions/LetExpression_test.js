@@ -86,7 +86,7 @@ module.exports = {
 					assert.deepEqual(x._variables[0].a._expressions.a.getValue(), 1);
 					assert.deepEqual(x._variables[1].b._expressions.b.getValue(), 2);
 					assert.deepEqual(x._variables[2].c._expressions.c.getValue(), 3);
-				},
+				}
 			},
 
 			"#optimize()": {
@@ -160,7 +160,7 @@ module.exports = {
 					y = x.evaluate(new Variables(10, {price: 90, tax: .05, applyDiscount: 1}));
 					assert.equal(y, 90.05 * .9);
 				}
-			},
+			}
 		}
 	}
 };
