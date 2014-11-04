@@ -7,175 +7,244 @@ var assert = require("assert"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
 	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-//TODO: refactor these test cases using Expression.parseOperand() or something because these could be a whole lot cleaner...
-module.exports = {
+var TestBase = function TestBase(overrides) {
+		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
+		for (var key in overrides)
+			this[key] = overrides[key];
+	},
+	ExpectedResultBase = (function() {
+		var klass = function ExpectedResultBase() {
+			base.apply(this, arguments);
+		}, base = TestBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.run = function() {
+			var expr = new AddExpression();
+			this.populateOperands(expr);
+			var expectedResult = this.expectedResult instanceof Function ? this.expectedResult() : this.expectedResult;
+			if (expectedResult instanceof Date) //NOTE: DEVIATION FROM MONGO: special case for Date
+				return assert.strictEqual(Date(expectedResult), Date(expr.evaluate({})));
+			assert.strictEqual(expectedResult, expr.evaluate({}));
+		};
+		return klass;
+	})(),
+	SingleOperandBase = (function() {
+		var klass = function SingleOperandBase() {
+			base.apply(this, arguments);
+		}, base = ExpectedResultBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.populateOperands = function(expr) {
+			var operand = this.operand instanceof Function ? this.operand() : this.operand;
+			expr.addOperand(ConstantExpression.create(operand));
+		};
+		proto.expectedResult = function() {
+			var operand = this.operand instanceof Function ? this.operand() : this.operand;
+			return operand;
+		};
+		return klass;
+	})(),
+	TwoOperandBase = (function() {
+		var klass = function TwoOperandBase() {
+			base.apply(this, arguments);
+		}, base = ExpectedResultBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.run = function() {
+			base.prototype.run.call(this);
+            // Now add the operands in the reverse direction.
+            this._reverse = true;
+			base.prototype.run.call(this);
+		};
+		proto.populateOperands = function(expr) {
+			var operand1 = this.operand1 instanceof Function ? this.operand1() : this.operand1,
+				operand2 = this.operand1 instanceof Function ? this.operand2() : this.operand2;
+			expr.addOperand(ConstantExpression.create(this._reverse ? operand2 : operand1));
+			expr.addOperand(ConstantExpression.create(this._reverse ? operand1 : operand2));
+		};
+		proto._reverse = false;
+		return klass;
+	})()
 
-	"AddExpression": {
+exports.AddExpression = {
 
-		"constructor()": {
+	"constructor()": {
 
-			"should not throw Error when constructing without args": function testConstructor() {
-				assert.doesNotThrow(function () {
-					new AddExpression();
-				});
-			},
 
-			"should throw Error when constructing with args": function testConstructor() {
-				assert.throws(function () {
-					new AddExpression(1);
-				});
-			}
+		"should construct instance": function() {
+			assert(new AddExpression() instanceof AddExpression);
+			assert(new AddExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $add": function testOpName() {
-				assert.equal(new AddExpression().getOpName(), "$add");
-			}
+		"should error if given args": function() {
+			assert.throws(function() {
+				new AddExpression("bad stuff");
+			});
 		},
 
-		"#evaluateInternal()": {
+	},
 
-			"should return the operand if null document is given": function nullDocument() {
-				var expr = new AddExpression();
-				expr.addOperand(new ConstantExpression(2));
-				assert.equal(expr.evaluateInternal(null), 2);
-			},
+	"#getOpName()": {
 
-			"should return 0 if no operands were given": function noOperands() {
-				var expr = new AddExpression();
-				assert.equal(expr.evaluateInternal({}), 0);
-			},
-
-			"should throw Error if a Date operand was given": function date() {
-				var expr = new AddExpression();
-				expr.addOperand(new ConstantExpression(new Date()));
-				assert.throws(function () {
-					expr.evaluateInternal({});
-				});
-			},
-
-			"should throw Error if a String operand was given": function string() {
-				var expr = new AddExpression();
-				expr.addOperand(new ConstantExpression(""));
-				assert.throws(function () {
-					expr.evaluateInternal({});
-				});
-			},
-
-			"should throw Error if a Boolean operand was given": function bool() {
-				var expr = new AddExpression();
-				expr.addOperand(new ConstantExpression(true));
-				assert.throws(function () {
-					expr.evaluateInternal({});
-				});
-			},
-
-			"singleOperandBase": {
-				beforeEach: function () {
-					this.expectedResult = function (_input_, _expected_) {
-						var expr = new AddExpression();
-						expr.addOperand(new ConstantExpression(_input_));
-						assert.equal(expr.evaluateInternal({}), _expected_);
-					}
-				},
-
-				"should pass through a single number": function number() {
-					this.expectedResult(123, 123);
-				},
-
-				"should pass through a single null": function nullSupport() {
-					this.expectedResult(null, null);
-				},
-
-				"should pass through a single undefined": function undefinedSupport() {
-					this.expectedResult(undefined, null);
-				},
-				"should pass through a single float": function () {
-					var v = 123.234;
-					this.expectedResult(v, v);
-				},
-//NOTE: DEVIATION FROM MONGO: We don't support dates
-//				"should pass through a single date": function () {
-//					var v = new Date();
-//					this.expectedResult(v, v);
-//				}
-			},
-
-			"TwoOperand": {
-				beforeEach: function () {
-					this.reverse = function (array) {
-						var reversed = [];
-						array.forEach(function (a) {
-							reversed.unshift(a);
-						})
-						return reversed;
-					};
-					this.compareBothWays = function (array, expected) {
-						this.compare(array, expected);
-						this.compare(this.reverse(array), expected);
-					};
-					this.compare = function (array, expected) {
-						var expr = new AddExpression();
-						array.forEach(function (input) {
-							expr.addOperand(new ConstantExpression(input));
-						});
-						assert.equal(expr.evaluateInternal({}), expected);
-					}
-				},
-				"should add two numbers": function numbers() {
-					this.compareBothWays([1, 5], 6);
-				},
-
-				"should add a number and a null": function numberAndNull() {
-					this.compareBothWays([1, null], null);
-				},
-
-				"should add a number and an undefined": function numberAndUndefined() {
-					this.compareBothWays([1, undefined], null);
-				},
-
-				"should add several numbers": function () {
-					this.compareBothWays([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 55);
-				},
-
-				"should add floats": function () {
-					this.compareBothWays([1.1, 2.2, 3.3], 6.6);
-				},
-
-//NOTE: DEVIATION FROM MONGO: We don't support dates
-//				"should add an int and a date and get a date": function () {
-//					var d = new Date();
-//					this.compareBothWays([d, 10], d.getTime() + 10);
-//				},
-
-//NOTE: DEVIATION FROM MONGO: We don't support dates
-//				"We can't add 2 dates": function () {
-//					var d = new Date();
-//					this.compareBothWays([d, d], 0);
-//				}
-			}
-		},
-		"optimize": {
-			beforeEach: function(){
-			this.vps = new VariablesParseState(new VariablesIdGenerator());
-			},
-			"should understand a single number": function() {
-				var a = Expression.parseOperand({$add:[123]}, this.vps).optimize();
-				assert.equal(a.operands.length, 0, "The operands should have been optimized away");
-				assert(a instanceof ConstantExpression);
-				assert.equal(a.evaluateInternal(), 123);
-			},
-			"should optimize strings of numbers without regard to their order": function() {
-				var a = Expression.parseOperand({$add:[1,2,3,'$a',4,5,6]}, this.vps).optimize();
-				assert.equal(a.operands.length, 2, "The operands should have been optimized away");
-				assert(a.operands[0] instanceof FieldPathExpression);
-				assert(a.operands[1] instanceof ConstantExpression);
-				assert(a.operands[1].evaluateInternal(), 1+2+3+4+5+6);
-			}
+		"should return the correct op name; $add": function() {
+			assert.equal(new AddExpression().getOpName(), "$add");
 		}
-	}
+	},
+
+	"#evaluate()": {
+
+		"should return the operand if null document is given": function testNullDocument() {
+			/** $add with a NULL Document pointer, as called by ExpressionNary::optimize(). */
+			var expr = new AddExpression();
+			expr.addOperand(ConstantExpression.create(2));
+			assert.strictEqual(expr.evaluate({}), 2);
+		},
+
+		"should return 0 if no operands were given": function testNoOperands() {
+			/** $add without operands. */
+			var expr = new AddExpression();
+			assert.strictEqual(expr.evaluate({}), 0);
+		},
+
+		"should throw Error if a String operand was given": function testString() {
+			/** String type unsupported. */
+			var expr = new AddExpression();
+			expr.addOperand(ConstantExpression.create("a"));
+			assert.throws(function () {
+				expr.evaluate({});
+			});
+		},
+
+		"should throw Error if a Boolean operand was given": function testBool() {
+			var expr = new AddExpression();
+			expr.addOperand(ConstantExpression.create(true));
+			assert.throws(function () {
+				expr.evaluate({});
+			});
+		},
+
+		"w/ 1 operand": {
+
+			"should pass through a single int": function testInt() {
+        		/** Single int argument. */
+				new SingleOperandBase({
+					operand: 1,
+				}).run();
+			},
+
+			//SKIPPED: Long -- would be same as Int above
+
+			"should pass through a single float": function testDouble() {
+				/** Single double argument. */
+				new SingleOperandBase({
+					operand: 99.99,
+				}).run();
+			},
+
+			"should pass through a single date": function testDate() {
+				/** Single Date argument. */
+				new SingleOperandBase({
+					operand: new Date(12345),
+				}).run();
+			},
+
+			"should pass through a single null": function testNull() {
+				/** Single null argument. */
+				new SingleOperandBase({
+					operand: null,
+				}).run();
+			},
+
+			"should pass through a single undefined": function testUndefined() {
+				/** Single undefined argument. */
+				new SingleOperandBase({
+					operand: undefined,
+					expectedResult: null,
+				}).run();
+			},
+
+		},
+
+		"w/ 2 operands": {
+
+			"should add two ints": function testIntInt() {
+				/** Add two ints. */
+				new TwoOperandBase({
+					operand1: 1,
+					operand2: 5,
+					expectedResult: 6,
+				}).run();
+			},
+
+			//SKIPPED: IntIntNoOverflow
+
+			//SKIPPED: IntLong
+
+			//SKIPPED: IntLongOverflow
+
+			"should add int and double": function testIntDouble() {
+				/** Adding an int and a double produces a double. */
+				new TwoOperandBase({
+					operand1: 9,
+					operand2: 1.1,
+					expectedResult: 10.1,
+				}).run();
+			},
+
+			"should add int and date": function testIntDate() {
+				/** Adding an int and a Date produces a Date. */
+				new TwoOperandBase({
+					operand1: 6,
+					operand2: new Date(123450),
+					expectedResult: new Date(123456),
+				}).run();
+			},
+
+			//SKIPPED: LongDouble
+
+			//SKIPPED: LongDoubleNoOverflow
+
+			"should add int and null": function testIntNull() {
+				/** Adding an int and null. */
+				new TwoOperandBase({
+					operand1: 1,
+					operand2: null,
+					expectedResult: null,
+				}).run();
+			},
+
+			"should add long and undefined": function testLongUndefined() {
+				/** Adding a long and undefined. */
+				new TwoOperandBase({
+					operand1: 5e11,
+					operand2: undefined,
+					expectedResult: null,
+				}).run();
+			},
+
+		}
+
+	},
+
+	"optimize": {
+
+		"should understand a single number": function() {
+			var vps = new VariablesParseState(new VariablesIdGenerator()),
+				expr = Expression.parseOperand({$add:[123]}, vps).optimize();
+			assert.strictEqual(expr.operands.length, 0, "should optimize operands away");
+			assert(expr instanceof ConstantExpression);
+			assert.strictEqual(expr.evaluate(), 123);
+		},
+
+		"should optimize strings of numbers without regard to their order": function() {
+			var vps = new VariablesParseState(new VariablesIdGenerator()),
+				expr = Expression.parseOperand({$add:[1,2,3,'$a',4,5,6]}, vps).optimize();
+			assert.strictEqual(expr.operands.length, 2, "should optimize operands away");
+			assert(expr.operands[0] instanceof FieldPathExpression);
+			assert(expr.operands[1] instanceof ConstantExpression);
+			debugger
+			assert.strictEqual(expr.operands[1].evaluate(), 1 + 2 + 3 + 4 + 5 + 6);
+		},
+
+	},
+
 };
 
 if (!module.parent)(new (require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
