@@ -1,75 +1,118 @@
 "use strict";
 var assert = require("assert"),
-	MatchDetails = require('../../../../lib/pipeline/matcher/MatchDetails'),
+	BSON = require("bson"),
+	MatchDetails = require("../../../../lib/pipeline/matcher/MatchDetails"),
 	LTEMatchExpression = require("../../../../lib/pipeline/matcher/LTEMatchExpression");
 
 
 module.exports = {
 	"LTEMatchExpression": {
-		"should match scalars and strings properly": function (){
-			var e = new LTEMatchExpression();
-			var s = e.init('x',5);
-			
-			assert.strictEqual(s.code, 'OK');
-			assert.ok( e.matches({'x':5}) );
-			assert.ok( e.matches({'x':4}) );
-			assert.ok( ! e.matches({'x':6}) );
-			assert.ok( ! e.matches({'x': 'eliot'}) );
+		"should match element": function (){
+			var operand = {$lte:5},
+				match = {a:4.5},
+				equalMatch = {a:5},
+				notMatch = {a:6},
+				notMatchWrongType = {a:"foo"},
+				lte = new LTEMatchExpression();
+			var s = lte.init("",operand.$lte);
+			assert.strictEqual(s.code, "OK");
+			assert.ok(lte.matchesSingleElement(match.a));
+			assert.ok(lte.matchesSingleElement(equalMatch.a));
+			assert.ok(!lte.matchesSingleElement(notMatch.a));
+			assert.ok(!lte.matchesSingleElement(notMatchWrongType.a));
 		},
-		"should handle invalid End of Object Operand": function testInvalidEooOperand(){
+		"should not work for invalid eoo operand": function(){
+			var operand = {},
+				lte = new LTEMatchExpression();
+			assert.ok(lte.init("", operand).code !== "OK");
+		},
+		"should match scalars properly": function (){
+			var operand = {$lte:5},
+				lte = new LTEMatchExpression();
+			var s = lte.init("a",operand.$lte);
+			assert.strictEqual(s.code, "OK");
+			assert.ok(lte.matchesJSON({"a":4.5}, null));
+			assert.ok(!lte.matchesJSON({"a":6}), null);
+		},
+		"should match array value": function() {
 			var e = new LTEMatchExpression();
-			var s = e.init('',{});
+			var s = e.init("a",5);
 
-			assert.strictEqual(s.code, 'BAD_VALUE');
+			assert.strictEqual(s.code, "OK");
+			assert.ok( e.matchesJSON({"a":[6,4.5]}) );
+			assert.ok( ! e.matchesJSON({"a":[6,7]}) );
 		},
-		"should match a pathed number":function() {
-			var e = new LTEMatchExpression();
-			var s = e.init('a',5);
+		"should match whole array" : function() {
+			var e = new LTEMatchExpression(),
+				s = e.init("a",[5]);
 
-			assert.strictEqual(s.code, 'OK');
-			assert.ok( e.matches({'a':4.5}) );
-			assert.ok( ! e.matches({'a':6}) );
+			assert.strictEqual(s.code, "OK");
+			assert.ok(e.matchesJSON({"a":[4]}));
+			assert.ok(e.matchesJSON({"a":[5]}));
+			assert.ok(!e.matchesJSON({"a":[6]}));
+			assert.ok(e.matchesJSON({"a":[[4]]}));
+			assert.ok(e.matchesJSON({"a":[[5]]}));
+			assert.ok(!e.matchesJSON({"a":[[6]]}));
 		},
-		"should match stuff in an array": function() {
+		"should match null" : function() {
 			var e = new LTEMatchExpression();
-			var s = e.init('a',5);
+			var s = e.init("a",null);
 
-			assert.strictEqual(s.code, 'OK');
-			assert.ok( e.matches({'a':[6,4.5]}) );
-			assert.ok( ! e.matches({'a':[6,7]}) );
+			assert.strictEqual(s.code, "OK");
+			assert.ok( e.matchesJSON({}) );
+			assert.ok( e.matchesJSON({"a":null}) );
+			assert.ok( ! e.matchesJSON({"a":4}) );
+			// A non-existent field is treated same way as an empty bson object
+			assert.ok( e.matchesJSON({"b":4}) );
 		},
-		"should not match full array" : function() {
+		"should match dot notation null" : function() {
 			var e = new LTEMatchExpression();
-			var s = e.init('a',[5]);
+			var s = e.init("a.b",null);
 
-			assert.strictEqual(s.code, 'OK');
-			assert.ok( ! e.matches({'a':[4]}) );
+			assert.strictEqual(s.code, "OK");
+			assert.ok( e.matchesJSON({}) );
+			assert.ok( e.matchesJSON({"a":null}) );
+			assert.ok( e.matchesJSON({"a":4}) );
+			assert.ok( e.matchesJSON({"a":{}}) );
+			assert.ok( e.matchesJSON({"a":[{b:null}]}) );
+			assert.ok( e.matchesJSON({"a":[{a:4},{b:4}]}) );
+			assert.ok( ! e.matchesJSON({"a":[4]}) );
+			assert.ok( ! e.matchesJSON({"a":[{b:4}]}) );
 		},
-		"should not match null" : function() {
-			var e = new LTEMatchExpression();
-			var s = e.init('a',null);
-		
-			assert.strictEqual(s.code, 'OK');
-			assert.ok( e.matches({}) );
-			assert.ok( e.matches({'a':null}) );
-			assert.ok( ! e.matches({'a':4}) );
+		"should match MinKey": function (){
+			var operand = {a:new BSON.MinKey()},
+				e = new LTEMatchExpression();
+			var s = e.init("a",operand.a);
+			assert.strictEqual(s.code, "OK");
+			assert.ok(e.matchesJSON({"a":new BSON.MinKey()}, null));
+			assert.ok(!e.matchesJSON({"a":new BSON.MaxKey()}, null));
+			assert.ok(!e.matchesJSON({"a":4}), null);
+		},
+		"should match MaxKey": function (){
+			var operand = {a:new BSON.MaxKey()},
+				e = new LTEMatchExpression();
+			var s = e.init("a",operand.a);
+			assert.strictEqual(s.code, "OK");
+			assert.ok(e.matchesJSON({"a":new BSON.MaxKey()}, null));
+			assert.ok(e.matchesJSON({"a":new BSON.MinKey()}, null));
+			assert.ok(e.matchesJSON({"a":4}), null);
 		},
 		"should handle elemMatchKey":function() {
 			var e = new LTEMatchExpression();
-			var s = e.init('a',5);
+			var s = e.init("a",5);
 			var m = new MatchDetails();
 			m.requestElemMatchKey();
-			assert.strictEqual( s.code, 'OK' );
+			assert.strictEqual( s.code, "OK" );
 
-			assert.ok( ! e.matches({'a':6}, m) );
+			assert.ok( ! e.matchesJSON({"a":6}, m) );
 			assert.ok( ! m.hasElemMatchKey() );
 
-			assert.ok( e.matches({'a':4}, m) );
+			assert.ok( e.matchesJSON({"a":4}, m) );
 			assert.ok( ! m.hasElemMatchKey() );
 
-			assert.ok( e.matches({'a':[6,2,5]}, m));
+			assert.ok( e.matchesJSON({"a":[6,2,5]}, m));
 			assert.ok( m.hasElemMatchKey());
-			assert.strictEqual('1', m.elemMatchKey());
+			assert.strictEqual("1", m.elemMatchKey());
 		}
 
 	}

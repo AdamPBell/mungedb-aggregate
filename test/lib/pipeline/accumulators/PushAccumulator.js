@@ -2,99 +2,119 @@
 var assert = require("assert"),
 	PushAccumulator = require("../../../../lib/pipeline/accumulators/PushAccumulator");
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-function createAccumulator(){
-	return new PushAccumulator();
-}
 
-module.exports = {
+exports.PushAccumulator = {
 
-	"PushAccumulator": {
+	".constructor()": {
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new PushAccumulator();
-				});
-			}
-
+		"should create instance of accumulator": function() {
+			assert(new PushAccumulator() instanceof PushAccumulator);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $push": function testOpName(){
-				assert.strictEqual(new PushAccumulator().getOpName(), "$push");
-			}
-
+		"should throw error if called with args": function() {
+			assert.throws(function() {
+				new PushAccumulator(123);
+			});
 		},
 
-		"#getFactory()": {
+	},
 
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new PushAccumulator().getFactory(), PushAccumulator);
-			}
+	".create()": {
 
+		"should return an instance of the accumulator": function() {
+			assert(PushAccumulator.create() instanceof PushAccumulator);
 		},
 
-		"#processInternal()": {
+	},
 
-			"should processInternal no documents and return []": function testprocessInternal_None(){
-				var accumulator = createAccumulator();
-				assert.deepEqual(accumulator.getValue(), []);
-			},
+	"#process()": {
 
-			"should processInternal a 1 and return [1]": function testprocessInternal_One(){
-				var accumulator = createAccumulator();
-				accumulator.processInternal(1);
-				assert.deepEqual(accumulator.getValue(), [1]);
-			},
+		"should return empty array if no inputs evaluated": function() {
+			var acc = PushAccumulator.create();
+			assert.deepEqual(acc.getValue(), []);
+		},
 
-			"should processInternal a 1 and a 2 and return [1,2]": function testprocessInternal_OneTwo(){
-				var accumulator = createAccumulator();
-				accumulator.processInternal(1);
-				accumulator.processInternal(2);
-				assert.deepEqual(accumulator.getValue(), [1,2]);
-			},
+		"should return array of one value for one input": function() {
+			var acc = PushAccumulator.create();
+			acc.process(1);
+			assert.deepEqual(acc.getValue(), [1]);
+		},
 
-			"should processInternal a 1 and a null and return [1,null]": function testprocessInternal_OneNull(){
-				var accumulator = createAccumulator();
-				accumulator.processInternal(1);
-				accumulator.processInternal(null);
-				assert.deepEqual(accumulator.getValue(), [1, null]);
-			},
+		"should return array of two values for two inputs": function() {
+			var acc = PushAccumulator.create();
+			acc.process(1);
+			acc.process(2);
+			assert.deepEqual(acc.getValue(), [1,2]);
+		},
 
-			"should processInternal a 1 and an undefined and return [1]": function testprocessInternal_OneUndefined(){
-				var accumulator = createAccumulator();
-				accumulator.processInternal(1);
-				accumulator.processInternal(undefined);
-				assert.deepEqual(accumulator.getValue(), [1]);
-			},
+		"should return array of two values for two inputs (including null)": function() {
+			var acc = PushAccumulator.create();
+			acc.process(1);
+			acc.process(null);
+			assert.deepEqual(acc.getValue(), [1, null]);
+		},
 
-			"should processInternal a 1 and a 0 and return [1,0]": function testprocessInternal_OneZero(){
-				var accumulator = createAccumulator();
-				accumulator.processInternal(1);
-				accumulator.processInternal(0);
-				assert.deepEqual(accumulator.getValue(), [1, 0]);
-			},
+		"should return array of one value for two inputs if one is undefined": function() {
+			var acc = PushAccumulator.create();
+			acc.process(1);
+			acc.process(undefined);
+			assert.deepEqual(acc.getValue(), [1]);
+		},
 
-			"should processInternal a 1 and a [0] and return [1,0]": function testprocessInternal_OneArrayZeroMerging(){
-				var accumulator = createAccumulator();
-				accumulator.processInternal(1);
-				accumulator.processInternal([0], true);
-				assert.deepEqual(accumulator.getValue(), [1, 0]);
-			},
+		"should return array of two values from two separate mergeable inputs": function() {
+			var acc = PushAccumulator.create();
+			acc.process([1], true);
+			acc.process([0], true);
+			assert.deepEqual(acc.getValue(), [1, 0]);
+		},
 
-			"should processInternal a 1 and a 0 and throw an error if merging": function testprocessInternal_OneZeroMerging(){
-				var accumulator = createAccumulator();
-				accumulator.processInternal(1);
-				assert.throws(function() {
-					accumulator.processInternal(0, true);
-				});
-			}
-		}
+		"should throw error if merging non-array": function() {
+			var acc = PushAccumulator.create();
+			assert.throws(function() {
+				acc.process(0, true);
+			});
+			assert.throws(function() {
+				acc.process("foo", true);
+			});
+		},
 
-	}
+	},
+
+	"#getValue()": {
+
+		"should get value the same for shard and router": function() {
+			var acc = PushAccumulator.create();
+			assert.strictEqual(acc.getValue(false), acc.getValue(true));
+			acc.process(123);
+			assert.strictEqual(acc.getValue(false), acc.getValue(true));
+		},
+
+	},
+
+	"#reset()": {
+
+		"should reset to empty array": function() {
+			var acc = PushAccumulator.create();
+			assert.deepEqual(acc.getValue(), []);
+			acc.process(123);
+			assert.notDeepEqual(acc.getValue(), []);
+			acc.reset();
+			assert.deepEqual(acc.getValue(), []);
+			assert.deepEqual(acc.getValue(true), []);
+		},
+
+	},
+
+	"#getOpName()": {
+
+		"should return the correct op name; $push": function(){
+			assert.strictEqual(new PushAccumulator().getOpName(), "$push");
+		},
+
+	},
 
 };
 
