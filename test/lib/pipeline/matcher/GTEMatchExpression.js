@@ -8,13 +8,13 @@ module.exports = {
 	"GTEMatchExpression": {
 		"should match scalars and strings properly": function (){
 			var e = new GTEMatchExpression();
-			var s = e.init('a',5);
+			var s = e.init('x',5);
 
 			assert.strictEqual(s.code, 'OK');
-			assert.ok( e.matches({'a':5.5}) );
-			assert.ok( e.matches({'a':5}) );
-			assert.ok( ! e.matches({'a':4}) );
-			assert.ok( ! e.matches({'a': 'foo'}) );
+			assert.ok( e.matches({'x':5}) );
+			assert.ok( ! e.matches({'x':4}) );
+			assert.ok( e.matches({'x':6}) );
+			assert.ok( ! e.matches({'x': 'eliot'}) );
 		},
 		"should handle invalid End of Object Operand": function testInvalidEooOperand(){
 			var e = new GTEMatchExpression();
@@ -43,8 +43,6 @@ module.exports = {
 			var s = e.init('a',[5]);
 
 			assert.strictEqual(s.code, 'OK');
-			assert.ok( ! e.matches({'a':[4]}) );
-			assert.ok( e.matches({'a':[5]}) );
 			assert.ok( e.matches({'a':[6]}) );
 		},
 		"should not match null" : function() {
@@ -55,24 +53,6 @@ module.exports = {
 			assert.ok( e.matches({}) );
 			assert.ok( e.matches({'a':null}) );
 			assert.ok( ! e.matches({'a':4}) );
-			assert.ok( e.matches({'b':4}) );
-		},
-		"should match dot notation nulls": function() {
-			var e = new GTEMatchExpression();
-			var s = e.init('a.b',null);
-
-			assert.strictEqual(s.code, 'OK');
-			assert.ok(e.matchesJSON({}));
-			assert.ok(e.matchesJSON({a:null}));
-			assert.ok(e.matchesJSON({a:{}}));
-			assert.ok(e.matchesJSON({a:[{b: null}]}));
-			assert.ok(e.matchesJSON({a:[{a:4}, {b:4}]}));
-			assert.ok(!e.matchesJSON({a:[4]}));
-			assert.ok(!e.matchesJSON({a:[{b:4}]}));
-		},
-		"should match MinKey": function() {
-		},
-		"should match MaxKey": function() {
 		},
 		"should handle elemMatchKey":function() {
 			var e = new GTEMatchExpression();
