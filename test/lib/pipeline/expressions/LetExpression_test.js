@@ -153,7 +153,7 @@ module.exports = {
 				}
 			},
 
-			"The Guantlet": {
+			"The Gauntlet": {
 				"example from http://docs.mongodb.org/manual/reference/operator/aggregation/let/": function () {
 					var x = Expression.parseOperand(
 						{$let: { vars: { total: { $add: [ '$price', '$tax' ] },	discounted: { $cond: { if: '$applyDiscount', then: 0.9, else: 1 } }}, in: { $multiply: [ '$$total', '$$discounted' ] }}},
