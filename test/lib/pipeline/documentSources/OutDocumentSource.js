@@ -41,7 +41,7 @@ module.exports = {
 				assert.throws(ods.getNext.bind(ods));
 			},
 
-			"should act ass passthrough (for now)": function(next) {
+			"should act as passthrough (for now)": function(next) {
 				var ods = OutDocumentSource.createFromJson("test"),
 					cwc = new CursorDocumentSource.CursorWithContext(),
 					l = [{_id:0,a:[{b:1},{b:2}]}, {_id:1,a:[{b:1},{b:1}]} ];
