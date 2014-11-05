@@ -80,7 +80,7 @@ exports.ConcatExpression = {
 		},
 
 		"should throw if an operand is a boolean": function() {
-			var expr = Expression.parseOperand({$concat:["my","$a"]}, this.vps)
+			var expr = Expression.parseOperand({$concat:["my","$a"]}, this.vps);
 			assert.throws(function() {
 				expr.evaluate({a:true});
 			});
