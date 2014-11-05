@@ -30,7 +30,7 @@ module.exports = {
 				q3 = {'x':5, 'y':{'$isolated':1}};
 			var parser = new MatchExpressionParser();
 			var t = parser.parse(q1);
-			
+
 			assert.strictEqual(parser.parse(q1).code, 'OK');
 			assert.strictEqual(parser.parse(q2).code, 'OK');
 			assert.strictEqual(parser.parse(q3).code, 'BAD_VALUE');
@@ -38,7 +38,7 @@ module.exports = {
 		"Should parse and match $size with an int": function() {
 			var parser = new MatchExpressionParser();
 			var q = {'x':{'$size':2}};
-				
+
 			var res = parser.parse(q);
 			assert.strictEqual(res.code,'OK',res.description);
 			assert.ok( ! res.result.matches({'x':1}) );
@@ -49,7 +49,7 @@ module.exports = {
 		"Should parse and match $size with a string argument": function() {
 			var parser = new MatchExpressionParser();
 			var q = {'x':{'$size':'a'}};
-			
+
 			var res = parser.parse( q );
 			assert.strictEqual(res.code,'OK',res.description);
 			assert.ok( ! res.result.matches({'x':1}) );
@@ -78,7 +78,7 @@ module.exports = {
 		"Should parse $elemMatch : {x:1,y:2}": function() {
 			var parser = new MatchExpressionParser();
 			var q = {'x':{'$elemMatch': {'x':1,'y':2}}};
-			
+
 			var res = parser.parse( q );
 			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( ! res.result.matches({'x':1}) );
@@ -99,7 +99,7 @@ module.exports = {
 		"Should parse and match $all:[1,2]" : function() {
 			var parser = new MatchExpressionParser();
 			var q = {'x':{'$all':[1,2]}};
-			
+
 			var res = parser.parse( q );
 			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( ! res.result.matches({'x':1}) );
@@ -119,9 +119,9 @@ module.exports = {
 		"Should not allow large regex patterns": function () {
 			var parser = new MatchExpressionParser();
 			var q = {'x':{'$all':[new RegExp((new Array(50*1000+1)).join('z'))] }};
-			
+
 			var res = parser.parse( q );
-			assert.strictEqual( res.code, 'BAD_VALUE' );	
+			assert.strictEqual( res.code, 'BAD_VALUE' );
 		},
 		"Should parse and match some simple regex patterns": function() {
 			var parser = new MatchExpressionParser();
@@ -174,7 +174,7 @@ module.exports = {
 
 			var res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
-			
+
 			q = {'x':{'$all':[5,{'$elemMatch':{'x':1,'y':2}}]}};
 			res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
@@ -206,7 +206,7 @@ module.exports = {
 			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( res.result.matches({'x':1}) );
 			assert.ok( ! res.result.matches({'x':2}) );
-			assert.ok( ! res.result.matches({'x':3}) );	
+			assert.ok( ! res.result.matches({'x':3}) );
 		},
 		"Should parse and match simple $gte": function() {
 			var parser = new MatchExpressionParser();
@@ -216,7 +216,7 @@ module.exports = {
 			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( ! res.result.matches({'x':1}) );
 			assert.ok( res.result.matches({'x':2}) );
-			assert.ok( res.result.matches({'x':3}) );	
+			assert.ok( res.result.matches({'x':3}) );
 		},
 		"Should parse and matc simple $lte": function() {
 			var parser = new MatchExpressionParser();
@@ -256,7 +256,7 @@ module.exports = {
 			q = {'x':{'$mod':['q',2]}};
 			res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
-		
+
 			q = {'x':{'$mod':3}};
 			res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
@@ -272,19 +272,8 @@ module.exports = {
 			var res = parser.parse( q );
 			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( res.result.matches({'x':5}) );
-			assert.ok( ! res.result.matches({'x':4}) );	
+			assert.ok( ! res.result.matches({'x':4}) );
 			assert.ok( res.result.matches({'x':8}) );
-		},
-		"Should treat a second arg to $mod that is a string as a 0": function() {
-			var parser = new MatchExpressionParser();
-			var q = {'x':{'$mod':[2,'r']}};
-
-			var res = parser.parse( q );
-			assert.strictEqual( res.code,'OK',res.description );
-			assert.ok( res.result.matches({'x':2}) );
-			assert.ok( res.result.matches({'x':4}) );
-			assert.ok( ! res.result.matches({'x':5}) );
-			assert.ok( ! res.result.matches({'x':'a'}) );
 		},
 		"Should parse and match a simple $in": function() {
 			var parser = new MatchExpressionParser();
@@ -317,7 +306,7 @@ module.exports = {
 
 			var res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
-	
+
 			q = {'x':{'$in': [{'$regex': str}]}};
 			res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
@@ -392,11 +381,11 @@ module.exports = {
 
 			var res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
-		
+
 			q = {'x':{'$optionas': 'i'}};
 			res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
-		
+
 			q = {'x':{'$options':'i'}};
 			res = parser.parse( q );
 			assert.strictEqual( res.code, 'BAD_VALUE' );
@@ -422,7 +411,7 @@ module.exports = {
 		"Should parse and match String $type": function() {
 			var parser = new MatchExpressionParser();
 			var q = {'x':{'$type': 2 }};
-			
+
 			var res = parser.parse( q );
 			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( res.result.matches({'x': 'abc'}) );
@@ -445,12 +434,12 @@ module.exports = {
 			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( ! res.result.matches({'x':{}}) );
 			assert.ok( ! res.result.matches({'x':5}) );
-			assert.ok( res.result.matches({'x':null}) );		
+			assert.ok( res.result.matches({'x':null}) );
 		},
 		"Should parse but not match a type beyond typemax in $type": function() {
 			var parser = new MatchExpressionParser();
 			var q = {'x':{'$type': 1000}};
-			
+
 			var res = parser.parse( q );
 			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( ! res.result.matches({'x':5}) );
@@ -479,7 +468,7 @@ module.exports = {
 			var q = {'$or':[{'$or':[{'x':1},{'y':2}]}]};
 
 			var res = parser.parse( q );
-			assert.strictEqual( res.code,'OK',res.description );	
+			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( res.result.matches({'x':1}) );
 			assert.ok( res.result.matches({'y':2}) );
 			assert.ok( ! res.result.matches({'x':3}) );
@@ -503,7 +492,7 @@ module.exports = {
 			var q = {'$nor':[{'x':1},{'y':2}]};
 
 			var res = parser.parse( q );
-			assert.strictEqual( res.code,'OK',res.description );	
+			assert.strictEqual( res.code,'OK',res.description );
 			assert.ok( ! res.result.matches({'x':1}) );
 			assert.ok( ! res.result.matches({'y':2}) );
 			assert.ok( res.result.matches({'x':3}) );
@@ -518,6 +507,77 @@ module.exports = {
 			assert.ok( res.result.matches({'x':2}) );
 			assert.ok( ! res.result.matches({'x':8}) );
 		},
+		"should allow trees less than the maximum recursion depth": function() {
+			var parser = new MatchExpressionParser(),
+				depth = 60,
+				q = "",
+				i;
+
+			for (i = 0; i < depth/2; i++) {
+				q = q + '{"$and": [{"a":3}, {"$or": [{"b":2},';
+			}
+			q = q + '{"b": 4}';
+			for (i = 0; i < depth/2; i++) {
+				q = q + "]}]}";
+			}
+
+			var res = parser.parse(JSON.parse(q));
+			assert.strictEqual(res.code, 'OK', res.description);
+		},
+		"should error when depth limit is exceeded": function() {
+			var parser = new MatchExpressionParser(),
+				depth = 105,
+				q = "",
+				i;
+
+			for (i = 0; i < depth/2; i++) {
+				q = q + '{"$and": [{"a":3}, {"$or": [{"b":2},';
+			}
+			q = q + '{"b": 4}';
+			for (i = 0; i < depth/2; i++) {
+				q = q + "]}]}";
+			}
+
+			var res = parser.parse(JSON.parse(q));
+			assert.strictEqual(res.description.substr(0, 43), 'exceeded maximum query tree depth of 100 at');
+			assert.strictEqual(res.code, 'BAD_VALUE');
+		},
+		"should error when depth limit is reached through a $not": function() {
+			var parser = new MatchExpressionParser(),
+				depth = 105,
+				q = '{"a": ',
+				i;
+
+			for (i = 0; i < depth; i++) {
+				q = q + '{"$not": ';
+			}
+			q = q + '{"$eq": 5}';
+			for (i = 0; i < depth+1; i++) {
+				q = q + "}";
+			}
+
+			var res = parser.parse(JSON.parse(q));
+			assert.strictEqual(res.description.substr(0, 43), 'exceeded maximum query tree depth of 100 at');
+			assert.strictEqual(res.code, 'BAD_VALUE');
+		},
+		"should error when depth limit is reached through an $elemMatch": function() {
+			var parser = new MatchExpressionParser(),
+				depth = 105,
+				q = '',
+				i;
+
+			for (i = 0; i < depth; i++) {
+				q = q + '{"a": {"$elemMatch": ';
+			}
+			q = q + '{"b": 5}';
+			for (i = 0; i < depth; i++) {
+				q = q + "}}";
+			}
+
+			var res = parser.parse(JSON.parse(q));
+			assert.strictEqual(res.description.substr(0, 43), 'exceeded maximum query tree depth of 100 at');
+			assert.strictEqual(res.code, 'BAD_VALUE');
+		},
 		"Should parse $not $regex and match properly": function() {
 			var parser = new MatchExpressionParser();
 			var a = /abc/i;
@@ -528,10 +588,7 @@ module.exports = {
 			assert.ok( ! res.result.matches({'x':'ABC'}) );
 			assert.ok( res.result.matches({'x':'AC'}) );
 		}
-
-
 	}
 };
 
 if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
-
