@@ -1,10 +1,15 @@
 "use strict";
 var assert = require("assert"),
 	async = require("async"),
-	Cursor = require("../../../../lib/Cursor"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
+	SkipDocumentSource = require("../../../../lib/pipeline/documentSources/SkipDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	SkipDocumentSource = require("../../../../lib/pipeline/documentSources/SkipDocumentSource");
+	ArrayRunner = require("../../../../lib/query/ArrayRunner");
+
+var addSource = function addSource(ds, data) {
+	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
+	ds.setSource(cds);
+};
 
 
 module.exports = {
@@ -84,19 +89,15 @@ module.exports = {
 
 				var expected = [
 					{val:4},
-					DocumentSource.EOF
+					null
 				];
-
-				var cwc = new CursorDocumentSource.CursorWithContext();
 				var input = [
 					{val:1},
 					{val:2},
 					{val:3},
 					{val:4},
 				];
-				cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
-				sds.setSource(cds);
+				addSource(sds, input);
 
 				async.series([
 						sds.getNext.bind(sds),
@@ -108,20 +109,17 @@ module.exports = {
 					}
 				);
 				sds.getNext(function(err, actual) {
-					assert.equal(actual, DocumentSource.EOF);
+					assert.equal(actual, null);
 				});
 			},
 			"should return documents if skip count is not hit and there are more documents": function hitSkip(next){
 				var sds = SkipDocumentSource.createFromJson(1);
 
-				var cwc = new CursorDocumentSource.CursorWithContext();
 				var input = [{val:1},{val:2},{val:3}];
-				cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
-				sds.setSource(cds);
+				addSource(sds, input);
 
 				sds.getNext(function(err,actual) {
-					assert.notEqual(actual, DocumentSource.EOF);
+					assert.notEqual(actual, null);
 					assert.deepEqual(actual, {val:2});
 					next();
 				});
@@ -130,11 +128,8 @@ module.exports = {
 			"should return the current document source": function currSource(){
 				var sds = SkipDocumentSource.createFromJson(1);
 
-				var cwc = new CursorDocumentSource.CursorWithContext();
 				var input = [{val:1},{val:2},{val:3}];
-				cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
-				sds.setSource(cds);
+				addSource(sds, input);
 
 				sds.getNext(function(err, actual) {
 					assert.deepEqual(actual, { val:2 });
@@ -147,17 +142,11 @@ module.exports = {
 
 				var expected = [
 					{item:4},
-					DocumentSource.EOF
+					null
 				];
-
-				var i = 1;
-				sds.source = {
-					getNext:function(cb){
-						if (i>=5)
-							return cb(null,DocumentSource.EOF);
-						return cb(null, { item:i++ });
-					}
-				};
+				
+				var input = [{item:1},{item:2},{item:3},{item:4}];
+				addSource(sds, input);
 
 				async.series([
 						sds.getNext.bind(sds),

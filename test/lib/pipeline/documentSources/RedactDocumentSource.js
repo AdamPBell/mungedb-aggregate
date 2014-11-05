@@ -4,7 +4,7 @@ var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	RedactDocumentSource = require("../../../../lib/pipeline/documentSources/RedactDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	Cursor = require("../../../../lib/Cursor"),
+	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
 	Expressions = require("../../../../lib/pipeline/expressions");
 
 var exampleRedact = {$cond:{
@@ -15,9 +15,7 @@ var exampleRedact = {$cond:{
 
 var createCursorDocumentSource = function createCursorDocumentSource (input) {
 	if (!input || input.constructor !== Array) throw new Error('invalid');
-	var cwc = new CursorDocumentSource.CursorWithContext();
-	cwc._cursor = new Cursor(input);
-	return new CursorDocumentSource(cwc);
+	return new CursorDocumentSource(null, new ArrayRunner(input), null);
 };
 
 var createRedactDocumentSource = function createRedactDocumentSource (src, expression) {
@@ -55,29 +53,27 @@ module.exports = {
 				var rds = RedactDocumentSource.createFromJson(exampleRedact);
 				rds.setSource({
 					getNext: function getNext(cb) {
-						return cb(null, DocumentSource.EOF);
+						return cb(null, null);
 					}
 				});
 				rds.getNext(function(err, doc) {
-					assert.equal(DocumentSource.EOF, doc);
+					assert.equal(null, doc);
 					next();
 				});
 			},
 
 			"iterator state accessors consistently report the source is exhausted": function assertExhausted() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
 				var input = [{}];
-				cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
+				var cds = createCursorDocumentSource(input);
 				var rds = RedactDocumentSource.createFromJson(exampleRedact);
 				rds.setSource(cds);
 				rds.getNext(function(err, actual) {
 					rds.getNext(function(err, actual1) {
-						assert.equal(DocumentSource.EOF, actual1);
+						assert.equal(null, actual1);
 						rds.getNext(function(err, actual2) {
-							assert.equal(DocumentSource.EOF, actual2);
+							assert.equal(null, actual2);
 							rds.getNext(function(err, actual3) {
-								assert.equal(DocumentSource.EOF, actual3);
+								assert.equal(null, actual3);
 							});
 						});
 					});
