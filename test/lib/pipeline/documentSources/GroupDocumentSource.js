@@ -5,7 +5,8 @@ var assert = require("assert"),
 	Cursor = require("../../../../lib/Cursor"),
 	GroupDocumentSource = require("../../../../lib/pipeline/documentSources/GroupDocumentSource"),
 	async = require('async'),
-	utils = require("../expressions/utils");
+	utils = require("../expressions/utils"),
+	expressions = require("../../../../lib/pipeline/expressions");
 
 
 /// An assertion for `ObjectExpression` instances based on Mongo's `ExpectedResultBase` class
@@ -44,7 +45,7 @@ function assertExpectedResult(args) {
 				});
 			},
 			function(err) {
-				assert.deepEqual(results, args.expected);
+				assert.equal(JSON.stringify(results), JSON.stringify(args.expected));
 				if(args.done) {
 					return args.done();
 				}
@@ -246,7 +247,7 @@ module.exports = {
 			"should make one group with two values": function TwoValuesSingleKey() {
 				assertExpectedResult({
 					docs: [{a:1}, {a:2}],
-					spec: {_id:"$_id", a:{$push:"$a"}},
+					spec: {_id:0, a:{$push:"$a"}},
 					expected: [{_id:0, a:[1,2]}]
 				});
 			},
