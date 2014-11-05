@@ -64,7 +64,7 @@ exports.CoerceToBoolExpression = {
 		"should be able to output in to JSON Object": function testAddToBsonObj() {
 			/** Output to BSONObj. */
 			var expr = CoerceToBoolExpression.create(FieldPathExpression.create("foo"));
-            // serialized as $and because CoerceToBool isn't an ExpressionNary
+			// serialized as $and because CoerceToBool isn't an ExpressionNary
 			assert.deepEqual({field:{$and:["$foo"]}}, {field:expr.serialize(false)});
 		},
 

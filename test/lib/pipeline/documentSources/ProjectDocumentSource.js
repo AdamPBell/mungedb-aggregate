@@ -1,10 +1,11 @@
 "use strict";
 var assert = require("assert"),
 	async = require("async"),
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	ProjectDocumentSource = require("../../../../lib/pipeline/documentSources/ProjectDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	Cursor = require("../../../../lib/Cursor"),
+	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
 	TestBase = require("./TestBase"),
 	And = require("../../../../lib/pipeline/expressions/AndExpression");
 
@@ -37,268 +38,236 @@ var createProject = function createProject(projection) {
 //TESTS
 module.exports = {
 
-	"ProjectDocumentSource": {
+	"constructor()": {
 
-		"mongo tests": {
-			"Inclusion": function() {
-				var test = new TestBase();
-				//client.insert( ns, fromjson( "{_id:0,a:1,b:1,c:{d:1}}" ) );
-				test.createSource();
-				test.createProject();
-			}
+		"should not throw Error when constructing without args": function testConstructor() {
+			assert.doesNotThrow(function() {
+				new ProjectDocumentSource();
+			});
 		},
 
-		"constructor()": {
+		"should throw Error when constructing with more than 1 arg": function testConstructor() {
+			assert.throws(function() {
+				new ProjectDocumentSource("a", "b", "c");
+			});
+		}
 
-			"should not throw Error when constructing without args": function testConstructor() {
-				assert.doesNotThrow(function() {
-					new ProjectDocumentSource();
-				});
-			},
+	},
 
-			"should throw Error when constructing with more than 1 arg": function testConstructor() {
-				assert.throws(function() {
-					new ProjectDocumentSource("a", "b", "c");
-				});
-			}
+	"#getSourceName()": {
 
+		"should return the correct source name; $project": function testSourceName() {
+			var pds = new ProjectDocumentSource();
+			assert.strictEqual(pds.getSourceName(), "$project");
+		}
+
+	},
+
+	"#getNext()": {
+
+		"should return EOF": function testEOF(next) {
+			var pds = createProject({});
+			pds.setSource({
+				getNext: function getNext(cb) {
+					return cb(null, null);
+				}
+			});
+			pds.getNext(function(err, doc) {
+				assert.equal(null, doc);
+				next();
+			});
 		},
 
-		"#getSourceName()": {
-
-			"should return the correct source name; $project": function testSourceName() {
-				var pds = new ProjectDocumentSource();
-				assert.strictEqual(pds.getSourceName(), "$project");
-			}
-
-		},
-
-		"#getNext()": {
-
-			"should return EOF": function testEOF(next) {
-				var pds = createProject({});
-				pds.setSource({
-					getNext: function getNext(cb) {
-						return cb(null, DocumentSource.EOF);
-					}
-				});
-				pds.getNext(function(err, doc) {
-					assert.equal(DocumentSource.EOF, doc);
-					next();
-				});
-			},
-
-			"iterator state accessors consistently report the source is exhausted": function assertExhausted() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				var input = [{}];
-				cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
-				var pds = createProject();
-				pds.setSource(cds);
-				pds.getNext(function(err, actual) {
-					pds.getNext(function(err, actual1) {
-						assert.equal(DocumentSource.EOF, actual1);
-						pds.getNext(function(err, actual2) {
-							assert.equal(DocumentSource.EOF, actual2);
-							pds.getNext(function(err, actual3) {
-								assert.equal(DocumentSource.EOF, actual3);
-							});
+		"iterator state accessors consistently report the source is exhausted": function assertExhausted() {
+			var input = [{}];
+			var cds = new CursorDocumentSource(null, new ArrayRunner(input), null);
+			var pds = createProject();
+			pds.setSource(cds);
+			pds.getNext(function(err, actual) {
+				pds.getNext(function(err, actual1) {
+					assert.equal(null, actual1);
+					pds.getNext(function(err, actual2) {
+						assert.equal(null, actual2);
+						pds.getNext(function(err, actual3) {
+							assert.equal(null, actual3);
 						});
 					});
 				});
-			},
+			});
+		},
 
-			"callback is required": function requireCallback() {
-				var pds = createProject();
-				assert.throws(pds.getNext.bind(pds));
-			},
+		"callback is required": function requireCallback() {
+			var pds = createProject();
+			assert.throws(pds.getNext.bind(pds));
+		},
 
-			"should not return EOF when a document is still in cursor": function testNotEOFTrueIfDocPresent() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				var input = [{_id: 0, a: 1}, {_id: 1, a: 2}];
-					cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
-				var pds = createProject();
-				pds.setSource(cds);
-				pds.getNext(function(err,actual) {
-					// first go round
-					assert.notEqual(actual, DocumentSource.EOF);
-				});
-			},
+		"should not return EOF when a document is still in cursor": function testNotEOFTrueIfDocPresent() {
+			var input = [{_id: 0, a: 1}, {_id: 1, a: 2}];
+			var cds = new CursorDocumentSource(null, new ArrayRunner(input), null);
+			var pds = createProject();
+			pds.setSource(cds);
+			pds.getNext(function(err,actual) {
+				// first go round
+				assert.notEqual(actual, null);
+			});
+		},
 
-			"can retrieve second document from source": function testAdvanceFirst() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				var input = [{_id: 0, a: 1}, {_id: 1, a: 2}];
-				cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
-				var pds = createProject();
-				pds.setSource(cds);
+		"can retrieve second document from source": function testAdvanceFirst() {
+			var input = [{_id: 0, a: 1}, {_id: 1, a: 2}];
+			var cds = new CursorDocumentSource(null, new ArrayRunner(input), null);
+			var pds = createProject();
+			pds.setSource(cds);
 
+			pds.getNext(function(err,val) {
+				// eh, ignored
 				pds.getNext(function(err,val) {
-					// eh, ignored
-					pds.getNext(function(err,val) {
-						assert.equal(2, val.a);
-					});
+					assert.equal(2, val.a);
 				});
-			},
+			});
+		},
 
-			"should get the first document out of a cursor": function getCurrentCalledFirst() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				var input = [{_id: 0, a: 1}];
-				cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
-				var pds = createProject();
-				pds.setSource(cds);
-				pds.getNext(function(err, actual) {
-					assert.equal(1, actual.a);
-				});
-			},
+		"should get the first document out of a cursor": function getCurrentCalledFirst() {
+			var input = [{_id: 0, a: 1}];
+			var cds = new CursorDocumentSource(null, new ArrayRunner(input), null);
+			var pds = createProject();
+			pds.setSource(cds);
+			pds.getNext(function(err, actual) {
+				assert.equal(1, actual.a);
+			});
+		},
 
-			"The a and c.d fields are included but the b field is not": function testFullProject1(next) {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				var input = [{
-					_id:1,
-					a: 1,
-					b: 1,
-					c: {
-						d: 1
-					}
-				}];
-				cwc._cursor = new Cursor(input);
-				var cds = new CursorDocumentSource(cwc);
-				var pds = createProject({
-						_id: 0,
-						a: true,
-						c: {
-							d: true
-						}
-					}),
-					expected = {a:1, c:{ d: 1 }};
-				pds.setSource(cds);
-
-				pds.getNext(function(err,val) {
-					assert.deepEqual(expected, val);
-					next();
-				});
-			},
-
-			"Two documents": function testTwoDocumentsProject(next) {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				var input = [{
-					a: 1,
-					b: 2
-				}, {
-					a: 3,
-					b: 4
-				}],
-				expected = [
-					{a:1},
-					{a:3},
-					DocumentSource.EOF
-				];
-				cwc._cursor = new Cursor(input);
-				var cds = new CursorDocumentSource(cwc);
-				var pds = createProject({
+		"The a and c.d fields are included but the b field is not": function testFullProject1(next) {
+			var input = [{
+				_id:0,
+				a: 1,
+				b: 1,
+				c: {
+					d: 1
+				}
+			}];
+			var cds = new CursorDocumentSource(null, new ArrayRunner(input), null);
+			var pds = createProject({
 					a: true,
 					c: {
 						d: true
 					}
-				});
-				pds.setSource(cds);
+				}),
+				expected = {_id: 0, a:1, c:{ d: 1 }};
+			pds.setSource(cds);
 
-				async.series([
-						pds.getNext.bind(pds),
-						pds.getNext.bind(pds),
-						pds.getNext.bind(pds),
-					],
-					function(err,res) {
-						assert.deepEqual(expected, res);
-						next();
-					}
-				);
-			}
+			pds.getNext(function(err,val) {
+				assert.deepEqual(expected, val);
+				next();
+			});
 		},
 
-		"#optimize()": {
+		"Two documents": function testTwoDocumentsProject(next) {
+			var input = [{
+				a: 1,
+				b: 2
+			}, {
+				a: 3,
+				b: 4
+			}],
+			expected = [
+				{a:1},
+				{a:3},
+				null
+			];
+			var cds = new CursorDocumentSource(null, new ArrayRunner(input), null);
+			var pds = createProject({
+				a: true,
+				c: {
+					d: true
+				}
+			});
+			pds.setSource(cds);
 
-			"Optimize the projection": function optimizeProject() {
+			async.series([
+					pds.getNext.bind(pds),
+					pds.getNext.bind(pds),
+					pds.getNext.bind(pds),
+				],
+				function(err,res) {
+					assert.deepEqual(expected, res);
+					next();
+				}
+			);
+		}
+	},
+
+	"#optimize()": {
+
+		"Optimize the projection": function optimizeProject() {
+			var pds = createProject({
+				a: {
+					$and: [{$const:true}]
+				}
+			});
+
+			pds.optimize();
+			checkJsonRepresentation(pds, {$project:{a:{$const:true}}});
+		}
+
+	},
+
+	"#createFromJson()": {
+
+		"should error if called with non-object": function testNonObjectPassed() {
+			//String as arg
+			assert.throws(function() {
+				var pds = createProject("not an object");
+			});
+			//Date as arg
+			assert.throws(function() {
+				var pds = createProject(new Date());
+			});
+			//Array as arg
+			assert.throws(function() {
+				var pds = createProject([]);
+			});
+			//Empty args
+			assert.throws(function() {
+				var pds = ProjectDocumentSource.createFromJson();
+			});
+			//Top level operator
+			assert.throws(function() {
+				var pds = createProject({
+					$add: []
+				});
+			});
+			//Invalid spec
+			assert.throws(function() {
 				var pds = createProject({
 					a: {
-						$and: [true]
+						$invalidOperator: 1
 					}
 				});
-				pds.optimize();
-				checkJsonRepresentation(pds, {
-					$project: {
-						a: {
-							$const: true
-						}
-					}
-				});
-			}
+			});
 
-		},
+		}
 
-		"#createFromJson()": {
+	},
 
-			"should error if called with non-object": function testNonObjectPassed() {
-				//String as arg
-				assert.throws(function() {
-					var pds = createProject("not an object");
-				});
-				//Date as arg
-				assert.throws(function() {
-					var pds = createProject(new Date());
-				});
-				//Array as arg
-				assert.throws(function() {
-					var pds = createProject([]);
-				});
-				//Empty args
-				assert.throws(function() {
-					var pds = ProjectDocumentSource.createFromJson();
-				});
-				//Top level operator
-				assert.throws(function() {
-					var pds = createProject({
-						$add: []
-					});
-				});
-				//Invalid spec
-				assert.throws(function() {
-					var pds = createProject({
-						a: {
-							$invalidOperator: 1
-						}
-					});
-				});
+	"#getDependencies()": {
 
-			}
-
-		},
-
-		"#getDependencies()": {
-
-			"should properly detect dependencies in project": function testGetDependencies() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				var input = {
-					a: true,
-					x: '$b',
-					y: {
-						$and: ['$c', '$d']
-					}
-				};
-				var pds = createProject(input);
-				var dependencies = {};
-				assert.equal(DocumentSource.GetDepsReturn.EXHAUSTIVE, pds.getDependencies(dependencies));
-				assert.equal(5, Object.keys(dependencies).length);
-				assert.ok(dependencies._id);
-				assert.ok(dependencies.a);
-				assert.ok(dependencies.b);
-				assert.ok(dependencies.c);
-				assert.ok(dependencies.d);
-			}
-
+		"should properly detect dependencies in project": function testGetDependencies() {
+			var input = {
+				a: true,
+				x: '$b',
+				y: {
+					$and: ['$c', '$d']
+				}
+			};
+			var pds = createProject(input);
+			var dependencies = new DepsTracker();
+			assert.equal(DocumentSource.GetDepsReturn.EXHAUSTIVE, pds.getDependencies(dependencies));
+			assert.equal(5, Object.keys(dependencies.fields).length);
+			assert.ok(dependencies.fields._id);
+			assert.ok(dependencies.fields.a);
+			assert.ok(dependencies.fields.b);
+			assert.ok(dependencies.fields.c);
+			assert.ok(dependencies.fields.d);
 		}
 
 	}

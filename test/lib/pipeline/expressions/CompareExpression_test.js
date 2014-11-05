@@ -329,7 +329,7 @@ exports.CompareExpression = {
 			}).run();
 		},
 
-        /** Incompatible types can be compared. */
+		/** Incompatible types can be compared. */
 		"IncompatibleTypes": function IncompatibleTypes() {
 			var specElement = {$ne:["a",1]},
 				idGenerator = new VariablesIdGenerator(),
