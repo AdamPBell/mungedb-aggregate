@@ -47,7 +47,7 @@ exports.MapExpression = {
 				optimized = expr.optimize();
 			assert.strictEqual(optimized, expr, "should be same reference");
 			assert.deepEqual(expressionToJson(optimized._input), {$const:[1,2,3]});
-			assert.deepEqual(expressionToJson(optimized._each), constify({$add:["$$i","$$i",32]}));
+			assert.deepEqual(expressionToJson(optimized._each), constify({$add:["$$i","$$i",3]}));
 		},
 
 	},
