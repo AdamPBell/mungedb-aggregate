@@ -287,61 +287,61 @@ module.exports = {
 				);
 			},
 
-		// 	"should sort documents with a compound key in ascending order": function compoundAscendingKeySort(next) {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0, a: 1, b:3}, {_id:5, a:12, b:7}, {_id:1, a:0, b:2}];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("a", true);
-		// 		sds.addKey("b", true);
-		// 		sds.setSource(cds);
+			"should sort documents with a compound key in ascending order": function compoundAscendingKeySort(next) {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0, a: 1, b:3}, {_id:5, a:12, b:7}, {_id:1, a:0, b:2}];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				sds.addKey("a", true);
+				sds.addKey("b", true);
+				sds.setSource(cds);
 
-		// 		var docs = [], i = 0;
-		// 		async.doWhilst(
-		// 			function(cb) {
-		// 				sds.getNext(function(err, val) {
-		// 					docs[i] = val;
-		// 					return cb(err);
-		// 				});
-		// 			},
-		// 			function() {
-		// 				return docs[i++] !== DocumentSource.EOF;
-		// 			},
-		// 			function(err) {
-		// 				assert.deepEqual([{_id:1, a:0, b:2}, {_id:0, a:1, b:3}, {_id:5, a:12, b:7}, DocumentSource.EOF], docs);
-		// 				next();
-		// 			}
-		// 		);
-		// 	},
+				var docs = [], i = 0;
+				async.doWhilst(
+					function(cb) {
+						sds.getNext(function(err, val) {
+							docs[i] = val;
+							return cb(err);
+						});
+					},
+					function() {
+						return docs[i++] !== DocumentSource.EOF;
+					},
+					function(err) {
+						assert.deepEqual([{_id:1, a:0, b:2}, {_id:0, a:1, b:3}, {_id:5, a:12, b:7}, DocumentSource.EOF], docs);
+						next();
+					}
+				);
+			},
 
-		// 	"should sort documents with a compound key in mixed order": function compoundMixedKeySort(next) {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0, a: 1, b:3}, {_id:5, a:12, b:7}, {_id:1, a:0, b:2}, {_id:8, a:7, b:42}];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("a", true);
-		// 		sds.addKey("b", false);
-		// 		sds.setSource(cds);
+			"should sort documents with a compound key in mixed order": function compoundMixedKeySort(next) {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0, a: 1, b:3}, {_id:5, a:12, b:7}, {_id:1, a:0, b:2}, {_id:8, a:7, b:42}];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				sds.addKey("a", true);
+				sds.addKey("b", false);
+				sds.setSource(cds);
 
-		// 		var docs = [], i = 0;
-		// 		async.doWhilst(
-		// 			function(cb) {
-		// 				sds.getNext(function(err, val) {
-		// 					docs[i] = val;
-		// 					return cb(err);
-		// 				});
-		// 			},
-		// 			function() {
-		// 				return docs[i++] !== DocumentSource.EOF;
-		// 			},
-		// 			function(err) {
-		// 				assert.deepEqual([{_id:1, a:0, b:2}, {_id:0, a:1, b:3}, {_id:8, a:7, b:42}, {_id:5, a:12, b:7}, DocumentSource.EOF], docs);
-		// 				next();
-		// 			}
-		// 		);
-		// 	},
+				var docs = [], i = 0;
+				async.doWhilst(
+					function(cb) {
+						sds.getNext(function(err, val) {
+							docs[i] = val;
+							return cb(err);
+						});
+					},
+					function() {
+						return docs[i++] !== DocumentSource.EOF;
+					},
+					function(err) {
+						assert.deepEqual([{_id:1, a:0, b:2}, {_id:0, a:1, b:3}, {_id:8, a:7, b:42}, {_id:5, a:12, b:7}, DocumentSource.EOF], docs);
+						next();
+					}
+				);
+			},
 
 			"should not sort different types": function diffTypesSort() {
 				var cwc = new CursorDocumentSource.CursorWithContext();
@@ -353,59 +353,59 @@ module.exports = {
 				assert.throws(sds.setSource(cds));
 			},
 
-			// "should sort docs with missing fields": function missingFields(next) {
-			// 	var cwc = new CursorDocumentSource.CursorWithContext();
-			// 	var l = [{_id:0, a: 1}, {_id:1}];
-			// 	cwc._cursor = new Cursor( l );
-			// 	var cds = new CursorDocumentSource(cwc);
-			// 	var sds = new SortDocumentSource();
-			// 	sds.addKey("a", true);
-			// 	sds.setSource(cds);
+			"should sort docs with missing fields": function missingFields(next) {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0, a: 1}, {_id:1}];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				sds.addKey("a", true);
+				sds.setSource(cds);
 
-			// 	var docs = [], i = 0;
-			// 	async.doWhilst(
-			// 		function(cb) {
-			// 			sds.getNext(function(err, val) {
-			// 				docs[i] = val;
-			// 				return cb(err);
-			// 			});
-			// 		},
-			// 		function() {
-			// 			return docs[i++] !== DocumentSource.EOF;
-			// 		},
-			// 		function(err) {
-			// 			assert.deepEqual([{_id:1}, {_id:0, a:1}, DocumentSource.EOF], docs);
-			// 			next();
-			// 		}
-			// 	);
-			// },
+				var docs = [], i = 0;
+				async.doWhilst(
+					function(cb) {
+						sds.getNext(function(err, val) {
+							docs[i] = val;
+							return cb(err);
+						});
+					},
+					function() {
+						return docs[i++] !== DocumentSource.EOF;
+					},
+					function(err) {
+						assert.deepEqual([{_id:1}, {_id:0, a:1}, DocumentSource.EOF], docs);
+						next();
+					}
+				);
+			},
 
-		// 	"should sort docs with null fields": function nullFields(next) {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0, a: 1}, {_id:1, a: null}];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("a", true);
-		// 		sds.setSource(cds);
+			"should sort docs with null fields": function nullFields(next) {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0, a: 1}, {_id:1, a: null}];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				sds.addKey("a", true);
+				sds.setSource(cds);
 
-		// 		var docs = [], i = 0;
-		// 		async.doWhilst(
-		// 			function(cb) {
-		// 				sds.getNext(function(err, val) {
-		// 					docs[i] = val;
-		// 					return cb(err);
-		// 				});
-		// 			},
-		// 			function() {
-		// 				return docs[i++] !== DocumentSource.EOF;
-		// 			},
-		// 			function(err) {
-		// 				assert.deepEqual([{_id:1, a:null}, {_id:0, a:1}, DocumentSource.EOF], docs);
-		// 				next();
-		// 			}
-		// 		);
-		// 	},
+				var docs = [], i = 0;
+				async.doWhilst(
+					function(cb) {
+						sds.getNext(function(err, val) {
+							docs[i] = val;
+							return cb(err);
+						});
+					},
+					function() {
+						return docs[i++] !== DocumentSource.EOF;
+					},
+					function(err) {
+						assert.deepEqual([{_id:1, a:null}, {_id:0, a:1}, DocumentSource.EOF], docs);
+						next();
+					}
+				);
+			},
 
 			"should not support a missing object nested in an array": function missingObjectWithinArray() {
 				var cwc = new CursorDocumentSource.CursorWithContext();
@@ -424,32 +424,32 @@ module.exports = {
 				});
 			},
 
-		// 	"should compare nested values from within an array": function extractArrayValues(next) {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0,a:[{b:1},{b:2}]}, {_id:1,a:[{b:1},{b:1}]} ];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("a.b", true);
-		// 		sds.setSource(cds);
+			"should compare nested values from within an array": function extractArrayValues(next) {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0,a:[{b:1},{b:2}]}, {_id:1,a:[{b:1},{b:1}]} ];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				sds.addKey("a.b", true);
+				sds.setSource(cds);
 
-		// 		var docs = [], i = 0;
-		// 		async.doWhilst(
-		// 			function(cb) {
-		// 				sds.getNext(function(err, val) {
-		// 					docs[i] = val;
-		// 					return cb(err);
-		// 				});
-		// 			},
-		// 			function() {
-		// 				return docs[i++] !== DocumentSource.EOF;
-		// 			},
-		// 			function(err) {
-		// 				assert.deepEqual([{_id:1,a:[{b:1},{b:1}]},{_id:0,a:[{b:1},{b:2}]}, DocumentSource.EOF], docs);
-		// 				next();
-		// 			}
-		// 		);
-		// 	}
+				var docs = [], i = 0;
+				async.doWhilst(
+					function(cb) {
+						sds.getNext(function(err, val) {
+							docs[i] = val;
+							return cb(err);
+						});
+					},
+					function() {
+						return docs[i++] !== DocumentSource.EOF;
+					},
+					function(err) {
+						assert.deepEqual([{_id:1,a:[{b:1},{b:1}]},{_id:0,a:[{b:1},{b:2}]}, DocumentSource.EOF], docs);
+						next();
+					}
+				);
+			}
 
 		},
 
@@ -466,40 +466,40 @@ module.exports = {
 			},
 
 
-		// 	"should return limit source when coalescing a limit source": function limitSource() {
-		// 		var sds = SortDocumentSource.createFromJson({a:1}),
-		// 			lds = LimitDocumentSource.createFromJson(1);
+			"should return limit source when coalescing a limit source": function limitSource() {
+				var sds = SortDocumentSource.createFromJson({a:1}),
+					lds = LimitDocumentSource.createFromJson(1);
 
-		// 		// TODO: add missing test cases.
-		// 		// array json getLimit
-		// 		// getShardSource
-		// 		// getMergeSource
+				// TODO: add missing test cases.
+				// array json getLimit
+				// getShardSource
+				// getMergeSource
 
 
-		// 		var newSrc = sds.coalesce(LimitDocumentSource.createFromJson(10));
-		// 		assert.ok(newSrc instanceof LimitDocumentSource);
-		// 		assert.equal(sds.getLimit(), 10);
-		// 		assert.equal(newSrc.limit, 10);
+				var newSrc = sds.coalesce(LimitDocumentSource.createFromJson(10));
+				assert.ok(newSrc instanceof LimitDocumentSource);
+				assert.equal(sds.getLimit(), 10);
+				assert.equal(newSrc.limit, 10);
 
-		// 		sds.coalesce(LimitDocumentSource.createFromJson(5));
-		// 		assert.equal(sds.getLimit(), 5);
+				sds.coalesce(LimitDocumentSource.createFromJson(5));
+				assert.equal(sds.getLimit(), 5);
 
-		// 		var arr = [];
-		// 		sds.serializeToArray(arr);
-		// 		assert.deepEqual(arr, [{$sort: {a:1}}, {$limit: 5}]);
+				var arr = [];
+				sds.serializeToArray(arr);
+				assert.deepEqual(arr, [{$sort: {a:1}}, {$limit: 5}]);
 
-		// 		// TODO: add missing test cases
-		// 		// doc array get limit
-		// 		// getShardSource
-		// 		// get MergeSource
+				// TODO: add missing test cases
+				// doc array get limit
+				// getShardSource
+				// get MergeSource
 
-		// 	},
+			},
 		},
 
 		"#dependencies": {
 			/** Dependant field paths. */
 			"should have Dependant field paths": function dependencies() {
-			 	var sds = new SortDocumentSource.createFromJson({sort: 1});
+			 	var sds = SortDocumentSource.createFromJson({sort: 1});
 
 				sds.addKey('a', true);
 			 	sds.addKey('b.c', false);
@@ -507,7 +507,6 @@ module.exports = {
 				var deps = {fields: {}, needWholeDocument: false, needTextScore: false};
 
 				assert.equal('SEE_NEXT', sds.getDependencies(deps));
-				console.log(deps);
 				assert.equal(2, Object.keys(deps.fields).length);
 			 	assert.equal(1, deps.fields.a);
 				assert.equal(1, deps.fields['b.c']);
