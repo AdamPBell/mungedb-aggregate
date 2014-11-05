@@ -2,8 +2,8 @@
 var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	Cursor = require("../../../../lib/Cursor"),
 	GroupDocumentSource = require("../../../../lib/pipeline/documentSources/GroupDocumentSource"),
+	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
 	async = require('async'),
 	utils = require("../expressions/utils"),
 	expressions = require("../../../../lib/pipeline/expressions");
@@ -21,22 +21,20 @@ function assertExpectedResult(args) {
 	// run implementation
 	if(args.expected && args.docs){
 		var gds = GroupDocumentSource.createFromJson(args.spec),
-			cwc = new CursorDocumentSource.CursorWithContext();
-		cwc._cursor = new Cursor( args.docs );
-		var next,
+			next,
 			results = [],
-			cds = new CursorDocumentSource(cwc);
+			cds = new CursorDocumentSource(null, new ArrayRunner(args.docs), null);
+			debugger;
 		gds.setSource(cds);
-		var serialized = gds.serialize();
 		async.whilst(
 			function() {
-				return next !== DocumentSource.EOF;
+				return next !== null;
 			},
 			function(done) {
 				gds.getNext(function(err, doc) {
 					if(err) return done(err);
 					next = doc;
-					if(next === DocumentSource.EOF) {
+					if(next === null) {
 						return done();
 					} else {
 						results.push(next);
