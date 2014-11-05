@@ -1,213 +1,286 @@
 "use strict";
 var assert = require("assert"),
+	Expression = require("../../../../lib/pipeline/expressions/Expression"),
 	AndExpression = require("../../../../lib/pipeline/expressions/AndExpression"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
-	CoerceToBoolExpression = require("../../../../lib/pipeline/expressions/CoerceToBoolExpression"),
-	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression"),
-	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression");
+	utils = require("./utils"),
+	constify = utils.constify,
+	expressionToJson = utils.expressionToJson;
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+var TestBase = function TestBase(overrides) {
+		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
+		for (var key in overrides)
+			this[key] = overrides[key];
+	},
+	ExpectedResultBase = (function() {
+		var klass = function ExpectedResultBase() {
+			base.apply(this, arguments);
+		}, base = TestBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.run = function() {
+			var specElement = this.spec instanceof Function ? this.spec() : this.spec,
+				idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand(specElement, vps);
+			assert.deepEqual(constify(specElement), expressionToJson(expr));
+			var expectedResult = this.expectedResult instanceof Function ? this.expectedResult() : this.expectedResult;
+			assert.strictEqual(expectedResult, expr.evaluate({a:1}));
+			var optimized = expr.optimize();
+			assert.strictEqual(expectedResult, optimized.evaluate({a:1}));
+		};
+		return klass;
+	})(),
+	OptimizeBase = (function() {
+		var klass = function OptimizeBase() {
+			base.apply(this, arguments);
+		}, base = TestBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.run = function() {
+			var specElement = this.spec instanceof Function ? this.spec() : this.spec,
+				idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand(specElement, vps);
+			assert.deepEqual(constify(specElement), expressionToJson(expr));
+			var optimized = expr.optimize(),
+				expectedOptimized = this.expectedOptimized instanceof Function ? this.expectedOptimized() : this.expectedOptimized;
+			assert.deepEqual(expectedOptimized, expressionToJson(optimized));
+		};
+		return klass;
+	})(),
+	NoOptimizeBase = (function() {
+		var klass = function NoOptimizeBase() {
+			base.apply(this, arguments);
+		}, base = OptimizeBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.expectedOptimized = function() {
+			return constify(this.spec instanceof Function ? this.spec() : this.spec);
+		};
+		return klass;
+	})();
 
-	"AndExpression": {
+exports.AndExpression = {
 
-		beforeEach: function() {
-			this.vps = new VariablesParseState(new VariablesIdGenerator());
+	"constructor()": {
+
+		"should construct instance": function() {
+			assert(new AndExpression() instanceof AndExpression);
+			assert(new AndExpression() instanceof Expression);
 		},
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new AndExpression();
-				});
-			},
-
-			"should throw Error when constructing with args": function testConstructor(){
-				assert.throws(function(){
-					new AndExpression(1);
-				});
-			}
-
+		"should error if given args": function() {
+			assert.throws(function() {
+				new AndExpression("bad stuff");
+			});
 		},
 
-		"#getOpName()": {
+	},
 
-			"should return the correct op name; $and": function testOpName(){
-				assert.equal(new AndExpression().getOpName(), "$and");
-			}
+	"#getOpName()": {
 
-		},
-
-
-		"#evaluate()": {
-
-			"should return true if no operands were given; {$and:[]}": function testEmpty(){
-				assert.equal(Expression.parseOperand({$and:[]},this.vps).evaluate(), true);
-			},
-
-			"should return true if operands is one true; {$and:[true]}": function testTrue(){
-				assert.equal(Expression.parseOperand({$and:[true]},this.vps).evaluate(), true);
-			},
-
-			"should return false if operands is one false; {$and:[false]}": function testFalse(){
-				assert.equal(Expression.parseOperand({$and:[false]},this.vps).evaluate(), false);
-			},
-
-			"should return true if operands are true and true; {$and:[true,true]}": function testTrueTrue(){
-				assert.equal(Expression.parseOperand({$and:[true,true]},this.vps).evaluate(), true);
-			},
-
-			"should return false if operands are true and false; {$and:[true,false]}": function testTrueFalse(){
-				assert.equal(Expression.parseOperand({$and:[true,false]},this.vps).evaluate(), false);
-			},
-
-			"should return false if operands are false and true; {$and:[false,true]}": function testFalseTrue(){
-				assert.equal(Expression.parseOperand({$and:[false,true]},this.vps).evaluate(), false);
-			},
-
-			"should return false if operands are false and false; {$and:[false,false]}": function testFalseFalse(){
-				assert.equal(Expression.parseOperand({$and:[false,false]},this.vps).evaluate(), false);
-			},
-
-			"should return true if operands are true, true, and true; {$and:[true,true,true]}": function testTrueTrueTrue(){
-				assert.equal(Expression.parseOperand({$and:[true,true,true]},this.vps).evaluate(), true);
-			},
-
-			"should return false if operands are true, true, and false; {$and:[true,true,false]}": function testTrueTrueFalse(){
-				assert.equal(Expression.parseOperand({$and:[true,true,false]},this.vps).evaluate(), false);
-			},
-
-			"should return false if operands are 0 and 1; {$and:[0,1]}": function testZeroOne(){
-				assert.equal(Expression.parseOperand({$and:[0,1]},this.vps).evaluate(), false);
-			},
-
-			"should return false if operands are 1 and 2; {$and:[1,2]}": function testOneTwo(){
-				assert.equal(Expression.parseOperand({$and:[1,2]},this.vps).evaluate(), true);
-			},
-
-			"should return true if operand is a path String to a truthy value; {$and:['$a']}": function testFieldPath(){
-				assert.equal(Expression.parseOperand({$and:['$a']},this.vps).evaluate({a:1}), true);
-			}
-
-		},
-
-		"#optimize()": {
-
-			"should optimize a constant expression to a constant; {$and:[1]} == true": function testOptimizeConstantExpression(){
-				var a = Expression.parseOperand({$and:[1]}, this.vps).optimize();
-				assert.equal(a.operands.length, 0, "The operands should have been optimized away");
-				assert.equal(a.evaluateInternal(), true);
-			},
-
-			"should not optimize a non-constant expression; {$and:['$a']}": function testNonConstant(){
-				var a = Expression.parseOperand({$and:['$a']}, this.vps).optimize();
-				assert.equal(a.operands[0]._fieldPath.fieldNames.length, 2);
-				assert.deepEqual(a.operands[0]._fieldPath.fieldNames[0], "CURRENT");
-				assert.deepEqual(a.operands[0]._fieldPath.fieldNames[1], "a");
-			},
-
-			"should not optimize an expression ending with a non-constant. {$and:[1,'$a']};": function testConstantNonConstant(){
-				var a = Expression.parseOperand({$and:[1,'$a']}, this.vps).optimize();
-				assert(a instanceof CoerceToBoolExpression);
-				assert(a.expression instanceof FieldPathExpression);
-
-				assert.equal(a.expression._fieldPath.fieldNames.length, 2);
-				assert.equal(a.expression._fieldPath.fieldNames[0], "CURRENT");
-				assert.equal(a.expression._fieldPath.fieldNames[1], "a");
-			},
-
-			"should optimize an expression with a path and a '1'; {$and:['$a',1]}": function testNonConstantOne(){
-				var a = Expression.parseOperand({$and:['$a', 1]}, this.vps).optimize();
-				// The 1 should be removed as it is redundant.
-				assert(a instanceof CoerceToBoolExpression, "The result should be forced to a boolean");
-
-				// This is the '$a' which cannot be optimized.
-				assert.equal(a.expression._fieldPath.fieldNames.length, 2);
-				assert.equal(a.expression._fieldPath.fieldNames[0], "CURRENT");
-				assert.equal(a.expression._fieldPath.fieldNames[1], "a");
-			},
-
-			"should optimize an expression with a field path and a '0'; {$and:['$a',0]}": function testNonConstantZero(){
-				var a = Expression.parseOperand({$and:['$a',0]}, this.vps).optimize();
-				assert.equal(a.operands.length, 0, "The operands should have been optimized away");
-				assert.equal(a.evaluateInternal(), false, "The 0 operand should have been converted to false");
-			},
-
-			"should optimize an expression with two field paths and '1'; {$and:['$a','$b',1]}": function testNonConstantNonConstantOne(){
-				var a = Expression.parseOperand({$and:['$a', '$b', 1]}, this.vps).optimize();
-				assert.equal(a.operands.length, 2, "Two operands should remain.");
-
-				// This is the '$a' which cannot be optimized.
-				assert.deepEqual(a.operands[0]._fieldPath.fieldNames.length, 2);
-				assert.deepEqual(a.operands[0]._fieldPath.fieldNames[0], "CURRENT");
-				assert.deepEqual(a.operands[0]._fieldPath.fieldNames[1], "a");
-
-				// This is the '$b' which cannot be optimized.
-				assert.deepEqual(a.operands[1]._fieldPath.fieldNames.length, 2);
-				assert.deepEqual(a.operands[1]._fieldPath.fieldNames[0], "CURRENT");
-				assert.deepEqual(a.operands[1]._fieldPath.fieldNames[1], "b");
-			},
-
-			"should optimize an expression with two field paths and '0'; {$and:['$a','$b',0]}": function testNonConstantNonConstantZero(){
-				var a = Expression.parseOperand({$and:['$a', '$b', 0]}, this.vps).optimize();
-				assert(a instanceof ConstantExpression, "With that trailing false, we know the result...");
-				assert.equal(a.operands.length, 0, "The operands should have been optimized away");
-				assert.equal(a.evaluateInternal(), false);
-			},
-
-			"should optimize an expression with '0', '1', and a field path; {$and:[0,1,'$a']}": function testZeroOneNonConstant(){
-				var a = Expression.parseOperand({$and:[0,1,'$a']}, this.vps).optimize();
-				assert(a instanceof ConstantExpression);
-				assert.equal(a.evaluateInternal(), false);
-			},
-
-			"should optimize an expression with '1', '1', and a field path; {$and:[1,1,'$a']}": function testOneOneNonConstant(){
-				var a = Expression.parseOperand({$and:[1,1,'$a']}, this.vps).optimize();
-				assert(a instanceof CoerceToBoolExpression);
-				assert(a.expression instanceof FieldPathExpression);
-
-				assert.equal(a.expression._fieldPath.fieldNames.length, 2);
-				assert.equal(a.expression._fieldPath.fieldNames[0], "CURRENT");
-				assert.equal(a.expression._fieldPath.fieldNames[1], "a");
-			},
-
-			"should optimize nested $and expressions properly and optimize out values evaluating to true; {$and:[1,{$and:[1]},'$a','$b']}": function testNested(){
-				var a = Expression.parseOperand({$and:[1,{$and:[1]},'$a','$b']}, this.vps).optimize();
-				assert.equal(a.operands.length, 2)
-				assert(a.operands[0] instanceof FieldPathExpression);
-				assert(a.operands[1] instanceof FieldPathExpression);
-			},
-
-			"should optimize nested $and expressions containing a nested value evaluating to false; {$and:[1,{$and:[1]},'$a','$b']}": function testNested(){
-				//assert.deepEqual(Expression.parseOperand({$and:[1,{$and:[{$and:[0]}]},'$a','$b']}, this.vps).optimize().toJSON(true), {$const:false});
-				var a = Expression.parseOperand({$and:[1,{$and:[{$and:[0]}]},'$a','$b']}, this.vps).optimize();
-				assert(a instanceof ConstantExpression);
-				assert.equal(a.evaluateInternal(), false);
-			},
-
-			"should optimize when the constants are on the right of the operand list. The rightmost is true": function(){
-				// 1, "x", and 1 are all true.  They should be optimized away.
-				var a = Expression.parseOperand({$and:['$a', 1, "x", 1]}, this.vps).optimize();
-				assert(a instanceof CoerceToBoolExpression);
-				assert(a.expression instanceof FieldPathExpression);
-
-				assert.equal(a.expression._fieldPath.fieldNames.length, 2);
-				assert.equal(a.expression._fieldPath.fieldNames[0], "CURRENT");
-				assert.equal(a.expression._fieldPath.fieldNames[1], "a");
-			},
-			"should optimize when the constants are on the right of the operand list. The rightmost is false": function(){
-				// 1, "x", and 1 are all true.  They should be optimized away.
-				var a = Expression.parseOperand({$and:['$a', 1, "x", 0]}, this.vps).optimize();
-				assert(a instanceof ConstantExpression, "The rightmost false kills it all");
-				assert.equal(a.evaluateInternal(), false);
-			}
+		"should return the correct op name; $and": function() {
+			assert.equal(new AndExpression().getOpName(), "$and");
 		}
 
-	}
+	},
+
+	"#evaluate()": {
+
+		"should return true if no operands": function testNoOperands() {
+			/** $and without operands. */
+			new ExpectedResultBase({
+				spec: {$and:[]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return true if given true": function testTrue() {
+			/** $and passed 'true'. */
+			new ExpectedResultBase({
+				spec: {$and:[true]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return false if given false": function testFalse() {
+			/** $and passed 'false'. */
+			new ExpectedResultBase({
+				spec: {$and:[false]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return true if given true and true": function testTrueTrue() {
+			/** $and passed 'true', 'true'. */
+			new ExpectedResultBase({
+				spec: {$and:[true, true]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return false if given true and false": function testTrueFalse() {
+			/** $and passed 'true', 'false'. */
+			new ExpectedResultBase({
+				spec: {$and:[true, false]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return false if given false and true": function testFalseTrue() {
+			/** $and passed 'false', 'true'. */
+			new ExpectedResultBase({
+				spec: {$and:[false, true]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return false if given false and false": function testFalseFalse() {
+			/** $and passed 'false', 'false'. */
+			new ExpectedResultBase({
+				spec: {$and:[false, false]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return true if given true and true and true": function testTrueTrueTrue() {
+			/** $and passed 'true', 'true', 'true'. */
+			new ExpectedResultBase({
+				spec: {$and:[true, true, true]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return false if given true and true and false": function testTrueTrueFalse() {
+			/** $and passed 'true', 'true', 'false'. */
+			new ExpectedResultBase({
+				spec: {$and:[true, true, false]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return false if given 0 and 1": function testZeroOne() {
+			/** $and passed '0', '1'. */
+			new ExpectedResultBase({
+				spec: {$and:[0, 1]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return true if given 1 and 2": function testOneTwo() {
+			/** $and passed '1', '2'. */
+			new ExpectedResultBase({
+				spec: {$and:[1, 2]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return true if given a field path to a truthy value": function testFieldPath() {
+			/** $and passed a field path. */
+			new ExpectedResultBase({
+				spec: {$and:["$a"]},
+				expectedResult: true,
+			}).run();
+		},
+
+	},
+
+	"#optimize()": {
+
+		"should optimize a constant expression": function testOptimizeConstantExpression() {
+			/** A constant expression is optimized to a constant. */
+			new OptimizeBase({
+				spec: {$and:[1]},
+				expectedOptimized: {$const:true},
+			}).run();
+		},
+
+		"should not optimize a non constant": function testNonConstant() {
+			/** A non constant expression is not optimized. */
+			new NoOptimizeBase({
+				spec: {$and:["$a"]},
+			}).run();
+		},
+
+		"should optimize truthy constant and truthy expression": function testConstantNonConstantTrue() {
+			/** An expression beginning with a single constant is optimized. */
+			new OptimizeBase({
+				spec: {$and:[1,"$a"]},
+				expectedOptimized: {$and:["$a"]},
+			}).run();
+			// note: using $and as serialization of ExpressionCoerceToBool rather than ExpressionAnd
+		},
+
+		"should optimize falsy constant and truthy expression": function testConstantNonConstantFalse() {
+			new OptimizeBase({
+				spec: {$and:[0,"$a"]},
+				expectedOptimized: {$const:false},
+			}).run();
+		},
+
+		"should optimize truthy expression and truthy constant": function testNonConstantOne() {
+			/** An expression with a field path and '1'. */
+			new OptimizeBase({
+				spec: {$and:["$a",1]},
+				expectedOptimized: {$and:["$a"]}
+			}).run();
+		},
+
+		"should optimize truthy expression and falsy constant": function testNonConstantZero() {
+			/** An expression with a field path and '0'. */
+			new OptimizeBase({
+				spec: {$and:["$a",0]},
+				expectedOptimized: {$const:false},
+			}).run();
+		},
+
+		"should optimize truthy expression, falsy expression, and truthy constant": function testNonConstantNonConstantOne() {
+			/** An expression with two field paths and '1'. */
+			new OptimizeBase({
+				spec: {$and:["$a","$b",1]},
+				expectedOptimized: {$and:["$a","$b"]}
+			}).run();
+		},
+
+		"should optimize truthy expression, falsy expression, and falsy constant": function testNonConstantNonConstantZero() {
+			/** An expression with two field paths and '0'. */
+			new OptimizeBase({
+				spec: {$and:["$a","$b",0]},
+				expectedOptimized: {$const:false},
+			}).run();
+		},
+
+		"should optimize to false if [0,1,'$a']": function testZeroOneNonConstant() {
+			/** An expression with '0', '1', and a field path. */
+			new OptimizeBase({
+				spec: {$and:[0,1,"$a"]},
+				expectedOptimized: {$const:false},
+			}).run();
+		},
+
+		"should optimize to {$and:'$a'} if [1,1,'$a']": function testOneOneNonConstant() {
+			/** An expression with '1', '1', and a field path. */
+			new OptimizeBase({
+				spec: {$and:[1,1,"$a"]},
+				expectedOptimized: {$and:["$a"]},
+			}).run();
+		},
+
+		"should optimize away nested truthy $and expressions": function testNested() {
+			/** Nested $and expressions. */
+			new OptimizeBase({
+				spec: {$and:[1, {$and:[1]}, "$a", "$b"]},
+				expectedOptimized: {$and:["$a","$b"]},
+			}).run();
+		},
+
+		"should optimize to false if nested falsey $and expressions": function testNestedZero() {
+			/** Nested $and expressions containing a nested value evaluating to false. */
+			new OptimizeBase({
+				spec: {$and:[1, {$and:[ {$and:[0]} ]}, "$a", "$b"]},
+				expectedOptimized: {$const:false},
+			}).run();
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
