@@ -496,19 +496,23 @@ module.exports = {
 		},
 
 		"#dependencies": {
-			// /** Dependant field paths. */
-			// "should have Dependant field paths": function dependencies() {
-			// 	var sds = new SortDocumentSource.createFromJson({"sort":1});
-			// 	sds.addKey("a", true);
-			// 	sds.addKey("b.c", false);
-			// 	var deps = {};
-			// 	assert.equal("SEE_NEXT", sds.getDependencies(deps));
-			// 	assert.equal(2, Object.keys(deps).length);
-			// 	assert.ok(deps.a);
-			// 	assert.ok(deps["b.c"]);
-			// 	// TODO: Add needWholeDocument
-			// 	// TODO: Add needTextScore
-			// }
+			/** Dependant field paths. */
+			"should have Dependant field paths": function dependencies() {
+			 	var sds = new SortDocumentSource.createFromJson({sort: 1});
+
+				sds.addKey('a', true);
+			 	sds.addKey('b.c', false);
+
+				var deps = {fields: {}, needWholeDocument: false, needTextScore: false};
+
+				assert.equal('SEE_NEXT', sds.getDependencies(deps));
+				console.log(deps);
+				assert.equal(2, Object.keys(deps.fields).length);
+			 	assert.equal(1, deps.fields.a);
+				assert.equal(1, deps.fields['b.c']);
+				assert.equal(false, deps.needWholeDocument);
+				assert.equal(false, deps.needTextScore);
+			}
 		}
 
 	}
