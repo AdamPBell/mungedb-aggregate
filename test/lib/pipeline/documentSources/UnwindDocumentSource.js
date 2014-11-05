@@ -4,7 +4,7 @@ var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	UnwindDocumentSource = require("../../../../lib/pipeline/documentSources/UnwindDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	Cursor = require("../../../../lib/Cursor");
+	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
 
 //HELPERS
@@ -35,10 +35,7 @@ var createUnwind = function createUnwind(unwind) {
 };
 
 var addSource = function addSource(unwind, data) {
-	var cwc = new CursorDocumentSource.CursorWithContext();
-	cwc._cursor = new Cursor(data);
-	var cds = new CursorDocumentSource(cwc);
-	var pds = new UnwindDocumentSource();
+	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
 	unwind.setSource(cds);
 };
 
@@ -53,7 +50,7 @@ var checkResults = function checkResults(data, expectedResults, path, next) {
 
 	expectedResults = expectedResults || [];
 
-	expectedResults.push(DocumentSource.EOF);
+	expectedResults.push(null);
 
 	//Load the results from the DocumentSourceUnwind
 	var docs = [], i = 0;
@@ -65,7 +62,7 @@ var checkResults = function checkResults(data, expectedResults, path, next) {
 			});
 		},
 		function() {
-			return docs[i++] !== DocumentSource.EOF;
+			return docs[i++] !== null;
 		},
 		function(err) {
 			assert.deepEqual(expectedResults, docs);
@@ -111,7 +108,7 @@ module.exports = {
 				var pds = createUnwind();
 				addSource(pds, []);
 				pds.getNext(function(err,doc) {
-					assert.strictEqual(doc, DocumentSource.EOF);
+					assert.strictEqual(doc, null);
 					next();
 				});
 			},
@@ -120,7 +117,7 @@ module.exports = {
 				var pds = createUnwind();
 				addSource(pds, [{_id:0, a:[1]}]);
 				pds.getNext(function(err,doc) {
-					assert.notStrictEqual(doc, DocumentSource.EOF);
+					assert.notStrictEqual(doc, null);
 					next();
 				});
 			},
@@ -129,7 +126,7 @@ module.exports = {
 				var pds = createUnwind();
 				addSource(pds, [{_id:0, a:[1,2]}]);
 				pds.getNext(function(err,doc) {
-					assert.notStrictEqual(doc, DocumentSource.EOF);
+					assert.notStrictEqual(doc, null);
 					assert.strictEqual(doc.a, 1);
 					pds.getNext(function(err,doc) {
 						assert.strictEqual(doc.a, 2);
@@ -151,10 +148,10 @@ module.exports = {
 						});
 					},
 					function() {
-						return docs[i++] !== DocumentSource.EOF;
+						return docs[i++] !== null;
 					},
 					function(err) {
-						assert.deepEqual([{_id:0, a:1},{_id:0, a:2},DocumentSource.EOF], docs);
+						assert.deepEqual([{_id:0, a:1},{_id:0, a:2},null], docs);
 						next();
 					}
 				);
