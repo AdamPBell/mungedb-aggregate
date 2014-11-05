@@ -364,7 +364,7 @@ module.exports = {
 		"#isTextQuery()": {
 
 			"should return true when $text operator is first stage in pipeline": function () {
-				var query = {$text:'textQuery'}
+				var query = {$text:'textQuery'};
 				assert.ok(MatchDocumentSource.isTextQuery(query)); // true
 			},
 
@@ -374,7 +374,7 @@ module.exports = {
 			},
 
 			"should return false when $text operator is not in pipeline": function () {
-				var query = {$notText:'textQuery'}
+				var query = {$notText:'textQuery'};
 				assert.ok(!MatchDocumentSource.isTextQuery(query)); // false
 			}
 

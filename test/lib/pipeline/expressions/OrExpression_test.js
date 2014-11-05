@@ -1,143 +1,287 @@
 "use strict";
 var assert = require("assert"),
+	Expression = require("../../../../lib/pipeline/expressions/Expression"),
 	OrExpression = require("../../../../lib/pipeline/expressions/OrExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression");
+	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
+	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
+	utils = require("./utils"),
+	constify = utils.constify,
+	expressionToJson = utils.expressionToJson;
 
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+var TestBase = function TestBase(overrides) {
+		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
+		for (var key in overrides)
+			this[key] = overrides[key];
+	},
+	ExpectedResultBase = (function() {
+		var klass = function ExpectedResultBase() {
+			base.apply(this, arguments);
+		}, base = TestBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.run = function() {
+			var specElement = this.spec instanceof Function ? this.spec() : this.spec,
+				idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand(specElement, vps);
+			assert.deepEqual(constify(specElement), expressionToJson(expr));
+			var expectedResult = this.expectedResult instanceof Function ? this.expectedResult() : this.expectedResult;
+			assert.strictEqual(expectedResult, expr.evaluate({a:1}));
+			var optimized = expr.optimize();
+			assert.strictEqual(expectedResult, optimized.evaluate({a:1}));
+		};
+		return klass;
+	})(),
+	OptimizeBase = (function() {
+		var klass = function OptimizeBase() {
+			base.apply(this, arguments);
+		}, base = TestBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.run = function() {
+			var specElement = this.spec instanceof Function ? this.spec() : this.spec,
+				idGenerator = new VariablesIdGenerator(),
+				vps = new VariablesParseState(idGenerator),
+				expr = Expression.parseOperand(specElement, vps);
+			assert.deepEqual(constify(specElement), expressionToJson(expr));
+			var optimized = expr.optimize(),
+				expectedOptimized = this.expectedOptimized instanceof Function ? this.expectedOptimized() : this.expectedOptimized;
+			assert.deepEqual(expectedOptimized, expressionToJson(optimized));
+		};
+		return klass;
+	})(),
+	NoOptimizeBase = (function() {
+		var klass = function NoOptimizeBase() {
+			base.apply(this, arguments);
+		}, base = OptimizeBase, proto = klass.prototype = Object.create(base.prototype);
+		proto.expectedOptimized = function() {
+			return constify(this.spec instanceof Function ? this.spec() : this.spec);
+		};
+		return klass;
+	})();
 
-	"OrExpression": {
+exports.OrExpression = {
 
-		"constructor()": {
+	"constructor()": {
 
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new OrExpression();
-				});
-			},
-
-			"should throw Error when constructing with args": function testConstructor(){
-				assert.throws(function(){
-					new OrExpression(1);
-				});
-			}
-
+		"should construct instance": function() {
+			assert(new OrExpression() instanceof OrExpression);
+			assert(new OrExpression() instanceof Expression);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $or": function testOpName(){
-				assert.equal(new OrExpression().getOpName(), "$or");
-			}
-
+		"should error if given args": function() {
+			assert.throws(function() {
+				new OrExpression("bad stuff");
+			});
 		},
 
-		"#getFactory()": {
+	},
 
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.equal(new OrExpression().getFactory(), OrExpression);
-			}
+	"#getOpName()": {
 
-		},
-
-		"#evaluateInternalInternal()": {
-
-			"should return false if no operors were given; {$or:[]}": function testEmpty(){
-				assert.equal(Expression.parseOperand({$or:[]}).evaluateInternal(), false);
-			},
-
-			"should return true if operors is one true; {$or:[true]}": function testTrue(){
-				assert.equal(Expression.parseOperand({$or:[true]}).evaluateInternal(), true);
-			},
-
-			"should return false if operors is one false; {$or:[false]}": function testFalse(){
-				assert.equal(Expression.parseOperand({$or:[false]}).evaluateInternal(), false);
-			},
-
-			"should return true if operors are true or true; {$or:[true,true]}": function testTrueTrue(){
-				assert.equal(Expression.parseOperand({$or:[true,true]}).evaluateInternal(), true);
-			},
-
-			"should return true if operors are true or false; {$or:[true,false]}": function testTrueFalse(){
-				assert.equal(Expression.parseOperand({$or:[true,false]}).evaluateInternal(), true);
-			},
-
-			"should return true if operors are false or true; {$or:[false,true]}": function testFalseTrue(){
-				assert.equal(Expression.parseOperand({$or:[false,true]}).evaluateInternal(), true);
-			},
-
-			"should return false if operors are false or false; {$or:[false,false]}": function testFalseFalse(){
-				assert.equal(Expression.parseOperand({$or:[false,false]}).evaluateInternal(), false);
-			},
-
-			"should return false if operors are false, false, or false; {$or:[false,false,false]}": function testFalseFalseFalse(){
-				assert.equal(Expression.parseOperand({$or:[false,false,false]}).evaluateInternal(), false);
-			},
-
-			"should return false if operors are false, false, or false; {$or:[false,false,true]}": function testFalseFalseTrue(){
-				assert.equal(Expression.parseOperand({$or:[false,false,true]}).evaluateInternal(), true);
-			},
-
-			"should return true if operors are 0 or 1; {$or:[0,1]}": function testZeroOne(){
-				assert.equal(Expression.parseOperand({$or:[0,1]}).evaluateInternal(), true);
-			},
-
-			"should return false if operors are 0 or false; {$or:[0,false]}": function testZeroFalse(){
-				assert.equal(Expression.parseOperand({$or:[0,false]}).evaluateInternal(), false);
-			},
-
-			"should return true if operor is a path String to a truthy value; {$or:['$a']}": function testFieldPath(){
-				assert.equal(Expression.parseOperand({$or:['$a']}).evaluateInternal({a:1}), true);
-			}
-
-		},
-
-		"#optimize()": {
-
-			"should optimize a constant expression to a constant; {$or:[1]} == true": function testOptimizeConstantExpression(){
-				assert.deepEqual(Expression.parseOperand({$or:[1]}).optimize().toJSON(true), {$const:true});
-			},
-
-			"should not optimize a non-constant expression; {$or:['$a']}; SERVER-6192": function testNonConstant(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a']}).optimize().toJSON(), {$or:['$a']});
-			},
-
-			"should optimize an expression with a path or a '1' (is entirely constant); {$or:['$a',1]}": function testNonConstantOne(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a',1]}).optimize().toJSON(true), {$const:true});
-			},
-
-			"should optimize an expression with a field path or a '0'; {$or:['$a',0]}": function testNonConstantZero(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a',0]}).optimize().toJSON(), {$and:['$a']});
-			},
-
-			"should optimize an expression with two field paths or '1' (is entirely constant); {$or:['$a','$b',1]}": function testNonConstantNonConstantOne(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a','$b',1]}).optimize().toJSON(true), {$const:true});
-			},
-
-			"should optimize an expression with two field paths or '0'; {$or:['$a','$b',0]}": function testNonConstantNonConstantZero(){
-				assert.deepEqual(Expression.parseOperand({$or:['$a','$b',0]}).optimize().toJSON(), {$or:['$a','$b']});
-			},
-
-			"should optimize an expression with '0', '1', or a field path; {$or:[0,1,'$a']}": function testZeroOneNonConstant(){
-				assert.deepEqual(Expression.parseOperand({$or:[0,1,'$a']}).optimize().toJSON(true), {$const:true});
-			},
-
-			"should optimize an expression with '0', '0', or a field path; {$or:[0,0,'$a']}": function testZeroZeroNonConstant(){
-				assert.deepEqual(Expression.parseOperand({$or:[0,0,'$a']}).optimize().toJSON(), {$and:['$a']});
-			},
-
-			"should optimize nested $or expressions properly or optimize out values evaluating to false; {$or:[0,{$or:[0]},'$a','$b']}": function testNested(){
-				assert.deepEqual(Expression.parseOperand({$or:[0,{$or:[0]},'$a','$b']}).optimize().toJSON(), {$or:['$a','$b']});
-			},
-
-			"should optimize nested $or expressions containing a nested value evaluating to false; {$or:[0,{$or:[{$or:[1]}]},'$a','$b']}": function testNestedOne(){
-				assert.deepEqual(Expression.parseOperand({$or:[0,{$or:[{$or:[1]}]},'$a','$b']}).optimize().toJSON(true), {$const:true});
-			}
-
+		"should return the correct op name; $or": function(){
+			assert.equal(new OrExpression().getOpName(), "$or");
 		}
 
-	}
+	},
+
+	"#evaluate()": {
+
+		"should return false if no operands": function testNoOperands(){
+			/** $or without operands. */
+			new ExpectedResultBase({
+				spec: {$or:[]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return true if given true": function testTrue(){
+			/** $or passed 'true'. */
+			new ExpectedResultBase({
+				spec: {$or:[true]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return false if given false": function testFalse(){
+			/** $or passed 'false'. */
+			new ExpectedResultBase({
+				spec: {$or:[false]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return true if given true and true": function testTrueTrue(){
+			/** $or passed 'true', 'true'. */
+			new ExpectedResultBase({
+				spec: {$or:[true, true]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return true if given true and false": function testTrueFalse(){
+			/** $or passed 'true', 'false'. */
+			new ExpectedResultBase({
+				spec: {$or:[true, false]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return true if given false and true": function testFalseTrue(){
+			/** $or passed 'false', 'true'. */
+			new ExpectedResultBase({
+				spec: {$or:[false, true]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return false if given false and false": function testFalseFalse(){
+			/** $or passed 'false', 'false'. */
+			new ExpectedResultBase({
+				spec: {$or:[false, false]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return false if given false and false and false": function testFalseFalseFalse(){
+			/** $or passed 'false', 'false', 'false'. */
+			new ExpectedResultBase({
+				spec: {$or:[false, false, false]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return true if given false and false and true": function testFalseFalseTrue(){
+			/** $or passed 'false', 'false', 'true'. */
+			new ExpectedResultBase({
+				spec: {$or:[false, false, true]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return true if given 0 and 1": function testZeroOne(){
+			/** $or passed '0', '1'. */
+			new ExpectedResultBase({
+				spec: {$or:[0, 1]},
+				expectedResult: true,
+			}).run();
+		},
+
+		"should return false if given 0 and false": function testZeroFalse(){
+			/** $or passed '0', 'false'. */
+			new ExpectedResultBase({
+				spec: {$or:[0, false]},
+				expectedResult: false,
+			}).run();
+		},
+
+		"should return true if given a field path to a truthy value": function testFieldPath(){
+			/** $or passed a field path. */
+			new ExpectedResultBase({
+				spec: {$or:["$a"]},
+				expectedResult: true,
+			}).run();
+		},
+
+	},
+
+	"#optimize()": {
+
+		"should optimize a constant expression": function testOptimizeConstantExpression() {
+			/** A constant expression is optimized to a constant. */
+			new OptimizeBase({
+				spec: {$or:[1]},
+				expectedOptimized: {$const:true},
+			}).run();
+		},
+
+		"should not optimize a non constant": function testNonConstant() {
+			/** A non constant expression is not optimized. */
+			new NoOptimizeBase({
+				spec: {$or:["$a"]},
+			}).run();
+		},
+
+		"should optimize truthy constant and truthy expression": function testConstantNonConstantTrue() {
+			/** An expression beginning with a single constant is optimized. */
+			new OptimizeBase({
+				spec: {$or:[1,"$a"]},
+				expectedOptimized: {$const:true},
+			}).run();
+		},
+
+		"should optimize falsy constant and truthy expression": function testConstantNonConstantFalse() {
+			/** An expression beginning with a single constant is optimized. */
+			new OptimizeBase({
+				spec: {$or:[0,"$a"]},
+				expectedOptimized: {$and:["$a"]},
+			}).run();
+			// note: using $and as serialization of ExpressionCoerceToBool rather than ExpressionAnd
+		},
+
+		"should optimize truthy expression and truthy constant": function testNonConstantOne() {
+			/** An expression with a field path and '1'. */
+			new OptimizeBase({
+				spec: {$or:["$a", 1]},
+				expectedOptimized: {$const:true},
+			}).run();
+		},
+
+		"should optimize truthy expression and falsy constant": function testNonConstantZero() {
+			/** An expression with a field path and '0'. */
+			new OptimizeBase({
+				spec: {$or:["$a", 0]},
+				expectedOptimized: {$and:["$a"]},
+			}).run();
+		},
+
+		"should optimize truthy expression, falsy expression, and truthy constant": function testNonConstantNonConstantOne() {
+			/** An expression with two field paths and '1'. */
+			new OptimizeBase({
+				spec: {$or:["$a","$b",1]},
+				expectedOptimized: {$const:true},
+			}).run();
+		},
+
+		"should optimize truthy expression, falsy expression, and falsy constant": function testNonConstantNonConstantZero() {
+			/** An expression with two field paths and '0'. */
+			new OptimizeBase({
+				spec: {$or:["$a","$b",0]},
+				expectedOptimized: {$or:["$a", "$b"]},
+			}).run();
+		},
+
+		"should optimize to true if [0,1,'$a']": function testZeroOneNonConstant() {
+			/** An expression with '0', '1', and a field path. */
+			new OptimizeBase({
+				spec: {$or:[0,1,"$a"]},
+				expectedOptimized: {$const:true},
+			}).run();
+		},
+
+		"should optimize to {$and:'$a'} if [0,0,'$a']": function testZeroZeroNonConstant() {
+			/** An expression with '0', '0', and a field path. */
+			new OptimizeBase({
+				spec: {$or:[0,0,"$a"]},
+				expectedOptimized: {$and:["$a"]},
+			}).run();
+		},
+
+		"should optimize away nested falsey $or expressions": function testNested() {
+			/** Nested $or expressions. */
+			new OptimizeBase({
+				spec: {$or:[0, {$or:[0]}, "$a", "$b"]},
+				expectedOptimized: {$or: ["$a", "$b"]},
+			}).run();
+		},
+
+		"should optimize to tru if nested truthy $or expressions": function testNestedOne() {
+			/** Nested $or expressions containing a nested value evaluating to false. */
+			new OptimizeBase({
+				spec: {$or:[0, {$or:[ {$or:[1]} ]}, "$a", "$b"]},
+				expectedOptimized: {$const:true},
+			}).run();
+		},
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
