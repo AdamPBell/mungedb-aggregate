@@ -44,29 +44,14 @@ module.exports = {
 			/** Assert that iterator state accessors consistently report the source is exhausted. */
 			"should return EOF if there are no more sources": function noSources(next){
 				var cwc = new CursorDocumentSource.CursorWithContext();
-				cwc._cursor = new Cursor( [{a: 1}] );
+				cwc._cursor = new Cursor( [{"a": 1}] );
 				var cds = new CursorDocumentSource(cwc);
-				var sds = SortDocumentSource.createFromJson({a:1});
+				var sds = SortDocumentSource.createFromJson({"a": 1});
 				sds.setSource(cds);
 				sds.getNext(function(err, val) {
 					assert.deepEqual(val, {a:1});
 					sds.getNext(function(err, val) {
 						assert.equal(val, DocumentSource.EOF);
-						next();
-					});
-				});
-				sds.getNext(function(err, val) {
-					assert.deepEqual(val, {a:1});
-					sds.getNext(function(err, val) {
-						assert.equal(val, DocumentSource.EOF);
-						next();
-					});
-				});
-				sds.getNext(function(err, val) {
-					assert.deepEqual(val, {a:1});
-					sds.getNext(function(err, val) {
-						assert.equal(val, DocumentSource.EOF);
-						next();
 					});
 				});
 			},
