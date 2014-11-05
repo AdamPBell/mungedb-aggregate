@@ -31,10 +31,10 @@ var utils = module.exports = {
 
 	//SKIPPED: toJson
 
-    /**
-     * Convert Expression to BSON.
-     * @method expressionToJson
-     */
+	/**
+	 * Convert Expression to BSON.
+	 * @method expressionToJson
+	 */
 	expressionToJson: function expressionToJson(expr) {
 		return expr.serialize(false);
 	},
