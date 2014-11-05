@@ -108,14 +108,14 @@ module.exports = {
 				});
 			},
 
-			// "should swap $match and $sort if the $match immediately follows the $sort": function () {
-			// 	var p = Pipeline.parseCommand({pipeline: [
-			// 		{$sort: {"xyz": 1}},
-			// 		{$match: {}}
-			// 	]});
-			// 	assert.equal(p.sources[0].constructor.matchName, "$match");
-			// 	assert.equal(p.sources[1].constructor.sortName, "$sort");
-			// },
+			"should swap $match and $sort if the $match immediately follows the $sort": function () {
+				var p = Pipeline.parseCommand({pipeline: [
+					{$sort: {"xyz": 1}},
+					{$match: {}}
+				]});
+				assert.equal(p.sources[0].constructor.matchName, "$match");
+				assert.equal(p.sources[1].constructor.sortName, "$sort");
+			},
 
 			"should attempt to coalesce all sources": function () {
 				var p = Pipeline.parseCommand({pipeline: [
@@ -139,38 +139,34 @@ module.exports = {
 				p.sources.forEach(function (source) {
 					assert.equal(source.optimizeWasCalled, true);
 				});
-			},
-
-			"should duplicate match before redact": function () {
-
 			}
 		},
 
-		"sharded": {
+		// "sharded": {
 
-			"should handle empty pipeline for sharded": function () {
-				var inputPipe = {pipeline: []},
-					expectedMergePipe = "[]",
-					expectedShardPipe = "[]";
-				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
-			},
+		// 	"should handle empty pipeline for sharded": function () {
+		// 		var inputPipe = {pipeline: []},
+		// 			expectedMergePipe = "[]",
+		// 			expectedShardPipe = "[]";
+		// 		shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+		// 	},
 
-			"should handle one unwind": function () {
-				var inputPipe = "[{$unwind: '$a'}]}",
-					expectedMergePipe = "[]",
-					expectedShardPipe = "[{$unwind: '$a'}]";
-				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
-			},
+		// 	"should handle one unwind": function () {
+		// 		var inputPipe = "[{$unwind: '$a'}]}",
+		// 			expectedMergePipe = "[]",
+		// 			expectedShardPipe = "[{$unwind: '$a'}]";
+		// 		shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+		// 	},
 
-			"should handle two unwinds": function () {
-				var inputPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}",
-					expectedMergePipe = "[]",
-					expectedShardPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}";
-				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+		// 	"should handle two unwinds": function () {
+		// 		var inputPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}",
+		// 			expectedMergePipe = "[]",
+		// 			expectedShardPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}";
+		// 		shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 
-			}
+		// 	}
 
-		},
+		// },
 
 		"#stitch": {
 			"should set the parent source for all sources in the pipeline except the first one": function () {
