@@ -13,32 +13,32 @@ module.exports = {
 
 	"SortDocumentSource": {
 
-		"constructor()": {
+		// "constructor()": {
 
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new SortDocumentSource();
-				});
-			}
+		// 	"should not throw Error when constructing without args": function testConstructor(){
+		// 		assert.doesNotThrow(function(){
+		// 			new SortDocumentSource();
+		// 		});
+		// 	}
 
-		},
+		// },
 
-		"#getSourceName()": {
+		// "#getSourceName()": {
 
-			"should return the correct source name; $sort": function testSourceName(){
-				var sds = new SortDocumentSource();
-				assert.strictEqual(sds.getSourceName(), "$sort");
-			}
+		// 	"should return the correct source name; $sort": function testSourceName(){
+		// 		var sds = new SortDocumentSource();
+		// 		assert.strictEqual(sds.getSourceName(), "$sort");
+		// 	}
 
-		},
+		// },
 
-		"#getFactory()": {
+		// "#getFactory()": {
 
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new SortDocumentSource().getFactory(), SortDocumentSource);
-			}
+		// 	"should return the constructor for this class": function factoryIsConstructor(){
+		// 		assert.strictEqual(new SortDocumentSource().getFactory(), SortDocumentSource);
+		// 	}
 
-		},
+		// },
 
 		"#getNext()": {
 			/** Assert that iterator state accessors consistently report the source is exhausted. */
