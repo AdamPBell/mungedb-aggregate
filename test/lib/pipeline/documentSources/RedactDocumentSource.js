@@ -4,23 +4,28 @@ var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	RedactDocumentSource = require("../../../../lib/pipeline/documentSources/RedactDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	Cursor = require("../../../../lib/Cursor");
+	Cursor = require("../../../../lib/Cursor"),
+	Expressions = require("../../../../lib/pipeline/expressions");
 
-var exampleRedact = {$cond: [
-	{$gt:[3, 0]},
-	"$$DESCEND",
-	"$$PRUNE"]
+var exampleRedact = {$cond:{
+	if:{$gt:[0,4]},
+	then:"$$DESCEND",
+	else:"$$PRUNE"
+}};
+
+var createCursorDocumentSource = function createCursorDocumentSource (input) {
+	if (!input || input.constructor !== Array) throw new Error('invalid');
+	var cwc = new CursorDocumentSource.CursorWithContext();
+	cwc._cursor = new Cursor(input);
+	return new CursorDocumentSource(cwc);
 };
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////// BUSTED ////////////////////////////////////
-//           This DocumentSource is busted without new Expressions            //
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+var createRedactDocumentSource = function createRedactDocumentSource (src, expression) {
+	var rds = RedactDocumentSource.createFromJson(expression);
+	rds.setSource(src);
+	return rds;
+};
 
-//TESTS
 module.exports = {
 
 	"RedactDocumentSource": {
@@ -83,6 +88,7 @@ module.exports = {
 				var rds = new RedactDocumentSource();
 				assert.throws(rds.getNext.bind(rds));
 			},
+
 		},
 
 		"#optimize()": {
@@ -109,9 +115,124 @@ module.exports = {
 			}
 
 		},
+
+		"#redact()": {
+
+			"should redact subsection where tag does not match": function (done) {
+				var cds = createCursorDocumentSource([{
+					_id: 1,
+					title: "123 Department Report",
+					tags: ["G", "STLW"],
+					year: 2014,
+					subsections: [
+						{
+							subtitle: "Section 1: Overview",
+							tags: ["SI", "G"],
+							content: "Section 1: This is the content of section 1."
+						},
+						{
+							subtitle: "Section 2: Analysis",
+							tags: ["STLW"],
+							content: "Section 2: This is the content of section 2."
+						},
+						{
+							subtitle: "Section 3: Budgeting",
+							tags: ["TK"],
+							content: {
+								text: "Section 3: This is the content of section3.",
+								tags: ["HCS"]
+							}
+						}
+					]
+				}]);
+
+				var expression = {$cond:{
+					if:{$gt: [{$size: {$setIntersection: ["$tags", [ "STLW", "G" ]]}},0]},
+					then:"$$DESCEND",
+					else:"$$PRUNE"
+				}};
+
+				var rds = createRedactDocumentSource(cds, expression);
+
+				var result = {
+					"_id": 1,
+					"title": "123 Department Report",
+					"tags": ["G", "STLW"],
+					"year": 2014,
+					"subsections": [{
+						"subtitle": "Section 1: Overview",
+						"tags": ["SI", "G"],
+						"content": "Section 1: This is the content of section 1."
+					}, {
+						"subtitle": "Section 2: Analysis",
+						"tags": ["STLW"],
+						"content": "Section 2: This is the content of section 2."
+					}]
+				};
+
+				rds.getNext(function (err, actual) {
+					assert.deepEqual(actual, result);
+					done();
+				});
+
+			},
+
+			"should redact an entire subsection based on a defined access level": function (done) {
+				var cds = createCursorDocumentSource([{
+					_id: 1,
+					level: 1,
+					acct_id: "xyz123",
+					cc: {
+						level: 5,
+						type: "yy",
+						exp_date: new Date("2015-11-01"),
+						billing_addr: {
+							level: 5,
+							addr1: "123 ABC Street",
+							city: "Some City"
+						},
+						shipping_addr: [
+							{
+								level: 3,
+								addr1: "987 XYZ Ave",
+								city: "Some City"
+							},
+							{
+								level: 3,
+								addr1: "PO Box 0123",
+								city: "Some City"
+							}
+						]
+					},
+					status: "A"
+				}]);
+
+				var expression = {$cond:{
+					if:{$eq:["$level",5]},
+					then:"$$PRUNE",
+					else:"$$DESCEND"
+				}};
+
+				var rds = createRedactDocumentSource(cds, expression);
+
+				var result = {
+					_id:1,
+					level:1,
+					acct_id:"xyz123",
+					status:"A"
+				};
+
+				rds.getNext(function (err, actual) {
+					assert.deepEqual(actual, result);
+					done();
+				});
+
+			}
+
+		}
+
 	}
 
 };
 
 if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);
-
