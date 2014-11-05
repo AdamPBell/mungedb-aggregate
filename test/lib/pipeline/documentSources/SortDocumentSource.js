@@ -13,32 +13,32 @@ module.exports = {
 
 	"SortDocumentSource": {
 
-		"constructor()": {
+		// "constructor()": {
 
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new SortDocumentSource();
-				});
-			}
+		// 	"should not throw Error when constructing without args": function testConstructor(){
+		// 		assert.doesNotThrow(function(){
+		// 			new SortDocumentSource();
+		// 		});
+		// 	}
 
-		},
+		// },
 
-		"#getSourceName()": {
+		// "#getSourceName()": {
 
-			"should return the correct source name; $sort": function testSourceName(){
-				var sds = new SortDocumentSource();
-				assert.strictEqual(sds.getSourceName(), "$sort");
-			}
+		// 	"should return the correct source name; $sort": function testSourceName(){
+		// 		var sds = new SortDocumentSource();
+		// 		assert.strictEqual(sds.getSourceName(), "$sort");
+		// 	}
 
-		},
+		// },
 
-		"#getFactory()": {
+		// "#getFactory()": {
 
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new SortDocumentSource().getFactory(), SortDocumentSource);
-			}
+		// 	"should return the constructor for this class": function factoryIsConstructor(){
+		// 		assert.strictEqual(new SortDocumentSource().getFactory(), SortDocumentSource);
+		// 	}
 
-		},
+		// },
 
 		"#getNext()": {
 			/** Assert that iterator state accessors consistently report the source is exhausted. */
@@ -125,11 +125,11 @@ module.exports = {
             * created with.
             */
             "should have equal json representation": function serializeToArrayCheck(){
-				var spec = {"sort":1};
-				var sds = new SortDocumentSource.createFromJson(spec, {});
+				var sds = SortDocumentSource.createFromJson({"sort":1}, {});
 
 				var array = [];
 				sds.serializeToArray(array, false);
+
 				assert.deepEqual(array, [ { '$sort': { '[object Object]': 1 } } ]);
 			},
 
@@ -258,33 +258,34 @@ module.exports = {
 				);
 			},
 
-			// "should sort documents with a compound key": function compoundKeySort(next) {
-			// 	var cwc = new CursorDocumentSource.CursorWithContext();
-			// 	var l = [{_id:0, a: 1, b:3}, {_id:5, a:12, b:7}, {_id:1, a:0, b:2}];
-			// 	cwc._cursor = new Cursor( l );
-			// 	var cds = new CursorDocumentSource(cwc);
-			// 	var sds = new SortDocumentSource();
-			// 	sds.addKey("a", false);
-			// 	sds.addKey("b", false);
-			// 	sds.setSource(cds);
+			"should sort documents with a compound key": function compoundKeySort(next) {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0, a: 1, b:3}, {_id:5, a:12, b:7}, {_id:1, a:0, b:2}];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = SortDocumentSource.createFromJson({"sort":1});
 
-			// 	var docs = [], i = 0;
-			// 	async.doWhilst(
-			// 		function(cb) {
-			// 			sds.getNext(function(err, val) {
-			// 				docs[i] = val;
-			// 				return cb(err);
-			// 			});
-			// 		},
-			// 		function() {
-			// 			return docs[i++] !== DocumentSource.EOF;
-			// 		},
-			// 		function(err) {
-			// 			assert.deepEqual([{_id:5, a:12, b:7}, {_id:0, a:1, b:3}, {_id:1, a:0, b:2}, DocumentSource.EOF], docs);
-			// 			next();
-			// 		}
-			// 	);
-			// },
+				sds.addKey("a", false);
+				sds.addKey("b", false);
+				sds.setSource(cds);
+
+				var docs = [], i = 0;
+				async.doWhilst(
+					function(cb) {
+						sds.getNext(function(err, val) {
+							docs[i] = val;
+							return cb(err);
+						});
+					},
+					function() {
+						return docs[i++] !== DocumentSource.EOF;
+					},
+					function(err) {
+						assert.deepEqual([{_id:5, a:12, b:7}, {_id:0, a:1, b:3}, {_id:1, a:0, b:2}, DocumentSource.EOF], docs);
+						next();
+					}
+				);
+			},
 
 		// 	"should sort documents with a compound key in ascending order": function compoundAscendingKeySort(next) {
 		// 		var cwc = new CursorDocumentSource.CursorWithContext();
