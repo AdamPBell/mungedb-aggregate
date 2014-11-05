@@ -13,32 +13,32 @@ module.exports = {
 
 	"SortDocumentSource": {
 
-		// "constructor()": {
+		"constructor()": {
 
-		// 	"should not throw Error when constructing without args": function testConstructor(){
-		// 		assert.doesNotThrow(function(){
-		// 			new SortDocumentSource();
-		// 		});
-		// 	}
+			"should not throw Error when constructing without args": function testConstructor(){
+				assert.doesNotThrow(function(){
+					new SortDocumentSource();
+				});
+			}
 
-		// },
+		},
 
-		// "#getSourceName()": {
+		"#getSourceName()": {
 
-		// 	"should return the correct source name; $sort": function testSourceName(){
-		// 		var sds = new SortDocumentSource();
-		// 		assert.strictEqual(sds.getSourceName(), "$sort");
-		// 	}
+			"should return the correct source name; $sort": function testSourceName(){
+				var sds = new SortDocumentSource();
+				assert.strictEqual(sds.getSourceName(), "$sort");
+			}
 
-		// },
+		},
 
-		// "#getFactory()": {
+		"#getFactory()": {
 
-		// 	"should return the constructor for this class": function factoryIsConstructor(){
-		// 		assert.strictEqual(new SortDocumentSource().getFactory(), SortDocumentSource);
-		// 	}
+			"should return the constructor for this class": function factoryIsConstructor(){
+				assert.strictEqual(new SortDocumentSource().getFactory(), SortDocumentSource);
+			}
 
-		// },
+		},
 
 		"#getNext()": {
 			/** Assert that iterator state accessors consistently report the source is exhausted. */
@@ -85,10 +85,10 @@ module.exports = {
 				var cwc = new CursorDocumentSource.CursorWithContext();
 				cwc._cursor = new Cursor( [{a: 1}, {b:2}] );
 				var cds = new CursorDocumentSource(cwc);
-				var sds = SortDocumentSource.createFromJson({"sort":-1});
+				var sds = SortDocumentSource.createFromJson({"sort":1});
 				sds.setSource(cds);
 				sds.getNext(function(err, doc) {
-					assert.deepEqual(doc, {b:2});
+					assert.deepEqual(doc, {a: 1});
 					return next();
 				});
 			},
@@ -97,11 +97,11 @@ module.exports = {
 				var cwc = new CursorDocumentSource.CursorWithContext();
 				cwc._cursor = new Cursor( [{a: 1}, {b:2}] );
 				var cds = new CursorDocumentSource(cwc);
-				var sds = SortDocumentSource.createFromJson({"sort":-1});
+				var sds = SortDocumentSource.createFromJson({"sort":1});
 				sds.setSource(cds);
 				sds.getNext(function(err, doc) {
 					sds.getNext(function(err, doc) {
-						assert.deepEqual(doc, {a:1});
+						assert.deepEqual(doc, {b:2});
 						next();
 					});
 				});
@@ -130,7 +130,7 @@ module.exports = {
 				var array = [];
 				sds.serializeToArray(array, false);
 
-				assert.deepEqual(array, [ { '$sort': { '[object Object]': 1 } } ]);
+				assert.deepEqual(array, [{"$sort":{"sort":1}}]);
 			},
 
 			"should create an object representation of the SortDocumentSource": function serializeToArrayTest(){
@@ -139,7 +139,7 @@ module.exports = {
 				sds.vSortKey.push(new FieldPathExpression("b", fieldPathVar) );
 				var array = [];
 				sds.serializeToArray(array, false);
-				assert.deepEqual(array,  [{"$sort":{"[object Object]":-1}}] );
+				assert.deepEqual(array, [{"$sort":{"":-1}}] );
 			}
 
 		},
@@ -151,7 +151,7 @@ module.exports = {
 				assert.strictEqual(sds.constructor, SortDocumentSource);
 				var t = [];
 				sds.serializeToArray(t, false);
-				assert.deepEqual(t, [{"$sort":{"[object Object]":1}}]);
+				assert.deepEqual(t, [{"$sort":{"a":1}}] );
 			},
 
 			"should return a new SortDocumentSource object from an input JSON object with a descending field": function createTest(){
@@ -159,7 +159,7 @@ module.exports = {
 				assert.strictEqual(sds.constructor, SortDocumentSource);
 				var t = [];
 				sds.serializeToArray(t, false);
-				assert.deepEqual(t, [{ "$sort": { "[object Object]": -1 } }]);
+				assert.deepEqual(t,  [{"$sort":{"a":-1}}]);
 			},
 
 			"should return a new SortDocumentSource object from an input JSON object with dotted paths": function createTest(){
@@ -167,7 +167,7 @@ module.exports = {
 				assert.strictEqual(sds.constructor, SortDocumentSource);
 				var t = [];
 				sds.serializeToArray(t, false);
-				assert.deepEqual(t, [{ "$sort": { "[object Object]" : 1  } }]);
+				assert.deepEqual(t, [{"$sort":{"a.b":1}}]);
 			},
 
 			"should throw an exception when not passed an object": function createTest(){
@@ -507,7 +507,8 @@ module.exports = {
 				var deps = {fields: {}, needWholeDocument: false, needTextScore: false};
 
 				assert.equal('SEE_NEXT', sds.getDependencies(deps));
-				assert.equal(2, Object.keys(deps.fields).length);
+				// Sort keys are now part of deps fields.
+				assert.equal(3, Object.keys(deps.fields).length);
 			 	assert.equal(1, deps.fields.a);
 				assert.equal(1, deps.fields['b.c']);
 				assert.equal(false, deps.needWholeDocument);
