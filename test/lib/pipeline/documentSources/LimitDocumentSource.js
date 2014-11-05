@@ -1,8 +1,14 @@
 "use strict";
 var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
-	LimitDocumentSource = require("../../../../lib/pipeline/documentSources/LimitDocumentSource");
+	LimitDocumentSource = require("../../../../lib/pipeline/documentSources/LimitDocumentSource"),
+	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
+	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
+var addSource = function addSource(ds, data) {
+	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
+	ds.setSource(cds);
+};
 
 module.exports = {
 
@@ -73,7 +79,7 @@ module.exports = {
 			"should return the current document source": function currSource(next){
 				var lds = new LimitDocumentSource({"$limit":[{"a":1},{"a":2}]});
 				lds.limit = 1;
-				lds.source = {getNext:function(cb){cb(null,{ item:1 });}};
+				addSource(lds, [{item:1}]);
 				lds.getNext(function(err,val) {
 					assert.deepEqual(val, { item:1 });
 					return next();
@@ -84,19 +90,10 @@ module.exports = {
 			"should return EOF for no sources remaining": function noMoar(next){
 				var lds = new LimitDocumentSource({"$match":[{"a":1},{"a":1}]});
 				lds.limit = 1;
-				lds.source = {
-					calls: 0,
-					getNext:function(cb) {
-						if (lds.source.calls)
-							return cb(null,DocumentSource.EOF);
-						lds.source.calls++;
-						return cb(null,{item:1});
-					},
-					dispose:function() { return true; }
-				};
+				addSource(lds, [{item:1}]);
 				lds.getNext(function(){});
 				lds.getNext(function(err,val) {
-					assert.strictEqual(val, DocumentSource.EOF);
+					assert.strictEqual(val, null);
 					return next();
 				});
 			},
@@ -104,18 +101,10 @@ module.exports = {
 			"should return EOF if we hit our limit": function noMoar(next){
 				var lds = new LimitDocumentSource();
 				lds.limit = 1;
-				lds.source = {
-					calls: 0,
-					getNext:function(cb) {
-						if (lds.source.calls)
-							return cb(null,DocumentSource.EOF);
-						return cb(null,{item:1});
-					},
-					dispose:function() { return true; }
-				};
+				addSource(lds, [{item:1},{item:2}]);
 				lds.getNext(function(){});
 				lds.getNext(function (err,val) {
-					assert.strictEqual(val, DocumentSource.EOF);
+					assert.strictEqual(val, null);
 					return next();
 				});
 			}
