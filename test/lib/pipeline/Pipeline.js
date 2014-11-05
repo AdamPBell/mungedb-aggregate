@@ -11,9 +11,8 @@ var addSource = function addSource(match, data) {
 	match.setSource(cds);
 };
 
-var shardedTest = function(inputPipeString, expectedMergePipeString, expectedShardPipeString) {
-	var inputPipe = JSON.parse(inputPipeString),
-		expectedMergePipe = JSON.parse(expectedMergePipeString),
+var shardedTest = function(inputPipe, expectedMergePipeString, expectedShardPipeString) {
+	var expectedMergePipe = JSON.parse(expectedMergePipeString),
 		expectedShardPipe = JSON.parse(expectedShardPipeString);
 
 	var mergePipe = Pipeline.parseCommand(inputPipe, {});
@@ -110,7 +109,6 @@ module.exports = {
 			},
 
 			"should swap $match and $sort if the $match immediately follows the $sort": function () {
-				debugger;
 				var p = Pipeline.parseCommand({pipeline: [
 					{$sort: {"xyz": 1}},
 					{$match: {}}
@@ -145,12 +143,15 @@ module.exports = {
 
 			"should duplicate match before redact": function () {
 
-			},
+			}
+		},
+
+		"sharded": {
 
 			"should handle empty pipeline for sharded": function () {
-				var inputPipe = "{[]}",
-					expectedMergePipe = "{[]}",
-					expectedShardPipe = "{[]}";
+				var inputPipe = {pipeline: []},
+					expectedMergePipe = "[]",
+					expectedShardPipe = "[]";
 				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 			},
 
