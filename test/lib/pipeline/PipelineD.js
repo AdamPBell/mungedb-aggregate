@@ -10,78 +10,19 @@ module.exports = {
 
 	"PipelineD": {
 
-		before: function(){
-
-			Pipeline.stageDesc.$test = (function(){
-
-				var klass = function TestDocumentSource(options, ctx){
-					base.call(this, ctx);
-
-					this.shouldCoalesce = options.coalesce;
-					this.coalesceWasCalled = false;
-					this.optimizeWasCalled = false;
-					this.resetWasCalled = false;
-
-					this.current = 5;
-				}, TestDocumentSource = klass, base = DocumentSource, proto = klass.prototype = Object.create(base.prototype, {constructor:{value:klass}});
-
-				proto.coalesce = function(){
-					this.coalesceWasCalled = true;
-					var c = this.shouldCoalesce;//only coalesce with the first thing we find
-					this.shouldCoalesce = false;
-					return c;
-				};
-
-				proto.optimize = function(){
-					this.optimizeWasCalled = true;
-				};
-
-				proto.eof = function(){
-					return this.current < 0;
-				};
-
-				proto.advance = function(){
-					this.current = this.current - 1;
-					return !this.eof();
-				};
-
-				proto.getCurrent = function(){
-					return this.current;
-				};
-
-				proto.reset = function(){
-					this.resetWasCalled = true;
-				};
-
-				proto.getDependencies = function(deps){
-					if (!deps.testDep){
-						deps.testDep = 1;
-						return DocumentSource.GetDepsReturn.EXHAUSTIVE;
-					}
-					return DocumentSource.GetDepsReturn.SEE_NEXT;
-				};
-
-				klass.createFromJson = function(options, ctx){
-					return new TestDocumentSource(options, ctx);
-				};
-
-				return klass;
-			})().createFromJson;
-
-		},
-
 		"prepareCursorSource": {
 
 			"should place a CursorDocumentSource in pipeline": function () {
-				var p = Pipeline.parseCommand({pipeline:[{$test:{coalesce:false}}, {$test:{coalesce:false}}], aggregate:[]}),
+				var p = Pipeline.parseCommand({pipeline:[{$match:{a:true}}], aggregate:[]}),
 					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
 				assert.equal(p.sources[0].constructor, CursorDocumentSource);
 			},
 
 			"should get projection from all sources": function () {
-				var p = Pipeline.parseCommand({pipeline:[{$test:{coalesce:false}}, {$test:{coalesce:false}}], aggregate:[]}),
+				var p = Pipeline.parseCommand({pipeline:[{$project:{a:"$x"}}], aggregate:[]}),
 					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
-				assert.deepEqual(p.sources[0]._projection, {"_id":0,"testDep":1});
+				assert.deepEqual(p.sources[0]._projection, {"x":1});
+				assert.deepEqual(p.sources[0]._dependencies, {}); //TODO: what goes here???
 			},
 
 			"should get projection's deps": function () {
@@ -106,6 +47,7 @@ module.exports = {
 				var p = Pipeline.parseCommand(cmdObj),
 					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
 				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({'a.b.c': 1, d: 1, 'e.f.g': 1, _id: 1}));
+				assert.deepEqual(p.sources[0]._dependencies, {}); //TODO: what goes here???
 			},
 
 			"should get group's deps": function(){
@@ -132,7 +74,12 @@ module.exports = {
 				var p = Pipeline.parseCommand(cmdObj),
 					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
 				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({ _id: 0, a: 1, b: 1, 'x.y.z': 1 }));
-			}
+				assert.deepEqual(p.sources[0]._dependencies, {}); //TODO: what goes here???
+			},
+			"should set the queryObj on the Cursor": function(){},
+			"should set the sort on the Cursor": function(){},
+			"should set the sort on the Cursor if there is a match first": function(){},
+			"should coalesce the Cursor with the rest of the pipeline": function(){},
 		}
 	}
 
