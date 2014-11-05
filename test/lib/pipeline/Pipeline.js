@@ -2,7 +2,31 @@
 var assert = require("assert"),
 	Pipeline = require("../../../lib/pipeline/Pipeline"),
 	FieldPath = require("../../../lib/pipeline/FieldPath"),
-	DocumentSource = require('../../../lib/pipeline/documentSources/DocumentSource');
+	DocumentSource = require('../../../lib/pipeline/documentSources/DocumentSource'),
+	CursorDocumentSource = require("../../../lib/pipeline/documentSources/CursorDocumentSource"),
+	ArrayRunner = require("../../../lib/query/ArrayRunner");
+
+var addSource = function addSource(match, data) {
+	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
+	match.setSource(cds);
+};
+
+var shardedTest = function(inputPipeString, expectedMergePipeString, expectedShardPipeString) {
+	var inputPipe = JSON.parse(inputPipeString),
+		expectedMergePipe = JSON.parse(expectedMergePipeString),
+		expectedShardPipe = JSON.parse(expectedShardPipeString);
+
+	var mergePipe = Pipeline.parseCommand(inputPipe, {});
+	assert.notEqual(mergePipe, null);
+
+	var shardPipe = mergePipe.splitForSharded();
+	assert.notEqual(shardPipe, null);
+
+	assert.equal(shardPipe.serialize()["pipeline"],
+		expectedShardPipe["pipeline"]);
+	assert.equal(mergePipe.serialize()["pipeline"],
+		expectedMergePipe["pipeline"]);
+};
 
 module.exports = {
 
@@ -86,6 +110,7 @@ module.exports = {
 			},
 
 			"should swap $match and $sort if the $match immediately follows the $sort": function () {
+				debugger;
 				var p = Pipeline.parseCommand({pipeline: [
 					{$sort: {"xyz": 1}},
 					{$match: {}}
@@ -116,6 +141,32 @@ module.exports = {
 				p.sources.forEach(function (source) {
 					assert.equal(source.optimizeWasCalled, true);
 				});
+			},
+
+			"should duplicate match before redact": function () {
+
+			},
+
+			"should handle empty pipeline for sharded": function () {
+				var inputPipe = "{[]}",
+					expectedMergePipe = "{[]}",
+					expectedShardPipe = "{[]}";
+				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+			},
+
+			"should handle one unwind": function () {
+				var inputPipe = "[{$unwind: '$a'}]}",
+					expectedMergePipe = "[]}",
+					expectedShardPipe = "[{$unwind: '$a'}]}";
+				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+			},
+
+			"should handle two unwinds": function () {
+				var inputPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}",
+					expectedMergePipe = "[]}",
+					expectedShardPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}";
+				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+
 			}
 
 		},
