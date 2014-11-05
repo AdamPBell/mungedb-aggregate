@@ -45,63 +45,62 @@ exports.LetExpression = {
 
 	"#parse()": {
 
-		beforeEach: function() {
-			this.dieForTheRightReason = function(expr, regex) {
-				var self = this;
-				assert.throws(function() {
-					Expression.parseOperand(expr, self.vps);
-				}, regex);
-			};
-		},
-
 		"should throw if $let isn't in expr": function() {
-			this.dieForTheRightReason({$xlet: ['$$a', 1]}, /15999/);
+			var self = this;
+			assert.throws(function() {
+				Expression.parseOperand({$xlet: ['$$a', 1]}, self.vps);
+			}, /15999/);
 		},
 
 		"should throw if the $let expression isn't an object": function() {
-			this.dieForTheRightReason({$let: "this is not an object"}, /16874/);
+			var self = this;
+			assert.throws(function() {
+				Expression.parseOperand({$let: "this is not an object"}, self.vps);
+			}, /16874/);
 		},
 
 		"should throw if the $let expression is an array": function() {
-			this.dieForTheRightReason({$let: [1, 2, 3]}, /16874/);
+			var self = this;
+			assert.throws(function() {
+				Expression.parseOperand({$let: [1, 2, 3]}, self.vps);
+			}, /16874/);
 		},
 
 		"should throw if there is no vars parameter to $let": function() {
-			this.dieForTheRightReason({$let: {noVars: 1}}, /16876/);
+			var self = this;
+			assert.throws(function() {
+				Expression.parseOperand({$let: {vars: undefined}}, self.vps);
+			}, /16876/);
 		},
 
 		"should throw if there is no input parameter to $let": function() {
-			this.dieForTheRightReason({$let: {vars: 1, noIn: 2}}, /16877/);
+			var self = this;
+			assert.throws(function() {
+				Expression.parseOperand({$let: {vars: 1, in: undefined}}, self.vps);
+			}, /16877/);
 		},
 
 		"should throw if any of the arguments to $let are not 'in' or 'vars'": function() {
-			this.dieForTheRightReason({$let: {vars: 1, in: 2, zoot:3}}, /16875/);
-		},
-
-		"should throw if the var name is not writable (1)": function() {
-			this.dieForTheRightReason({$let: {vars: {a:"@"}, in: 2}}, /16873/);
-		},
-
-		"should throw if the var name is not writable (2)": function() {
-			this.dieForTheRightReason({$let: {vars: {a:"$$"}, in: 2}}, /16869/);
+			var self = this;
+			assert.throws(function() {
+				Expression.parseOperand({$let: {vars: 1, in: 2, zoot:3}}, self.vps);
+			}, /16875/);
 		},
 
 		"should return a Let expression": function() {
 			var x = Expression.parseOperand({$let: {vars: {a:{$const:123}}, in: 2}}, this.vps);
 			assert(x instanceof LetExpression);
 			assert(x._subExpression instanceof ConstantExpression);
-			assert(x._subExpression.getValue() == 2);
-			assert(x._variables[0].a._expressions.a instanceof ConstantExpression);
-			assert.equal(x._variables[0].a._expressions.a.getValue(), 123, "Expected to see 123, but instead saw "+x._variables[0].a._expressions.a.getValue());
+			assert.strictEqual(x._subExpression.getValue(), 2);
+			assert(x._variables[0].expression instanceof ConstantExpression);
+			assert.strictEqual(x._variables[0].expression.getValue(), 123);
 		},
 
 		"should show we collect multiple vars": function() {
 			var x = Expression.parseOperand({$let: {vars: {a:{$const:1}, b:{$const:2}, c:{$const:3}}, in: 2}}, this.vps);
-			//TODO Kyle, this is the epitome of why I think the data structures are screwy. Put a break on the
-			//next line and look at x.
-			assert.deepEqual(x._variables[0].a._expressions.a.getValue(), 1);
-			assert.deepEqual(x._variables[1].b._expressions.b.getValue(), 2);
-			assert.deepEqual(x._variables[2].c._expressions.c.getValue(), 3);
+			assert.strictEqual(x._variables[0].expression.getValue(), 1);
+			assert.strictEqual(x._variables[1].expression.getValue(), 2);
+			assert.strictEqual(x._variables[2].expression.getValue(), 3);
 		},
 
 	},
@@ -109,30 +108,31 @@ exports.LetExpression = {
 	"#optimize()": {
 
 		beforeEach: function() {
-			this.testInOpt = function (expr, expected) {
-				assert(expr._subExpression instanceof ConstantExpression, "Expected the $multiply to be optimized to a constant. Saw '" + expr._subExpression.constructor.name + "'");
-				assert.equal(expr._subExpression.operands.length, 0, "Expected no operands, saw " + expr._subExpression.operands.length);
-				assert(expr._subExpression.getValue(), expected, "Expected the multiply to optimize to "+expected+" but saw "+expr._subExpression.getValue());
+			this.testInOpt = function(expr, expected) {
+				assert(expr._subExpression instanceof ConstantExpression, "should have $const subexpr");
+				assert.strictEqual(expr._subExpression.operands.length, 0);
+				assert.strictEqual(expr._subExpression.getValue(), expected);
 			};
-			this.testVarOpt = function (expr, expected) {
-				var here = expr._variables[0].a._expressions.a;
-				assert(here instanceof ConstantExpression, "Expected the $multiply to be optimized to a constant. Saw '" + here.constructor.name + "'");
-				assert(here.getValue(), expected, "Expected the multiply to optimize to "+expected+" but saw "+here.getValue());
+			this.testVarOpt = function(expr, expected) {
+				var varExpr = expr._variables[0].expression;
+				assert(varExpr instanceof ConstantExpression, "should have $const first var");
+				assert.strictEqual(varExpr.getValue(), expected);
 			};
 		},
 
-		"should optimize subexpressions if there are no variables": function() {
-			var x = Expression.parseOperand({$let: {vars: {}, in: {$multiply: [2,3]}}}, this.vps).optimize();
-			this.testInOpt(x, 6);
+		"should optimize to subexpression if no variables": function() {
+			var x = Expression.parseOperand({$let:{vars:{}, in:{$multiply:[2,3]}}}, this.vps).optimize();
+			assert(x instanceof ConstantExpression, "should become $const");
+			assert.strictEqual(x.getValue(), 6);
 		},
 
 		"should optimize variables": function() {
-			var x = Expression.parseOperand({$let: {vars: {a: {$multiply:[5,4]}}, in: {$const: 6}}}, this.vps).optimize();
+			var x = Expression.parseOperand({$let:{vars:{a:{$multiply:[5,4]}}, in:{$const:6}}}, this.vps).optimize();
 			this.testVarOpt(x, 20);
 		},
 
 		"should optimize subexpressions if there are variables": function() {
-			var x = Expression.parseOperand({$let: {vars: {a: {$multiply:[5,4]}}, in: {$multiply: [2,3]}}}, this.vps).optimize();
+			var x = Expression.parseOperand({$let:{vars:{a:{$multiply:[5,4]}}, in: {$multiply:[2,3]}}}, this.vps).optimize();
 			this.testInOpt(x, 6);
 			this.testVarOpt(x, 20);
 		},
@@ -143,13 +143,13 @@ exports.LetExpression = {
 
 		"should serialize variables and the subexpression": function() {
 			var s = Expression.parseOperand({$let: {vars: {a:{$const:1}, b:{$const:2}}, in: {$multiply: [2,3]}}}, this.vps).optimize().serialize("zoot");
-			var expected = '{"$let":{"vars":{"a":{"excludeId":false,"_atRoot":false,"_expressions":{"a":{"value":1,"operands":[]},"b":{"value":2,"operands":[]}},"_order":["a","b"]},"b":{"excludeId":false,"_atRoot":false,"_expressions":{"a":{"value":1,"operands":[]},"b":{"value":2,"operands":[]}},"_order":["a","b"]}},"in":{"$const":6}}}';
-			assert.deepEqual(JSON.stringify(s), expected);
+			var expected = {$let:{vars:{a:{$const:1},b:{$const:2}},in:{$const:6}}};
+			assert.deepEqual(s, expected);
 		},
 
 	},
 
-	"#evaluateInternal()": {
+	"#evaluate()": {
 
 		"should perform the evaluation for variables and the subexpression": function() {
 			var x = Expression.parseOperand({$let: {vars: {a: '$in1', b: '$in2'}, in: { $multiply: ["$$a", "$$b"] }}}, this.vps).optimize();
