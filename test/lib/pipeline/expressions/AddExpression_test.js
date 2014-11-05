@@ -238,7 +238,6 @@ exports.AddExpression = {
 			assert.strictEqual(expr.operands.length, 2, "should optimize operands away");
 			assert(expr.operands[0] instanceof FieldPathExpression);
 			assert(expr.operands[1] instanceof ConstantExpression);
-			debugger
 			assert.strictEqual(expr.operands[1].evaluate(), 1 + 2 + 3 + 4 + 5 + 6);
 		},
 
