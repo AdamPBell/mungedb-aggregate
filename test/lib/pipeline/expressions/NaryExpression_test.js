@@ -3,11 +3,16 @@
 var assert = require("assert"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
+	Expression = require("../../../../lib/pipeline/expressions/Expression"),
 	NaryExpression = require("../../../../lib/pipeline/expressions/NaryExpression"),
 	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
-	Expression = require("../../../../lib/pipeline/expressions/Expression"),
-	utils = require("./utils");
+	AndExpression = require("../../../../lib/pipeline/expressions/AndExpression"), //jshint ignore:line
+	AddExpression = require("../../../../lib/pipeline/expressions/AddExpression"), //jshint ignore:line
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
+	utils = require("./utils"),
+	constify = utils.constify,
+	expressionToJson = utils.expressionToJson;
 
 
 // Mocha one-liner to make these tests self-hosted
@@ -16,13 +21,11 @@ if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({
 
 // A dummy child of NaryExpression used for testing
 var Testable = (function(){
-	// CONSTRUCTOR
 	var klass = function Testable(isAssociativeAndCommutative){
 		this._isAssociativeAndCommutative = isAssociativeAndCommutative;
 		base.call(this);
 	}, base = NaryExpression, proto = klass.prototype = Object.create(base.prototype, {constructor:{value:klass}});
 
-	// MEMBERS
 	proto.evaluateInternal = function evaluateInternal(vars) {
 		// Just put all the values in a list.  This is not associative/commutative so
 		// the results will change if a factory is provided and operations are reordered.
@@ -54,14 +57,15 @@ var Testable = (function(){
 		var idGenerator = new VariablesIdGenerator(),
 			vps = new VariablesParseState(idGenerator),
 			testable = Testable.create(haveFactory);
-		operands.forEach(function(element) {
+		for (var i = 0, l = operands.length; i < l; i++) {
+			var element = operands[i];
 			testable.addOperand(Expression.parseOperand(element, vps));
-		});
+		}
 		return testable;
 	};
 
 	proto.assertContents = function assertContents(expectedContents) {
-		assert.deepEqual(utils.constify({$testable:expectedContents}), utils.expressionToJson(this));
+		assert.deepEqual(constify({$testable:expectedContents}), expressionToJson(this));
 	};
 
 	return klass;
@@ -103,26 +107,23 @@ exports.NaryExpression = {
 		var testable = Testable.create();
 
 		var assertDependencies = function assertDependencies(expectedDeps, expr) {
-			var deps = {}, //TODO: new DepsTracker
-				depsJson = [];
+			var deps = new DepsTracker();
 			expr.addDependencies(deps);
-			deps.forEach(function(dep) {
-				depsJson.push(dep);
-			});
+			var depsJson = Object.keys(deps.fields).sort();
 			assert.deepEqual(depsJson, expectedDeps);
-			assert.equal(deps.needWholeDocument, false);
-			assert.equal(deps.needTextScore, false);
+			assert.strictEqual(deps.needWholeDocument, false);
+			assert.strictEqual(deps.needTextScore, false);
 		};
 
 		// No arguments.
 		assertDependencies([], testable);
 
 		// Add a constant argument.
-		testable.addOperand(new ConstantExpression(1));
+		testable.addOperand(ConstantExpression.create(1));
 		assertDependencies([], testable);
 
 		// Add a field path argument.
-		testable.addOperand(new FieldPathExpression("ab.c"));
+		testable.addOperand(FieldPathExpression.create("ab.c"));
 		assertDependencies(["ab.c"], testable);
 
 		// Add an object expression.
@@ -131,7 +132,7 @@ exports.NaryExpression = {
 			ctx = new Expression.ObjectCtx({isDocumentOk:true}),
 			vps = new VariablesParseState(new VariablesIdGenerator());
 		testable.addOperand(Expression.parseObject(specElement, ctx, vps));
-		assertDependencies(["ab.c", "r", "x"]);
+		assertDependencies(["ab.c", "r", "x"], testable);
 	},
 
 	/** Serialize to an object. */
@@ -159,7 +160,7 @@ exports.NaryExpression = {
 		var spec = [{$and:[]}, "$abc"],
 			testable = Testable.createFromOperands(spec);
 		testable.assertContents(spec);
-		assert.deepEqual(testable.serialize(), testable.optimize().serialize());
+		assert.strictEqual(testable, testable.optimize());
 		testable.assertContents([true, "$abc"]);
 	},
 
@@ -169,8 +170,8 @@ exports.NaryExpression = {
 			testable = Testable.createFromOperands(spec);
 		testable.assertContents(spec);
 		var optimized = testable.optimize();
-		assert.notDeepEqual(testable.serialize(), optimized.serialize());
-		assert.deepEqual({$const:[1,2]}, utils.expressionToJson(optimized));
+		assert.notStrictEqual(testable, optimized);
+		assert.deepEqual({$const:[1,2]}, expressionToJson(optimized));
 	},
 
 	"NoFactoryOptimize": {
@@ -201,7 +202,7 @@ exports.NaryExpression = {
 		// The constant expressions are evaluated separately and placed at the end.
 		var testable = Testable.createFromOperands([55, 66, "$path"], true),
 			optimized = testable.optimize();
-		assert.deepEqual(utils.constify({$testable:["$path", [55, 66]]}), utils.expressionToJson(optimized));
+		assert.deepEqual(constify({$testable:["$path", [55, 66]]}), expressionToJson(optimized));
 	},
 
 	/** Factory optimization flattens nested operators of the same type. */
@@ -209,18 +210,23 @@ exports.NaryExpression = {
 		var testable = Testable.createFromOperands(
 				[55, "$path", {$add:[5,6,"$q"]}, 66],
 			true);
+		// Add a nested $testable operand.
 		testable.addOperand(Testable.createFromOperands(
 				[99, 100, "$another_path"],
-			true));
+			true)
+		);
 		var optimized = testable.optimize();
 		assert.deepEqual(
-			utils.constify({$testable:[
-					"$path",
-					{$add:["$q", 11]},
-					"$another_path",
-					[55, 66, [99, 100]]
-				]}),
-			utils.expressionToJson(optimized));
+			constify({$testable:[
+				// non constant parts
+				"$path",
+				{$add:["$q", 11]},
+				"$another_path",
+				// constant part last
+				[55, 66, [99, 100]]
+			]}),
+			expressionToJson(optimized)
+		);
 	},
 
 	/** Three layers of factory optimization are flattened. */
@@ -231,10 +237,8 @@ exports.NaryExpression = {
 		top.addOperand(nested);
 		var optimized = top.optimize();
 		assert.deepEqual(
-			utils.constify({
-				$testable: ["$a", "$b", "$c", [1, 2, [3, 4, [5, 6]]]]
-			}),
-			utils.expressionToJson(optimized)
+			constify({$testable: ["$a", "$b", "$c", [1, 2, [3, 4, [5, 6]]]]}),
+			expressionToJson(optimized)
 		);
 	},
 
