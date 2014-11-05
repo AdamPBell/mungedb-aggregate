@@ -111,7 +111,6 @@ module.exports = {
 				var pds = createUnwind();
 				addSource(pds, []);
 				pds.getNext(function(err,doc) {
-
 					assert.strictEqual(doc, DocumentSource.EOF);
 					next();
 				});
