@@ -3,12 +3,16 @@ var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	GeoNearDocumentSource = require("../../../../lib/pipeline/documentSources/GeoNearDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	Cursor = require("../../../../lib/Cursor"),
+	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
 	FieldPath = require("../../../../lib/pipeline/FieldPath");
 
 var createGeoNear = function(ctx) {
 	var ds = new GeoNearDocumentSource(ctx);
 	return ds;
+};
+var addSource = function addSource(ds, data) {
+	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
+	ds.setSource(cds);
 };
 
 module.exports = {
@@ -55,14 +59,11 @@ module.exports = {
 		"#setSource()":{
 
 			"check that setting source of GeoNearDocumentSource throws error":function() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
 				var input = [{}];
-				cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
 				var gnds = createGeoNear();
 
 				assert.throws(function(){
-					gnds.setSource(cds);
+					addSource(gnds, input);
 				});
 			}
 

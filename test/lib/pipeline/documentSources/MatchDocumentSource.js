@@ -2,13 +2,18 @@
 var assert = require("assert"),
 	async = require("async"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
-	MatchDocumentSource = require("../../../../lib/pipeline/documentSources/MatchDocumentSource");
+	MatchDocumentSource = require("../../../../lib/pipeline/documentSources/MatchDocumentSource"),
+	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
+	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
 var testRedactSafe = function testRedactSafe(input, safePortion) {
 	var match = MatchDocumentSource.createFromJson(input);
 	assert.deepEqual(match.redactSafePortion(), safePortion);
 };
-
+var addSource = function addSource(match, data) {
+	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
+	match.setSource(cds);
+};
 
 module.exports = {
 
@@ -67,7 +72,7 @@ module.exports = {
 
 			"should return the current document source": function currSource(next){
 				var mds = new MatchDocumentSource({item: 1});
-				mds.source = {getNext:function(cb){cb(null,{ item:1 });}};
+				addSource(mds, [{ item:1 }]);
 				mds.getNext(function(err,val) {
 					assert.deepEqual(val, { item:1 });
 					next();
@@ -77,16 +82,9 @@ module.exports = {
 			"should return matched sources remaining": function (next){
 				var mds = new MatchDocumentSource({ item: {$lt: 5} }),
 					items = [ 1,2,3,4,5,6,7,8,9 ];
-				mds.source = {
-					calls: 0,
-					getNext:function(cb) {
-						if (this.calls >= items.length)
-							return cb(null,DocumentSource.EOF);
-						return cb(null,{item: items[this.calls++]});
-					},
-					dispose:function() { return true; }
-				};
+				addSource(mds, items.map(function(i){return {item:i};}));
 
+				debugger;
 				async.series([
 						mds.getNext.bind(mds),
 						mds.getNext.bind(mds),
@@ -95,7 +93,7 @@ module.exports = {
 						mds.getNext.bind(mds),
 					],
 					function(err,res) {
-						assert.deepEqual([{item:1},{item:2},{item:3},{item:4},DocumentSource.EOF], res);
+						assert.deepEqual([{item:1},{item:2},{item:3},{item:4},null], res);
 						next();
 					}
 				);
@@ -104,15 +102,7 @@ module.exports = {
 			"should not return matched out documents for sources remaining": function (next){
 				var mds = new MatchDocumentSource({ item: {$gt: 5} }),
 					items = [ 1,2,3,4,5,6,7,8,9 ];
-				mds.source = {
-					calls: 0,
-					getNext:function(cb) {
-						if (this.calls >= items.length)
-							return cb(null,DocumentSource.EOF);
-						return cb(null,{item: items[this.calls++]});
-					},
-					dispose:function() { return true; }
-				};
+				addSource(mds, items.map(function(i){return {item:i};}));
 
 				async.series([
 						mds.getNext.bind(mds),
@@ -122,7 +112,7 @@ module.exports = {
 						mds.getNext.bind(mds),
 					],
 					function(err,res) {
-						assert.deepEqual([{item:6},{item:7},{item:8},{item:9},DocumentSource.EOF], res);
+						assert.deepEqual([{item:6},{item:7},{item:8},{item:9},null], res);
 						next();
 					}
 				);
@@ -131,21 +121,13 @@ module.exports = {
 			"should return EOF for no sources remaining": function (next){
 				var mds = new MatchDocumentSource({ item: {$gt: 5} }),
 					items = [ ];
-				mds.source = {
-					calls: 0,
-					getNext:function(cb) {
-						if (this.calls >= items.length)
-							return cb(null,DocumentSource.EOF);
-						return cb(null,{item: items[this.calls++]});
-					},
-					dispose:function() { return true; }
-				};
+				addSource(mds, items.map(function(i){return {item:i};}));
 
 				async.series([
 						mds.getNext.bind(mds),
 					],
 					function(err,res) {
-						assert.deepEqual([DocumentSource.EOF], res);
+						assert.deepEqual([null], res);
 						next();
 					}
 				);
@@ -364,7 +346,7 @@ module.exports = {
 		"#isTextQuery()": {
 
 			"should return true when $text operator is first stage in pipeline": function () {
-				var query = {$text:'textQuery'}
+				var query = {$text:'textQuery'};
 				assert.ok(MatchDocumentSource.isTextQuery(query)); // true
 			},
 
@@ -374,7 +356,7 @@ module.exports = {
 			},
 
 			"should return false when $text operator is not in pipeline": function () {
-				var query = {$notText:'textQuery'}
+				var query = {$notText:'textQuery'};
 				assert.ok(!MatchDocumentSource.isTextQuery(query)); // false
 			}
 
