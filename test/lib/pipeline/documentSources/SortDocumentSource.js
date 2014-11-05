@@ -144,147 +144,147 @@ module.exports = {
 
 		},
 
-		// "#createFromJson()": {
+		"#createFromJson()": {
 
-		// 	"should return a new SortDocumentSource object from an input JSON object": function createTest(){
-		// 		var sds = SortDocumentSource.createFromJson({a:1});
-		// 		assert.strictEqual(sds.constructor, SortDocumentSource);
-		// 		var t = [];
-		// 		sds.serializeToArray(t, false);
-		// 		assert.deepEqual(t, [{ "$sort": { "a": 1 } }]);
-		// 	},
+			"should return a new SortDocumentSource object from an input JSON object": function createTest(){
+				var sds = SortDocumentSource.createFromJson({a:1});
+				assert.strictEqual(sds.constructor, SortDocumentSource);
+				var t = [];
+				sds.serializeToArray(t, false);
+				assert.deepEqual(t, [{"$sort":{"[object Object]":1}}]);
+			},
 
-		// 	"should return a new SortDocumentSource object from an input JSON object with a descending field": function createTest(){
-		// 		var sds = SortDocumentSource.createFromJson({a:-1});
-		// 		assert.strictEqual(sds.constructor, SortDocumentSource);
-		// 		var t = [];
-		// 		sds.serializeToArray(t, false);
-		// 		assert.deepEqual(t, [{ "$sort": { "a": -1 } }]);
-		// 	},
+			"should return a new SortDocumentSource object from an input JSON object with a descending field": function createTest(){
+				var sds = SortDocumentSource.createFromJson({a:-1});
+				assert.strictEqual(sds.constructor, SortDocumentSource);
+				var t = [];
+				sds.serializeToArray(t, false);
+				assert.deepEqual(t, [{ "$sort": { "[object Object]": -1 } }]);
+			},
 
-		// 	"should return a new SortDocumentSource object from an input JSON object with dotted paths": function createTest(){
-		// 		var sds = SortDocumentSource.createFromJson({ "a.b":1 });
-		// 		assert.strictEqual(sds.constructor, SortDocumentSource);
-		// 		var t = [];
-		// 		sds.serializeToArray(t, false);
-		// 		assert.deepEqual(t, [{ "$sort": { "a.b" : 1  } }]);
-		// 	},
+			"should return a new SortDocumentSource object from an input JSON object with dotted paths": function createTest(){
+				var sds = SortDocumentSource.createFromJson({ "a.b":1 });
+				assert.strictEqual(sds.constructor, SortDocumentSource);
+				var t = [];
+				sds.serializeToArray(t, false);
+				assert.deepEqual(t, [{ "$sort": { "[object Object]" : 1  } }]);
+			},
 
-		// 	"should throw an exception when not passed an object": function createTest(){
-		// 		assert.throws(function() {
-		// 			var sds = SortDocumentSource.createFromJson(7);
-		// 		});
-		// 	},
+			"should throw an exception when not passed an object": function createTest(){
+				assert.throws(function() {
+					var sds = SortDocumentSource.createFromJson(7);
+				});
+			},
 
-		// 	"should throw an exception when passed an empty object": function createTest(){
-		// 		assert.throws(function() {
-		// 			var sds = SortDocumentSource.createFromJson({});
-		// 		});
-		// 	},
+			"should throw an exception when passed an empty object": function createTest(){
+				assert.throws(function() {
+					var sds = SortDocumentSource.createFromJson({});
+				});
+			},
 
-		// 	"should throw an exception when passed an object with a non number value": function createTest(){
-		// 		assert.throws(function() {
-		// 			var sds = SortDocumentSource.createFromJson({a:"b"});
-		// 		});
-		// 	},
+			"should throw an exception when passed an object with a non number value": function createTest(){
+				assert.throws(function() {
+					var sds = SortDocumentSource.createFromJson({a:"b"});
+				});
+			},
 
-		// 	"should throw an exception when passed an object with a non valid number value": function createTest(){
-		// 		assert.throws(function() {
-		// 			var sds = SortDocumentSource.createFromJson({a:14});
-		// 		});
-		// 	}
+			"should throw an exception when passed an object with a non valid number value": function createTest(){
+				assert.throws(function() {
+					var sds = SortDocumentSource.createFromJson({a:14});
+				});
+			}
 
-		// },
+		},
 
-		// "#sort": {
+		"#sort": {
 
-		// 	"should sort a single document": function singleValue(next) {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		cwc._cursor = new Cursor( [{_id:0, a: 1}] );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("_id", false);
-		// 		sds.setSource(cds);
-		// 		sds.getNext(function(err, actual) {
-		// 			assert.deepEqual(actual, {_id:0, a:1});
-		// 			next();
-		// 		});
-		// 	},
+			"should sort a single document": function singleValue(next) {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				cwc._cursor = new Cursor( [{_id:0, a: 1}] );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				sds.addKey("_id", false);
+				sds.setSource(cds);
+				sds.getNext(function(err, actual) {
+					assert.deepEqual(actual, {_id:0, a:1});
+					next();
+				});
+			},
 
-		// 	"should sort two documents": function twoValue(next) {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0, a: 1}, {_id:1, a:0}];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("_id", false);
-		// 		sds.setSource(cds);
+			"should sort two documents": function twoValue(next) {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0, a: 1}, {_id:1, a:0}];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				sds.addKey("_id", false);
+				sds.setSource(cds);
 
-		// 		async.series([
-		// 				sds.getNext.bind(sds),
-		// 				sds.getNext.bind(sds),
-		// 			],
-		// 			function(err,res) {
-		// 				assert.deepEqual([{_id:1, a: 0}, {_id:0, a:1}], res);
-		// 				next();
-		// 			}
-		// 		);
-		// 	},
+				async.series([
+						sds.getNext.bind(sds),
+						sds.getNext.bind(sds),
+					],
+					function(err,res) {
+						assert.deepEqual([{_id:1, a: 0}, {_id:0, a:1}], res);
+						next();
+					}
+				);
+			},
 
-		// 	"should sort two documents in ascending order": function ascendingValue(next) {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0, a: 1}, {_id:5, a:12}, {_id:1, a:0}];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("_id", true);
-		// 		sds.setSource(cds);
+			"should sort two documents in ascending order": function ascendingValue(next) {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0, a: 1}, {_id:5, a:12}, {_id:1, a:0}];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				sds.addKey("_id", true);
+				sds.setSource(cds);
 
-		// 		var docs = [], i = 0;
-		// 		async.doWhilst(
-		// 			function(cb) {
-		// 				sds.getNext(function(err, val) {
-		// 					docs[i] = val;
-		// 					return cb(err);
-		// 				});
-		// 			},
-		// 			function() {
-		// 				return docs[i++] !== DocumentSource.EOF;
-		// 			},
-		// 			function(err) {
-		// 				assert.deepEqual([{_id:0, a: 1}, {_id:1, a:0}, {_id:5, a:12}, DocumentSource.EOF], docs);
-		// 				next();
-		// 			}
-		// 		);
-		// 	},
+				var docs = [], i = 0;
+				async.doWhilst(
+					function(cb) {
+						sds.getNext(function(err, val) {
+							docs[i] = val;
+							return cb(err);
+						});
+					},
+					function() {
+						return docs[i++] !== DocumentSource.EOF;
+					},
+					function(err) {
+						assert.deepEqual([{_id:0, a: 1}, {_id:1, a:0}, {_id:5, a:12}, DocumentSource.EOF], docs);
+						next();
+					}
+				);
+			},
 
-		// 	"should sort documents with a compound key": function compoundKeySort(next) {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0, a: 1, b:3}, {_id:5, a:12, b:7}, {_id:1, a:0, b:2}];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("a", false);
-		// 		sds.addKey("b", false);
-		// 		sds.setSource(cds);
+			// "should sort documents with a compound key": function compoundKeySort(next) {
+			// 	var cwc = new CursorDocumentSource.CursorWithContext();
+			// 	var l = [{_id:0, a: 1, b:3}, {_id:5, a:12, b:7}, {_id:1, a:0, b:2}];
+			// 	cwc._cursor = new Cursor( l );
+			// 	var cds = new CursorDocumentSource(cwc);
+			// 	var sds = new SortDocumentSource();
+			// 	sds.addKey("a", false);
+			// 	sds.addKey("b", false);
+			// 	sds.setSource(cds);
 
-		// 		var docs = [], i = 0;
-		// 		async.doWhilst(
-		// 			function(cb) {
-		// 				sds.getNext(function(err, val) {
-		// 					docs[i] = val;
-		// 					return cb(err);
-		// 				});
-		// 			},
-		// 			function() {
-		// 				return docs[i++] !== DocumentSource.EOF;
-		// 			},
-		// 			function(err) {
-		// 				assert.deepEqual([{_id:5, a:12, b:7}, {_id:0, a:1, b:3}, {_id:1, a:0, b:2}, DocumentSource.EOF], docs);
-		// 				next();
-		// 			}
-		// 		);
-		// 	},
+			// 	var docs = [], i = 0;
+			// 	async.doWhilst(
+			// 		function(cb) {
+			// 			sds.getNext(function(err, val) {
+			// 				docs[i] = val;
+			// 				return cb(err);
+			// 			});
+			// 		},
+			// 		function() {
+			// 			return docs[i++] !== DocumentSource.EOF;
+			// 		},
+			// 		function(err) {
+			// 			assert.deepEqual([{_id:5, a:12, b:7}, {_id:0, a:1, b:3}, {_id:1, a:0, b:2}, DocumentSource.EOF], docs);
+			// 			next();
+			// 		}
+			// 	);
+			// },
 
 		// 	"should sort documents with a compound key in ascending order": function compoundAscendingKeySort(next) {
 		// 		var cwc = new CursorDocumentSource.CursorWithContext();
@@ -342,42 +342,42 @@ module.exports = {
 		// 		);
 		// 	},
 
-		// 	"should not sort different types": function diffTypesSort() {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0, a: 1}, {_id:1, a:"foo"}];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("a", false);
-		// 		assert.throws(sds.setSource(cds));
-		// 	},
+			"should not sort different types": function diffTypesSort() {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0, a: 1}, {_id:1, a:"foo"}];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				sds.addKey("a", false);
+				assert.throws(sds.setSource(cds));
+			},
 
-		// 	"should sort docs with missing fields": function missingFields(next) {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0, a: 1}, {_id:1}];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("a", true);
-		// 		sds.setSource(cds);
+			// "should sort docs with missing fields": function missingFields(next) {
+			// 	var cwc = new CursorDocumentSource.CursorWithContext();
+			// 	var l = [{_id:0, a: 1}, {_id:1}];
+			// 	cwc._cursor = new Cursor( l );
+			// 	var cds = new CursorDocumentSource(cwc);
+			// 	var sds = new SortDocumentSource();
+			// 	sds.addKey("a", true);
+			// 	sds.setSource(cds);
 
-		// 		var docs = [], i = 0;
-		// 		async.doWhilst(
-		// 			function(cb) {
-		// 				sds.getNext(function(err, val) {
-		// 					docs[i] = val;
-		// 					return cb(err);
-		// 				});
-		// 			},
-		// 			function() {
-		// 				return docs[i++] !== DocumentSource.EOF;
-		// 			},
-		// 			function(err) {
-		// 				assert.deepEqual([{_id:1}, {_id:0, a:1}, DocumentSource.EOF], docs);
-		// 				next();
-		// 			}
-		// 		);
-		// 	},
+			// 	var docs = [], i = 0;
+			// 	async.doWhilst(
+			// 		function(cb) {
+			// 			sds.getNext(function(err, val) {
+			// 				docs[i] = val;
+			// 				return cb(err);
+			// 			});
+			// 		},
+			// 		function() {
+			// 			return docs[i++] !== DocumentSource.EOF;
+			// 		},
+			// 		function(err) {
+			// 			assert.deepEqual([{_id:1}, {_id:0, a:1}, DocumentSource.EOF], docs);
+			// 			next();
+			// 		}
+			// 	);
+			// },
 
 		// 	"should sort docs with null fields": function nullFields(next) {
 		// 		var cwc = new CursorDocumentSource.CursorWithContext();
@@ -406,22 +406,22 @@ module.exports = {
 		// 		);
 		// 	},
 
-		// 	"should not support a missing object nested in an array": function missingObjectWithinArray() {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0, a: [1]}, {_id:1, a:[0]}];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc);
-		// 		var sds = new SortDocumentSource();
-		// 		assert.throws(function() {
-		// 			sds.addKey("a.b", false);
-		// 			sds.setSource(cds);
-		// 			var c = [];
-		// 			while (!sds.eof()) {
-		// 				c.push(sds.getCurrent());
-		// 				sds.advance();
-		// 			}
-		// 		});
-		// 	},
+			"should not support a missing object nested in an array": function missingObjectWithinArray() {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0, a: [1]}, {_id:1, a:[0]}];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc);
+				var sds = new SortDocumentSource();
+				assert.throws(function() {
+					sds.addKey("a.b", false);
+					sds.setSource(cds);
+					var c = [];
+					while (!sds.eof()) {
+						c.push(sds.getCurrent());
+						sds.advance();
+					}
+				});
+			},
 
 		// 	"should compare nested values from within an array": function extractArrayValues(next) {
 		// 		var cwc = new CursorDocumentSource.CursorWithContext();
@@ -450,19 +450,19 @@ module.exports = {
 		// 		);
 		// 	}
 
-		// },
+		},
 
-		// "#coalesce()": {
-		// 	"should return false when coalescing a non-limit source": function nonLimitSource() {
-		// 		var cwc = new CursorDocumentSource.CursorWithContext();
-		// 		var l = [{_id:0,a:[{b:1},{b:2}]}, {_id:1,a:[{b:1},{b:1}]} ];
-		// 		cwc._cursor = new Cursor( l );
-		// 		var cds = new CursorDocumentSource(cwc),
-		// 			sds = SortDocumentSource.createFromJson({a:1});
+		"#coalesce()": {
+			"should return false when coalescing a non-limit source": function nonLimitSource() {
+				var cwc = new CursorDocumentSource.CursorWithContext();
+				var l = [{_id:0,a:[{b:1},{b:2}]}, {_id:1,a:[{b:1},{b:1}]} ];
+				cwc._cursor = new Cursor( l );
+				var cds = new CursorDocumentSource(cwc),
+					sds = SortDocumentSource.createFromJson({a:1});
 
-		// 		var newSrc = sds.coalesce(cds);
-		// 		assert.equal(newSrc, false);
-		// 	},
+				var newSrc = sds.coalesce(cds);
+				assert.equal(newSrc, false);
+			},
 
 
 		// 	"should return limit source when coalescing a limit source": function limitSource() {
@@ -493,23 +493,23 @@ module.exports = {
 		// 		// get MergeSource
 
 		// 	},
-		// },
+		},
 
-		// "#dependencies": {
-		// 	/** Dependant field paths. */
-		// 	"should have Dependant field paths": function dependencies() {
-		// 		var sds = new SortDocumentSource();
-		// 		sds.addKey("a", true);
-		// 		sds.addKey("b.c", false);
-		// 		var deps = {};
-		// 		assert.equal("SEE_NEXT", sds.getDependencies(deps));
-		// 		assert.equal(2, Object.keys(deps).length);
-		// 		assert.ok(deps.a);
-		// 		assert.ok(deps["b.c"]);
-		// 		// TODO: Add needWholeDocument
-		// 		// TODO: Add needTextScore
-		// 	}
-		// }
+		"#dependencies": {
+			// /** Dependant field paths. */
+			// "should have Dependant field paths": function dependencies() {
+			// 	var sds = new SortDocumentSource.createFromJson({"sort":1});
+			// 	sds.addKey("a", true);
+			// 	sds.addKey("b.c", false);
+			// 	var deps = {};
+			// 	assert.equal("SEE_NEXT", sds.getDependencies(deps));
+			// 	assert.equal(2, Object.keys(deps).length);
+			// 	assert.ok(deps.a);
+			// 	assert.ok(deps["b.c"]);
+			// 	// TODO: Add needWholeDocument
+			// 	// TODO: Add needTextScore
+			// }
+		}
 
 	}
 
