@@ -19,16 +19,16 @@ exports.MapExpression = {
 
 	"constructor()": {
 
-		"should accept 4 arguments": function () {
+		"should accept 4 arguments": function() {
 			new MapExpression(1, 2, 3, 4);
 		},
 
-		"should accept only 4 arguments": function () {
-			assert.throws(function () { new MapExpression(); });
-			assert.throws(function () { new MapExpression(1); });
-			assert.throws(function () { new MapExpression(1, 2); });
-			assert.throws(function () { new MapExpression(1, 2, 3); });
-			assert.throws(function () { new MapExpression(1, 2, 3, 4, 5); });
+		"should accept only 4 arguments": function() {
+			assert.throws(function() { new MapExpression(); });
+			assert.throws(function() { new MapExpression(1); });
+			assert.throws(function() { new MapExpression(1, 2); });
+			assert.throws(function() { new MapExpression(1, 2, 3); });
+			assert.throws(function() { new MapExpression(1, 2, 3, 4, 5); });
 		},
 
 	},
@@ -47,7 +47,7 @@ exports.MapExpression = {
 				optimized = expr.optimize();
 			assert.strictEqual(optimized, expr, "should be same reference");
 			assert.deepEqual(expressionToJson(optimized._input), {$const:[1,2,3]});
-			assert.deepEqual(expressionToJson(optimized._each), constify({$add:["$$i","$$i",1,2]}));
+			assert.deepEqual(expressionToJson(optimized._each), constify({$add:["$$i","$$i",3]}));
 		},
 
 	},
@@ -92,7 +92,7 @@ exports.MapExpression = {
 
 	"#addDependencies()": {
 
-		"should add dependencies to both $map.input and $map.in": function () {
+		"should add dependencies to both $map.input and $map.in": function() {
 			var spec = {$map:{
 					input: "$inputArray",
 					as: "i",

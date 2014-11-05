@@ -40,7 +40,7 @@ var ExpectedResultBase = (function() {
 			var asserters = spec.error,
 				n = asserters.length;
 			for (var i = 0; i < n; ++i) {
-                // var obj2 = {<asserters[i]>: args}; //NOTE: DEVIATION FROM MONGO: see parseExpression below
+				// var obj2 = {<asserters[i]>: args}; //NOTE: DEVIATION FROM MONGO: see parseExpression below
 				var idGenerator2 = new VariablesIdGenerator(),
 					vps2 = new VariablesParseState(idGenerator2);
 				assert.throws(function() {
@@ -82,7 +82,7 @@ exports.AllElementsTrueExpression = {
 	"#evaluate()": {
 
 		"should return false if just false": function JustFalse() {
-            new ExpectedResultBase({
+			new ExpectedResultBase({
 				getSpec: {
 					input: [[false]],
 					expected: {
