@@ -4,7 +4,9 @@ var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	ProjectDocumentSource = require("../../../../lib/pipeline/documentSources/ProjectDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	Cursor = require("../../../../lib/Cursor");
+	Cursor = require("../../../../lib/Cursor"),
+	TestBase = require("./TestBase"),
+	And = require("../../../../lib/pipeline/expressions/AndExpression");
 
 
 /**
@@ -12,8 +14,7 @@ var assert = require("assert"),
  *   MUST CALL WITH A PDS AS THIS (e.g. checkJsonRepresentation.call(this, rep) where this is a PDS)
  **/
 var checkJsonRepresentation = function checkJsonRepresentation(self, rep) {
-	var pdsRep = {};
-	self.sourceToJson(pdsRep, true);
+	var pdsRep = self.serialize();
 	assert.deepEqual(pdsRep, rep);
 };
 
@@ -28,9 +29,9 @@ var createProject = function createProject(projection) {
 			"$project": projection
 		},
 		specElement = projection,
-		project = ProjectDocumentSource.createFromJson(specElement);
-	checkJsonRepresentation(project, spec);
-	return project;
+		_project = ProjectDocumentSource.createFromJson(specElement);
+	checkJsonRepresentation(_project, spec);
+	return _project;
 };
 
 //TESTS
@@ -38,11 +39,26 @@ module.exports = {
 
 	"ProjectDocumentSource": {
 
+		"mongo tests": {
+			"Inclusion": function() {
+				var test = new TestBase();
+				//client.insert( ns, fromjson( "{_id:0,a:1,b:1,c:{d:1}}" ) );
+				test.createSource();
+				test.createProject();
+			}
+		},
+
 		"constructor()": {
 
 			"should not throw Error when constructing without args": function testConstructor() {
 				assert.doesNotThrow(function() {
 					new ProjectDocumentSource();
+				});
+			},
+
+			"should throw Error when constructing with more than 1 arg": function testConstructor() {
+				assert.throws(function() {
+					new ProjectDocumentSource("a", "b", "c");
 				});
 			}
 
@@ -60,7 +76,7 @@ module.exports = {
 		"#getNext()": {
 
 			"should return EOF": function testEOF(next) {
-				var pds = createProject();
+				var pds = createProject({});
 				pds.setSource({
 					getNext: function getNext(cb) {
 						return cb(null, DocumentSource.EOF);
@@ -141,7 +157,7 @@ module.exports = {
 			"The a and c.d fields are included but the b field is not": function testFullProject1(next) {
 				var cwc = new CursorDocumentSource.CursorWithContext();
 				var input = [{
-					_id: 0,
+					_id:1,
 					a: 1,
 					b: 1,
 					c: {
@@ -151,6 +167,7 @@ module.exports = {
 				cwc._cursor = new Cursor(input);
 				var cds = new CursorDocumentSource(cwc);
 				var pds = createProject({
+						_id: 0,
 						a: true,
 						c: {
 							d: true
