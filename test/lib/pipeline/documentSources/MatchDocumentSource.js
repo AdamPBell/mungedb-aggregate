@@ -20,6 +20,12 @@ module.exports = {
 				assert.throws(function(){
 					new MatchDocumentSource();
 				});
+			},
+
+			"should throw Error when trying to using a $text operator": function testTextOp () {
+				assert.throws(function(){
+					new MatchDocumentSource({packet:{ $text:"thisIsntImplemented" } });
+				});
 			}
 
 		},
@@ -352,6 +358,87 @@ module.exports = {
 				testRedactSafe({a:{$in: [1, 0, null]}},
 					{});
 			}
+
+		},
+
+		"#isTextQuery()": {
+
+			"should return true when $text operator is first stage in pipeline": function () {
+				var query = {$text:'textQuery'};
+				assert.ok(MatchDocumentSource.isTextQuery(query)); // true
+			},
+
+			"should return true when $text operator is nested in the pipeline": function () {
+				var query = {$stage:{$text:'textQuery'}};
+				assert.ok(MatchDocumentSource.isTextQuery(query)); // true
+			},
+
+			"should return false when $text operator is not in pipeline": function () {
+				var query = {$notText:'textQuery'};
+				assert.ok(!MatchDocumentSource.isTextQuery(query)); // false
+			}
+
+		},
+
+		"#uassertNoDisallowedClauses()": {
+
+			"should throw if invalid stage is in match expression": function () {
+				var whereQuery = {$where:'where'};
+				assert.throws(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(whereQuery);
+				});
+
+				var nearQuery = {$near:'near'};
+				assert.throws(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(nearQuery);
+				});
+
+				var withinQuery = {$within:'within'};
+				assert.throws(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(withinQuery);
+				});
+
+				var nearSphereQuery = {$nearSphere:'nearSphere'};
+				assert.throws(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(nearSphereQuery);
+				});
+			},
+
+			"should throw if invalid stage is nested in the match expression": function () {
+				var whereQuery = {$validStage:{$where:'where'}};
+				assert.throws(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(whereQuery);
+				});
+
+				var nearQuery = {$validStage:{$near:'near'}};
+				assert.throws(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(nearQuery);
+				});
+
+				var withinQuery = {$validStage:{$within:'within'}};
+				assert.throws(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(withinQuery);
+				});
+
+				var nearSphereQuery = {$validStage:{$nearSphere:'nearSphere'}};
+				assert.throws(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(nearSphereQuery);
+				});
+			},
+
+			"should not throw if invalid stage is not in match expression": function () {
+				var query = {$valid:'valid'};
+				assert.doesNotThrow(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(query);
+				});
+			},
+
+			"should not throw if invalid stage is not nested in the match expression": function () {
+				var query = {$valid:{$anotherValid:'valid'}};
+				assert.doesNotThrow(function(){
+					MatchDocumentSource.uassertNoDisallowedClauses(query);
+				});
+			},
 
 		}
 
