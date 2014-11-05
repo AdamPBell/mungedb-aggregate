@@ -164,7 +164,7 @@ module.exports = {
 
 			"should handle two unwinds": function () {
 				var inputPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}",
-					expectedMergePipe = "[]}",
+					expectedMergePipe = "[]",
 					expectedShardPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}";
 				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 
