@@ -2,77 +2,99 @@
 var assert = require("assert"),
 	FirstAccumulator = require("../../../../lib/pipeline/accumulators/FirstAccumulator");
 
-function createAccumulator(){
-	return new FirstAccumulator();
-}
+// Mocha one-liner to make these tests self-hosted
+if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
-module.exports = {
+exports.FirstAccumulator = {
 
-	"FirstAccumulator": {
+	".constructor()": {
 
-		"constructor()": {
-
-			"should not throw Error when constructing without args": function testConstructor(){
-				assert.doesNotThrow(function(){
-					new FirstAccumulator();
-				});
-			}
-
+		"should create instance of Accumulator": function() {
+			assert(new FirstAccumulator() instanceof FirstAccumulator);
 		},
 
-		"#getOpName()": {
-
-			"should return the correct op name; $first": function testOpName(){
-				assert.equal(new FirstAccumulator().getOpName(), "$first");
-			}
-
+		"should throw error if called with args": function() {
+			assert.throws(function() {
+				new FirstAccumulator(123);
+			});
 		},
 
-		"#getFactory()": {
+	},
 
-			"should return the constructor for this class": function factoryIsConstructor(){
-				assert.strictEqual(new FirstAccumulator().getFactory(), FirstAccumulator);
-			}
+	".create()": {
 
+		"should return an instance of the accumulator": function() {
+			assert(FirstAccumulator.create() instanceof FirstAccumulator);
 		},
 
-		"#processInternal()": {
+	},
 
-			"The accumulator has no value": function none() {
-				// The accumulator returns no value in this case.
-				var acc = createAccumulator();
-				assert.ok(!acc.getValue());
-			},
+	"#process()": {
 
-			"The accumulator uses processInternal on one input and retains its value": function one() {
-				var acc = createAccumulator();
-				acc.processInternal(5);
-				assert.strictEqual(acc.getValue(), 5);
-			},
+		"should return undefined if no inputs evaluated": function testNone() {
+			var acc = FirstAccumulator.create();
+			assert.strictEqual(acc.getValue(), undefined);
+		},
 
-			"The accumulator uses processInternal on one input with the field missing and retains undefined": function missing() {
-				var acc = createAccumulator();
-				acc.processInternal();
-				assert.strictEqual(acc.getValue(), undefined);
-			},
+		"should return value for one input": function testOne() {
+			var acc = FirstAccumulator.create();
+			acc.process(5);
+			assert.strictEqual(acc.getValue(), 5);
+		},
 
-			"The accumulator uses processInternal on two inputs and retains the value in the first": function two() {
-				var acc = createAccumulator();
-				acc.processInternal(5);
-				acc.processInternal(7);
-				assert.strictEqual(acc.getValue(), 5);
-			},
+		"should return missing for one missing input": function testMissing() {
+			var acc = FirstAccumulator.create();
+			acc.process(undefined);
+			assert.strictEqual(acc.getValue(), undefined);
+		},
 
-			"The accumulator uses processInternal on two inputs and retains the undefined value in the first": function firstMissing() {
-				var acc = createAccumulator();
-				acc.processInternal();
-				acc.processInternal(7);
-				assert.strictEqual(acc.getValue(), undefined);
-			}
+		"should return first of two inputs": function testTwo() {
+			var acc = FirstAccumulator.create();
+			acc.process(5);
+			acc.process(7);
+			assert.strictEqual(acc.getValue(), 5);
+		},
+
+		"should return first of two inputs (even if first is missing)": function testFirstMissing() {
+			var acc = FirstAccumulator.create();
+			acc.process(undefined);
+			acc.process(7);
+			assert.strictEqual(acc.getValue(), undefined);
+		},
+
+	},
+
+	"#getValue()": {
+
+		"should get value the same for shard and router": function() {
+			var acc = FirstAccumulator.create();
+			assert.strictEqual(acc.getValue(false), acc.getValue(true));
+			acc.process(123);
+			assert.strictEqual(acc.getValue(false), acc.getValue(true));
+		},
+
+	},
+
+	"#reset()": {
+
+		"should reset to missing": function() {
+			var acc = FirstAccumulator.create();
+			assert.strictEqual(acc.getValue(), undefined);
+			acc.process(123);
+			assert.notEqual(acc.getValue(), undefined);
+			acc.reset();
+			assert.strictEqual(acc.getValue(), undefined);
+			assert.strictEqual(acc.getValue(true), undefined);
 		}
 
-	}
+	},
+
+	"#getOpName()": {
+
+		"should return the correct op name; $first": function() {
+			assert.equal(new FirstAccumulator().getOpName(), "$first");
+		}
+
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
