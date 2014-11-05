@@ -1,6 +1,7 @@
 "use strict";
 var assert = require("assert"),
 	async = require("async"),
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	ProjectDocumentSource = require("../../../../lib/pipeline/documentSources/ProjectDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
@@ -36,17 +37,6 @@ var createProject = function createProject(projection) {
 
 //TESTS
 module.exports = {
-
-	"ProjectDocumentSource": {
-
-		"mongo tests": {
-			"Inclusion": function() {
-				var test = new TestBase();
-				//client.insert( ns, fromjson( "{_id:0,a:1,b:1,c:{d:1}}" ) );
-				test.createSource();
-				test.createProject();
-			}
-		},
 
 		"constructor()": {
 
@@ -157,7 +147,7 @@ module.exports = {
 			"The a and c.d fields are included but the b field is not": function testFullProject1(next) {
 				var cwc = new CursorDocumentSource.CursorWithContext();
 				var input = [{
-					_id:1,
+					_id:0,
 					a: 1,
 					b: 1,
 					c: {
@@ -167,13 +157,12 @@ module.exports = {
 				cwc._cursor = new Cursor(input);
 				var cds = new CursorDocumentSource(cwc);
 				var pds = createProject({
-						_id: 0,
 						a: true,
 						c: {
 							d: true
 						}
 					}),
-					expected = {a:1, c:{ d: 1 }};
+					expected = {_id: 0, a:1, c:{ d: 1 }};
 				pds.setSource(cds);
 
 				pds.getNext(function(err,val) {
@@ -224,17 +213,12 @@ module.exports = {
 			"Optimize the projection": function optimizeProject() {
 				var pds = createProject({
 					a: {
-						$and: [true]
+						$and: [{$const:true}]
 					}
 				});
+
 				pds.optimize();
-				checkJsonRepresentation(pds, {
-					$project: {
-						a: {
-							$const: true
-						}
-					}
-				});
+				checkJsonRepresentation(pds, {$project:{a:{$const:true}}});
 			}
 
 		},
@@ -289,14 +273,14 @@ module.exports = {
 					}
 				};
 				var pds = createProject(input);
-				var dependencies = {};
+				var dependencies = new DepsTracker();
 				assert.equal(DocumentSource.GetDepsReturn.EXHAUSTIVE, pds.getDependencies(dependencies));
-				assert.equal(5, Object.keys(dependencies).length);
-				assert.ok(dependencies._id);
-				assert.ok(dependencies.a);
-				assert.ok(dependencies.b);
-				assert.ok(dependencies.c);
-				assert.ok(dependencies.d);
+				assert.equal(5, Object.keys(dependencies.fields).length);
+				assert.ok(dependencies.fields._id);
+				assert.ok(dependencies.fields.a);
+				assert.ok(dependencies.fields.b);
+				assert.ok(dependencies.fields.c);
+				assert.ok(dependencies.fields.d);
 			}
 
 		}
