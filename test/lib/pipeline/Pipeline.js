@@ -90,8 +90,8 @@ module.exports = {
 					{$sort: {"xyz": 1}},
 					{$match: {}}
 				]});
-				assert.equal(p.sourceVector[0].constructor.matchName, "$match");
-				assert.equal(p.sourceVector[1].constructor.sortName, "$sort");
+				assert.equal(p.sources[0].constructor.matchName, "$match");
+				assert.equal(p.sources[1].constructor.sortName, "$sort");
 			},
 
 			"should attempt to coalesce all sources": function () {
@@ -101,8 +101,8 @@ module.exports = {
 					{$test: {coalesce: false}},
 					{$test: {coalesce: false}}
 				]});
-				assert.equal(p.sourceVector.length, 3);
-				p.sourceVector.slice(0, -1).forEach(function (source) {
+				assert.equal(p.sources.length, 3);
+				p.sources.slice(0, -1).forEach(function (source) {
 					assert.equal(source.coalesceWasCalled, true);
 				});
 				assert.equal(p.sources[p.sources.length -1].coalesceWasCalled, false);
@@ -113,7 +113,7 @@ module.exports = {
 					{$test: {coalesce: false}},
 					{$test: {coalesce: false}}
 				]});
-				p.sourceVector.forEach(function (source) {
+				p.sources.forEach(function (source) {
 					assert.equal(source.optimizeWasCalled, true);
 				});
 			}
