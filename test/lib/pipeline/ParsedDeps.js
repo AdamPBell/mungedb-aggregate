@@ -30,14 +30,10 @@ module.exports = {
 				assert.deepEqual(expected, parse._documentHelper(json, neededFields));
 			},
 			"should call _arrayHelper on values that are arrays": function() {
-				var json = {'foo':[{'bar':'baz'}]},
+				var json = {'foo':[{'bar':'baz'}], 'a': 'b'},
 					neededFields = {'foo':true},
 					parse = new ParsedDeps(),
-					expected = {'foo':true};
-				// TODO: mock out _arrayHelper to return true
-				parse._arrayHelper = function() {
-					return true;
-				};
+					expected = {'foo':[{bar:'baz'}]};
 				assert.deepEqual(expected, parse._documentHelper(json, neededFields));
 			},
 			"should recurse on values that are objects": function() {
@@ -53,11 +49,7 @@ module.exports = {
 				var array = [{'foo':'bar'}],
 					neededFields = {'foo':true},
 					parse = new ParsedDeps(),
-					expected = [true];
-				// TODO: mock out _documentHelper to return true
-				parse._documentHelper = function() {
-					return true;
-				};
+					expected = [{foo:'bar'}];
 				assert.deepEqual(expected, parse._arrayHelper(array, neededFields));
 			},
 			"should recurse on values that are arrays": function() {
@@ -65,7 +57,9 @@ module.exports = {
 					neededFields = {'foo':true},
 					parse = new ParsedDeps(),
 					expected = [[{'foo':'bar'}]];
-				assert.deepEqual(expected, parse._arrayHelper(array, neededFields));
+
+				var actual = parse._arrayHelper(array, neededFields);
+				assert.deepEqual(actual, expected);
 			}
 		}
 	}
