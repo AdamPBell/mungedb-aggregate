@@ -5,6 +5,8 @@ var assert = require("assert"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	LimitDocumentSource = require("../../../../lib/pipeline/documentSources/LimitDocumentSource"),
 	SkipDocumentSource = require("../../../../lib/pipeline/documentSources/SkipDocumentSource"),
+	ProjectDocumentSource = require("../../../../lib/pipeline/documentSources/ProjectDocumentSource"),
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
 var getCursorDocumentSource = function(values) {
@@ -136,11 +138,23 @@ module.exports = {
 
 		"#setProjection": {
 
-			"should set a projection": function() {
-				var cds = getCursorDocumentSource();
-				cds.setProjection({a:1}, {a:true});
-				assert.deepEqual(cds._projection, {a:1});
-				assert.deepEqual(cds._dependencies, {a:true});
+			"should set a projection": function(next) {
+				var cds = getCursorDocumentSource([{a:1, b:2},{a:2, b:3}]),
+					deps = new DepsTracker(),
+					project = ProjectDocumentSource.createFromJson({"a":1});
+				project.getDependencies(deps);
+				cds.setProjection(deps.toProjection(), deps.toParsedDeps());
+				
+				async.series([
+						cds.getNext.bind(cds),
+						cds.getNext.bind(cds),
+						cds.getNext.bind(cds)
+					],
+					function(err,res) {
+						assert.deepEqual([{a:1},{a:2},null], res);
+						next();
+					}
+				);
 			}
 
 		}
