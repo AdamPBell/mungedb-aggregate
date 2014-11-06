@@ -192,16 +192,6 @@ module.exports = {
 						{$foo: {bar: "baz"}}
 					]});
 				});
-			},
-
-			"should call callback with errors from pipeline components": function (next) {
-				var p = Pipeline.parseCommand({pipeline: [
-					{$foo: {bar: "baz"}}
-				]});
-				p.run(new DocumentSource({}), function (err, results) {
-					assert(err instanceof Error);
-					return next();
-				});
 			}
 
 		},
