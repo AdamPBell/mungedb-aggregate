@@ -74,6 +74,7 @@ module.exports = {
 	"aggregate": {
 
 		"should be able to use an empty pipeline (no-op)": function(next){
+			debugger;
 			testAggregate({
 				inputs: [1, 2, 3],
 				pipeline: [],
@@ -209,6 +210,8 @@ module.exports = {
 
 		"should be able to construct an instance with $group operators properly": function(next){
 			// NOTE: Test case broken until expression is fixed
+			
+			debugger;
 			testAggregate({
 				inputs: [
 					{_id:0, a:1},
