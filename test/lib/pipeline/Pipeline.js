@@ -142,31 +142,31 @@ module.exports = {
 			}
 		},
 
-		// "sharded": {
+		"sharded": {
 
-		// 	"should handle empty pipeline for sharded": function () {
-		// 		var inputPipe = {pipeline: []},
-		// 			expectedMergePipe = "[]",
-		// 			expectedShardPipe = "[]";
-		// 		shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
-		// 	},
+			"should handle empty pipeline for sharded": function () {
+				var inputPipe = {pipeline: []},
+					expectedMergePipe = "[]",
+					expectedShardPipe = "[]";
+				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+			},
 
-		// 	"should handle one unwind": function () {
-		// 		var inputPipe = "[{$unwind: '$a'}]}",
-		// 			expectedMergePipe = "[]",
-		// 			expectedShardPipe = "[{$unwind: '$a'}]";
-		// 		shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
-		// 	},
+			"should handle one unwind": function () {
+				var inputPipe = "[{$unwind: '$a'}]}",
+					expectedMergePipe = "[]",
+					expectedShardPipe = "[{$unwind: '$a'}]";
+				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+			},
 
-		// 	"should handle two unwinds": function () {
-		// 		var inputPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}",
-		// 			expectedMergePipe = "[]",
-		// 			expectedShardPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}";
-		// 		shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+			"should handle two unwinds": function () {
+				var inputPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}",
+					expectedMergePipe = "[]",
+					expectedShardPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}";
+				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 
-		// 	}
+			}
 
-		// },
+		},
 
 		"#stitch": {
 			"should set the parent source for all sources in the pipeline except the first one": function () {
@@ -174,7 +174,7 @@ module.exports = {
 				p.stitch();
 				assert.equal(p.sources[1].source, p.sources[0]);
 			}
-			},
+		},
 
 		"#_runSync": {
 
@@ -192,7 +192,7 @@ module.exports = {
 						{$foo: {bar: "baz"}}
 					]});
 				});
-			}
+			},
 
 		},
 
@@ -202,7 +202,7 @@ module.exports = {
 					results = p.run(function(err, results) {
 						assert.deepEqual(results.result, [ { val: 5 }, { val: 4 }, { val: 3 }, { val: 2 }, { val: 1 } ]);
 					});
-		}
+			}
 		},
 
 		"#addInitialSource": {
@@ -219,7 +219,7 @@ module.exports = {
 				p.addInitialSource(initialSource);
 				p.stitch();
 				assert.equal(p.sources[1].source, p.sources[0]);
-	}
+			}
 		}
 
 	}
