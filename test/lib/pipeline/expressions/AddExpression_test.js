@@ -49,8 +49,8 @@ var TestBase = function TestBase(overrides) {
 		}, base = ExpectedResultBase, proto = klass.prototype = Object.create(base.prototype);
 		proto.run = function() {
 			base.prototype.run.call(this);
-            // Now add the operands in the reverse direction.
-            this._reverse = true;
+			// Now add the operands in the reverse direction.
+			this._reverse = true;
 			base.prototype.run.call(this);
 		};
 		proto.populateOperands = function(expr) {
@@ -122,7 +122,7 @@ exports.AddExpression = {
 		"w/ 1 operand": {
 
 			"should pass through a single int": function testInt() {
-        		/** Single int argument. */
+				/** Single int argument. */
 				new SingleOperandBase({
 					operand: 1,
 				}).run();

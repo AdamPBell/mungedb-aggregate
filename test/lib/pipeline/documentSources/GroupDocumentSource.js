@@ -2,20 +2,12 @@
 var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	Cursor = require("../../../../lib/Cursor"),
 	GroupDocumentSource = require("../../../../lib/pipeline/documentSources/GroupDocumentSource"),
-	async = require('async');
+	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
+	async = require('async'),
+	utils = require("../expressions/utils"),
+	expressions = require("../../../../lib/pipeline/expressions");
 
-
-/**
- * Tests if the given spec is the same as what the DocumentSource resolves to as JSON.
- * MUST CALL WITH A DocumentSource AS THIS (e.g. checkJsonRepresentation.call(this, spec) where this is a DocumentSource and spec is the JSON used to create the source).
- **/
-var checkJsonRepresentation = function checkJsonRepresentation(self, spec) {
-	var rep = {};
-	self.serialize(rep, true);
-	assert.deepEqual(rep, {$group: spec});
-};
 
 /// An assertion for `ObjectExpression` instances based on Mongo's `ExpectedResultBase` class
 function assertExpectedResult(args) {
@@ -29,21 +21,20 @@ function assertExpectedResult(args) {
 	// run implementation
 	if(args.expected && args.docs){
 		var gds = GroupDocumentSource.createFromJson(args.spec),
-			cwc = new CursorDocumentSource.CursorWithContext();
-		cwc._cursor = new Cursor( args.docs );
-		var next,
+			next,
 			results = [],
-			cds = new CursorDocumentSource(cwc);
+			cds = new CursorDocumentSource(null, new ArrayRunner(args.docs), null);
+			debugger;
 		gds.setSource(cds);
 		async.whilst(
 			function() {
-				next !== DocumentSource.EOF;
+				return next !== null;
 			},
 			function(done) {
 				gds.getNext(function(err, doc) {
 					if(err) return done(err);
 					next = doc;
-					if(next === DocumentSource.EOF) {
+					if(next === null) {
 						return done();
 					} else {
 						results.push(next);
@@ -52,8 +43,7 @@ function assertExpectedResult(args) {
 				});
 			},
 			function(err) {
-				assert.deepEqual(results, args.expected);
-				checkJsonRepresentation(gds, args.spec);
+				assert.equal(JSON.stringify(results), JSON.stringify(args.expected));
 				if(args.done) {
 					return args.done();
 				}
@@ -67,7 +57,6 @@ function assertExpectedResult(args) {
 		} else {
 			assert.doesNotThrow(function(){
 				var gds = GroupDocumentSource.createFromJson(args.spec);
-				checkJsonRepresentation(gds, args.spec);
 			});
 		}
 	}
@@ -97,7 +86,6 @@ module.exports = {
 
 			// $group _id is an empty object
 			"should not throw when _id is an empty object": function advanceTest(){
-				//NOTE: This is broken until expressions get #serialize methods
 				assertExpectedResult({spec:{_id:{}}, "throw":false});
 			},
 
@@ -116,13 +104,11 @@ module.exports = {
 
 			// $group _id is the empty string
 			"should not throw when _id is an empty string": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:""}, "throw":false});
 			},
 
 			// $group _id is a string constant
 			"should not throw when _id is a string constant": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:"abc"}, "throw":false});
 			},
 
@@ -133,55 +119,46 @@ module.exports = {
 
 			// $group _id is a numeric constant
 			"should not throw when _id is a numeric constant": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:2}, "throw":false});
 			},
 
 			// $group _id is an array constant
 			"should not throw when _id is an array constant": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:[1,2]}, "throw":false});
 			},
 
 			// $group _id is a regular expression (not supported)
-			"should throw when _id is a regex": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
-				assertExpectedResult({spec:{_id:/a/}});
+			"should not throw when _id is a regex": function advanceTest(){
+				assertExpectedResult({spec:{_id:/a/}, "throw":false});
 			},
 
 			// The name of an aggregate field is specified with a $ prefix
 			"should throw when aggregate field spec is specified with $ prefix": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, $foo:{$sum:1}}});
 			},
 
 			// An aggregate field spec that is not an object
 			"should throw when aggregate field spec is not an object": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:1}});
 			},
 
 			// An aggregate field spec that is not an object
 			"should throw when aggregate field spec is an empty object": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:{}}});
 			},
 
 			// An aggregate field spec with an invalid accumulator operator
 			"should throw when aggregate field spec is an invalid accumulator": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:{$bad:1}}});
 			},
 
 			// An aggregate field spec with an array argument
 			"should throw when aggregate field spec with an array as an argument": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:{$sum:[]}}});
 			},
 
 			// Multiple accumulator operators for a field
 			"should throw when aggregate field spec with multiple accumulators": function advanceTest(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({spec:{_id:1, a:{$sum:1, $push:1}}});
 			}
 
@@ -202,7 +179,6 @@ module.exports = {
 
 			// $group _id is computed from an object expression
 			"should compute _id from an object expression": function testAdvance_ObjectExpression(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:{z:"$a"}},
@@ -212,7 +188,6 @@ module.exports = {
 
 			// $group _id is a field path expression
 			"should compute _id from a field path expression": function testAdvance_FieldPathExpression(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:5}],
 					spec: {_id:"$a"},
@@ -222,7 +197,6 @@ module.exports = {
 
 			// $group _id is a field path expression
 			"should compute _id from a Date": function testAdvance_Date(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				var d = new Date();
 				assertExpectedResult({
 					docs: [{a:d}],
@@ -233,7 +207,6 @@ module.exports = {
 
 			// Aggregate the value of an object expression
 			"should aggregate the value of an object expression": function testAdvance_ObjectExpression(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:0, z:{$first:{x:"$a"}}},
@@ -243,7 +216,6 @@ module.exports = {
 
 			// Aggregate the value of an operator expression
 			"should aggregate the value of an operator expression": function testAdvance_OperatorExpression(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:0, z:{$first:"$a"}},
@@ -253,7 +225,6 @@ module.exports = {
 
 			// Aggregate the value of an operator expression
 			"should aggregate the value of an operator expression with a null id": function testAdvance_Null(){
-				//NOTE: This is broken until expressions get ported to 2.5; specifically, until they get a #create method
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:null, z:{$first:"$a"}},
@@ -274,7 +245,7 @@ module.exports = {
 			"should make one group with two values": function TwoValuesSingleKey() {
 				assertExpectedResult({
 					docs: [{a:1}, {a:2}],
-					spec: {_id:"$_id", a:{$push:"$a"}},
+					spec: {_id:0, a:{$push:"$a"}},
 					expected: [{_id:0, a:[1,2]}]
 				});
 			},
