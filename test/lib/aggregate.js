@@ -74,7 +74,6 @@ module.exports = {
 	"aggregate": {
 
 		"should be able to use an empty pipeline (no-op)": function(next){
-			debugger;
 			testAggregate({
 				inputs: [1, 2, 3],
 				pipeline: [],
@@ -209,9 +208,6 @@ module.exports = {
 		},
 
 		"should be able to construct an instance with $group operators properly": function(next){
-			// NOTE: Test case broken until expression is fixed
-			
-			debugger;
 			testAggregate({
 				inputs: [
 					{_id:0, a:1},
@@ -245,8 +241,8 @@ module.exports = {
 						//min_a:1,
 						max_a:4,
 						avg_a:2.3,
-						first_b:undefined,
-						last_b:undefined,
+						first_b:null,
+						last_b:null,
 						addToSet_b:[],
 						push_b:[]
 					},
@@ -254,7 +250,7 @@ module.exports = {
 						_id:1,
 						sum_a:0,
 						//min_a:null,
-						max_a:undefined,
+						max_a:null,
 						avg_a:0,
 						first_b:"a",
 						last_b:"c",
@@ -267,7 +263,6 @@ module.exports = {
 		},
 
 		"should be able to construct an instance with $group using concat": function(next){
-			// NOTE: Test case broken until expression is fixed; not sure if that concat is supposed to work
 			testAggregate({
 				inputs: [
 					{_id:0, a:null},
@@ -369,6 +364,27 @@ module.exports = {
 				next: next
 			});
 		},
+		
+		"should be able to handle a large array of inputs": function(next){
+			var inputs = [],
+				expected = [];
+			for(var i = 0; i < 10; i++){
+				inputs.push({a:i});
+				expected.push({foo:i});
+			}
+			testAggregate({
+				inputs: inputs,
+				pipeline: {
+					batchSize:Infinity,
+					pipeline: [
+					{$project:{
+						foo: "$a"
+					}}
+				]},
+				expected: expected,
+				next: next
+			});
+		}
 	}
 
 };
