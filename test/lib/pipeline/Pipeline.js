@@ -188,16 +188,15 @@ module.exports = {
 			"should catch parse errors": function () {
 				// The $foo part is invalid and causes a throw.
 				assert.throws(function () {
-					debugger
 					Pipeline.parseCommand({pipeline: [
-						{$foo: {bar: "baz"}}//} {$match: {$foo: {bar: "baz"}}}
+						{$foo: {bar: "baz"}}
 					]});
 				});
 			},
 
 			"should call callback with errors from pipeline components": function (next) {
 				var p = Pipeline.parseCommand({pipeline: [
-					{$match: {foo: {bar: "baz"}}}
+					{$foo: {bar: "baz"}}
 				]});
 				p.run(new DocumentSource({}), function (err, results) {
 					assert(err instanceof Error);
