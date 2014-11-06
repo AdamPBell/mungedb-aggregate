@@ -16,7 +16,7 @@ var TestBase = (function() {
 	proto.createProject = function(projection) {
 		projection = projection || {a:true};
 		var spec = {$project:projection};
-		this._project = ProjectDocumentSource(spec /*,ctx()*/);
+		this._project = new ProjectDocumentSource(spec /*,ctx()*/);
 		this.checkJsonRepresentation(spec);
 		this._project.setSource(this.source());
 	};

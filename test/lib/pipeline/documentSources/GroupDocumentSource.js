@@ -24,7 +24,6 @@ function assertExpectedResult(args) {
 			next,
 			results = [],
 			cds = new CursorDocumentSource(null, new ArrayRunner(args.docs), null);
-			debugger;
 		gds.setSource(cds);
 		async.whilst(
 			function() {
