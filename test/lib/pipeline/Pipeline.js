@@ -188,8 +188,9 @@ module.exports = {
 			"should catch parse errors": function () {
 				// The $foo part is invalid and causes a throw.
 				assert.throws(function () {
+					debugger
 					Pipeline.parseCommand({pipeline: [
-						{$match: {$foo: {bar: "baz"}}}
+						{$foo: {bar: "baz"}}//} {$match: {$foo: {bar: "baz"}}}
 					]});
 				});
 			},
