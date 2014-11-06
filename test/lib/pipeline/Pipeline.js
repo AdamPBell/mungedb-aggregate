@@ -12,22 +12,24 @@ var addSource = function addSource(match, data) {
 	match.setSource(cds);
 };
 
-var shardedTest = function(inputPipe, expectedMergePipeString, expectedShardPipeString) {
-	expectedMergePipeString = "{pipeline: " + expectedMergePipeString + "}";
-	expectedShardPipeString = "{pipeline: " + expectedShardPipeString + "}";
-	var expectedMergePipe = JSON.parse(expectedMergePipeString),
+var shardedTest = function(inputPipeString, expectedMergePipeString, expectedShardPipeString) {
+	inputPipeString = '{"pipeline": ' + inputPipeString + '}';
+	expectedMergePipeString = '{"pipeline": ' + expectedMergePipeString + '}';
+	expectedShardPipeString = '{"pipeline": ' + expectedShardPipeString + '}';
+	var inputPipe = JSON.parse(inputPipeString),
+		expectedMergePipe = JSON.parse(expectedMergePipeString),
 		expectedShardPipe = JSON.parse(expectedShardPipeString);
 
-	var mergePipe = Pipeline.parseCommand(JSON.parse(inputPipe), {});
+	var mergePipe = Pipeline.parseCommand(inputPipe, {});
 	assert.notEqual(mergePipe, null);
 
 	var shardPipe = mergePipe.splitForSharded();
 	assert.notEqual(shardPipe, null);
 
 	assert.deepEqual(shardPipe.serialize()["pipeline"], 
-		expectedShardPipe);//expectedShardPipe["pipeline"]);
+		expectedShardPipe["pipeline"]);
 	assert.deepEqual(mergePipe.serialize()["pipeline"],
-		expectedMergePipe);//["pipeline"]);
+		expectedMergePipe["pipeline"]);
 };
 
 module.exports = {
@@ -148,14 +150,15 @@ module.exports = {
 		"sharded": {
 
 			"should handle empty pipeline for sharded": function () {
-				var inputPipe = {pipeline: []},
+				debugger
+				var inputPipe = "[]",
 					expectedMergePipe = "[]",
 					expectedShardPipe = "[]";
-				shardedTest(JSON.stringify(inputPipe), expectedMergePipe, expectedShardPipe);
+				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 			},
 
 			"should handle one unwind": function () {
-				var inputPipe = '[{"$unwind":"$a"}]',
+				var inputPipe = [{"$unwind":"$a"}],
 					expectedMergePipe = '[]',
 					expectedShardPipe = '[{"$unwind":"$a"}]';
 				shardedTest(inputPipe,  expectedMergePipe, expectedShardPipe);
