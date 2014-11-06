@@ -2,7 +2,30 @@
 var assert = require("assert"),
 	Pipeline = require("../../../lib/pipeline/Pipeline"),
 	FieldPath = require("../../../lib/pipeline/FieldPath"),
-	DocumentSource = require('../../../lib/pipeline/documentSources/DocumentSource');
+	DocumentSource = require('../../../lib/pipeline/documentSources/DocumentSource'),
+	CursorDocumentSource = require("../../../lib/pipeline/documentSources/CursorDocumentSource"),
+	ArrayRunner = require("../../../lib/query/ArrayRunner");
+
+var addSource = function addSource(match, data) {
+	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
+	match.setSource(cds);
+};
+
+var shardedTest = function(inputPipe, expectedMergePipeString, expectedShardPipeString) {
+	var expectedMergePipe = JSON.parse(expectedMergePipeString),
+		expectedShardPipe = JSON.parse(expectedShardPipeString);
+
+	var mergePipe = Pipeline.parseCommand(inputPipe, {});
+	assert.notEqual(mergePipe, null);
+
+	var shardPipe = mergePipe.splitForSharded();
+	assert.notEqual(shardPipe, null);
+
+	assert.equal(shardPipe.serialize()["pipeline"],
+		expectedShardPipe["pipeline"]);
+	assert.equal(mergePipe.serialize()["pipeline"],
+		expectedMergePipe["pipeline"]);
+};
 
 module.exports = {
 
@@ -90,8 +113,8 @@ module.exports = {
 					{$sort: {"xyz": 1}},
 					{$match: {}}
 				]});
-				assert.equal(p.sourceVector[0].constructor.matchName, "$match");
-				assert.equal(p.sourceVector[1].constructor.sortName, "$sort");
+				assert.equal(p.sources[0].constructor.matchName, "$match");
+				assert.equal(p.sources[1].constructor.sortName, "$sort");
 			},
 
 			"should attempt to coalesce all sources": function () {
@@ -101,8 +124,8 @@ module.exports = {
 					{$test: {coalesce: false}},
 					{$test: {coalesce: false}}
 				]});
-				assert.equal(p.sourceVector.length, 3);
-				p.sourceVector.slice(0, -1).forEach(function (source) {
+				assert.equal(p.sources.length, 3);
+				p.sources.slice(0, -1).forEach(function (source) {
 					assert.equal(source.coalesceWasCalled, true);
 				});
 				assert.equal(p.sources[p.sources.length -1].coalesceWasCalled, false);
@@ -113,12 +136,37 @@ module.exports = {
 					{$test: {coalesce: false}},
 					{$test: {coalesce: false}}
 				]});
-				p.sourceVector.forEach(function (source) {
+				p.sources.forEach(function (source) {
 					assert.equal(source.optimizeWasCalled, true);
 				});
 			}
-
 		},
+
+		// "sharded": {
+
+		// 	"should handle empty pipeline for sharded": function () {
+		// 		var inputPipe = {pipeline: []},
+		// 			expectedMergePipe = "[]",
+		// 			expectedShardPipe = "[]";
+		// 		shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+		// 	},
+
+		// 	"should handle one unwind": function () {
+		// 		var inputPipe = "[{$unwind: '$a'}]}",
+		// 			expectedMergePipe = "[]",
+		// 			expectedShardPipe = "[{$unwind: '$a'}]";
+		// 		shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+		// 	},
+
+		// 	"should handle two unwinds": function () {
+		// 		var inputPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}",
+		// 			expectedMergePipe = "[]",
+		// 			expectedShardPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}";
+		// 		shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+
+		// 	}
+
+		// },
 
 		"#stitch": {
 			"should set the parent source for all sources in the pipeline except the first one": function () {
@@ -141,18 +189,8 @@ module.exports = {
 				// The $foo part is invalid and causes a throw.
 				assert.throws(function () {
 					Pipeline.parseCommand({pipeline: [
-						{$match: {$foo: {bar: "baz"}}}
+						{$foo: {bar: "baz"}}
 					]});
-				});
-			},
-
-			"should call callback with errors from pipeline components": function (next) {
-				var p = Pipeline.parseCommand({pipeline: [
-					{$match: {foo: {bar: "baz"}}}
-				]});
-				p.run(new DocumentSource({}), function (err, results) {
-					assert(err instanceof Error);
-					return next();
 				});
 			}
 
