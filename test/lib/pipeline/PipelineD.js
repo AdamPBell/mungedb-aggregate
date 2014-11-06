@@ -75,10 +75,64 @@ module.exports = {
 				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({ a: 1, b: 1, 'x.y.z': 1, _id: 0 }));
 				assert.deepEqual(p.sources[0]._dependencies, {"_fields":{"a":true,"b":true,"x":{"y":{"z":true}}}});
 			},
-			"should set the queryObj on the Cursor": function(){},
-			"should set the sort on the Cursor": function(){},
-			"should set the sort on the Cursor if there is a match first": function(){},
-			"should coalesce the Cursor with the rest of the pipeline": function(){},
+			"should set the queryObj on the Cursor": function(){
+				var cmdObj = {
+					aggregate: [],
+					pipeline: [
+						{$match:{
+							x:{$exists:true},
+							y:{$exists:false}
+						}}
+					]
+				};
+				var p = Pipeline.parseCommand(cmdObj),
+					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.deepEqual(p.sources[0]._query, {x:{$exists: true}, y:{$exists:false}});
+			},
+			"should set the sort on the Cursor": function(){
+				var cmdObj = {
+					aggregate: [],
+					pipeline: [
+						{$sort:{
+							x:1,
+							y:-1
+						}}
+					]
+				};
+				var p = Pipeline.parseCommand(cmdObj),
+					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.deepEqual(p.sources[0]._sort, {x:1, y:-1});
+			},
+			"should set the sort on the Cursor if there is a match first": function(){
+				var cmdObj = {
+					aggregate: [],
+					pipeline: [
+						{$match:{
+							x:{$exists:true},
+							y:{$exists:false}
+						}},
+						{$sort:{
+							x:1,
+							y:-1
+						}}
+					]
+				};
+				var p = Pipeline.parseCommand(cmdObj),
+					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.deepEqual(p.sources[0]._sort, {x:1, y:-1});
+			},
+			"should coalesce the Cursor with the rest of the pipeline": function(){
+				var cmdObj = {
+					aggregate: [],
+					pipeline: [
+						{$limit:1}
+					]
+				};
+				var p = Pipeline.parseCommand(cmdObj),
+					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.equal(p.sources[0].getLimit(), 1);
+				assert.equal(p.sources.length, 1);
+			},
 		}
 	}
 
