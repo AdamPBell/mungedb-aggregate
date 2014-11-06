@@ -95,26 +95,31 @@ module.exports = {
 					}
 				);
 			},
-			"should return values past the batch limit": function(next){
+			"should return values past the batch limit": function(done){
 				var n = 0,
-					arr = Array.apply(0, new Array(200)).map(function() { return n++; });
+					arr = Array.apply(0, new Array(100000)).map(function() { return n++; }),
+					result = [];
 
 				var cds = getCursorDocumentSource(arr);
-				async.each(arr,
-					function(a,next) {
-						cds.getNext(function(err,val) {
-							assert.equal(val,a);
-							next(err);
+				var doc = null,
+					error = null;
+				
+				async.doWhilst(
+					function iterator(next){
+						return cds.getNext(function (err, obj){
+							if (obj !== null) result.push(obj);
+							doc = obj;
+							error = err;
+							next();
 						});
 					},
-					function(err) {
-						assert.equal(err, null);
-					}
-				);
-				cds.getNext(function(err,val) {
-					assert.equal(val, null);
-					next();
-				});
+					function test(){
+						return doc !== null && !error;
+					},
+					function (err){
+						assert.deepEqual(arr,result);
+						done();
+					});
 			},
 		},
 		"#dispose": {
