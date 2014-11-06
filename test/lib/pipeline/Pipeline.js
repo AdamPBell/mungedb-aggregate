@@ -59,7 +59,7 @@ module.exports = {
 				};
 
 				proto.getNext = function(callback){
-					var answer = this.current > 0 ? {val:this.current--} : DocumentSource.EOF,
+					var answer = this.current > 0 ? {val:this.current--} : null,
 						err = null;
 
 					if (!this.works)
@@ -176,32 +176,28 @@ module.exports = {
 			}
 		},
 
-		"#_runSync": {
+		"#run": {
 
-			"should iterate through sources and return resultant array": function () {
+			"should iterate through sources and return resultant array": function (done) {
 				var p = Pipeline.parseCommand({pipeline:[{$test:{coalesce:false}}, {$test:{coalesce:false}}, {$test:{coalesce:false}}]}),
-					results = p.run(function(err, results) {
-						assert.deepEqual(results.result, [ { val: 5 }, { val: 4 }, { val: 3 }, { val: 2 }, { val: 1 } ]);
+					results = [];
+				p.run(function(err, doc) {
+					if (err) throw err;
+					if (!doc){
+						assert.deepEqual(results, [ { val: 5 }, { val: 4 }, { val: 3 }, { val: 2 }, { val: 1 } ]);
+						done();
+					} else {
+						results.push(doc);
+					}
 				});
 			},
-
-			"should catch parse errors": function () {
-				// The $foo part is invalid and causes a throw.
-				assert.throws(function () {
-					Pipeline.parseCommand({pipeline: [
-						{$foo: {bar: "baz"}}
-					]});
+			"should handle sources that return errors": function (done) {
+				var p = Pipeline.parseCommand({pipeline:[{$test:{works:false}}]}),
+					results = [];
+				p.run(function(err, doc) {
+					assert(err);
+					done();
 				});
-			},
-
-		},
-
-		"#_runAsync": {
-			"should iterate through sources and return resultant array asynchronously": function () {
-				var p = Pipeline.parseCommand({pipeline:[{$test:{coalesce:false}}, {$test:{coalesce:false}}, {$test:{coalesce:false}}]}),
-					results = p.run(function(err, results) {
-						assert.deepEqual(results.result, [ { val: 5 }, { val: 4 }, { val: 3 }, { val: 2 }, { val: 1 } ]);
-					});
 			}
 		},
 
