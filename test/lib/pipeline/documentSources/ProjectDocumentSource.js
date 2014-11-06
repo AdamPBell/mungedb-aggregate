@@ -261,7 +261,7 @@ module.exports = {
 			};
 			var pds = createProject(input);
 			var dependencies = new DepsTracker();
-			assert.equal(DocumentSource.GetDepsReturn.EXHAUSTIVE, pds.getDependencies(dependencies));
+			assert.equal(DocumentSource.GetDepsReturn.EXHAUSTIVE_FIELDS, pds.getDependencies(dependencies));
 			assert.equal(5, Object.keys(dependencies.fields).length);
 			assert.ok(dependencies.fields._id);
 			assert.ok(dependencies.fields.a);

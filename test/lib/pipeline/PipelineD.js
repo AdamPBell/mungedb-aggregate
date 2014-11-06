@@ -21,8 +21,8 @@ module.exports = {
 			"should get projection from all sources": function () {
 				var p = Pipeline.parseCommand({pipeline:[{$project:{a:"$x"}}], aggregate:[]}),
 					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
-				assert.deepEqual(p.sources[0]._projection, {"x":1});
-				assert.deepEqual(p.sources[0]._dependencies, {}); //TODO: what goes here???
+				assert.deepEqual(p.sources[0]._projection, {x:1, _id:1});
+				assert.deepEqual(p.sources[0]._dependencies, {_fields:{_id:true, x:true}});
 			},
 
 			"should get projection's deps": function () {
@@ -46,10 +46,9 @@ module.exports = {
 				};
 				var p = Pipeline.parseCommand(cmdObj),
 					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
-				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({'a.b.c': 1, d: 1, 'e.f.g': 1, _id: 1}));
-				assert.deepEqual(p.sources[0]._dependencies, {}); //TODO: what goes here???
+				assert.deepEqual(p.sources[0]._projection, {'a.b.c': 1, d: 1, 'e.f.g': 1, _id: 1});
+				assert.deepEqual(p.sources[0]._dependencies, {"_fields":{"_id":true,"a":{"b":{"c":true}},"d":true,"e":{"f":{"g":true}}}});
 			},
-
 			"should get group's deps": function(){
 				var cmdObj = {
 					aggregate: [],
@@ -73,8 +72,8 @@ module.exports = {
 				};
 				var p = Pipeline.parseCommand(cmdObj),
 					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
-				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({ _id: 0, a: 1, b: 1, 'x.y.z': 1 }));
-				assert.deepEqual(p.sources[0]._dependencies, {}); //TODO: what goes here???
+				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({ a: 1, b: 1, 'x.y.z': 1, _id: 0 }));
+				assert.deepEqual(p.sources[0]._dependencies, {"_fields":{"a":true,"b":true,"x":{"y":{"z":true}}}});
 			},
 			"should set the queryObj on the Cursor": function(){},
 			"should set the sort on the Cursor": function(){},
