@@ -150,7 +150,6 @@ module.exports = {
 		"sharded": {
 
 			"should handle empty pipeline for sharded": function () {
-				debugger
 				var inputPipe = "[]",
 					expectedMergePipe = "[]",
 					expectedShardPipe = "[]";
@@ -158,16 +157,16 @@ module.exports = {
 			},
 
 			"should handle one unwind": function () {
-				var inputPipe = [{"$unwind":"$a"}],
-					expectedMergePipe = '[]',
+				var inputPipe = '[{"$unwind":"$a"}]',
+					expectedMergePipe = "[]",
 					expectedShardPipe = '[{"$unwind":"$a"}]';
-				shardedTest(inputPipe,  expectedMergePipe, expectedShardPipe);
+				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 			},
 
 			"should handle two unwinds": function () {
-				var inputPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}",
+				var inputPipe = '[{"$unwind":"$a"}, {"$unwind":"$b"}]',
 					expectedMergePipe = "[]",
-					expectedShardPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}";
+					expectedShardPipe = '[{"$unwind": "$a"}, {"$unwind": "$b"}]';
 				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 
 			}
