@@ -2,32 +2,34 @@
 var assert = require("assert"),
 	aggregate = require("../../");
 
+aggregate.cmdDefaults.batchSize = Infinity;
 
 // Utility to test the various use cases of `aggregate`
 function testAggregate(opts){
 
-	// SYNC: test one-off usage
-	var results = aggregate(opts.pipeline, opts.inputs);
-	assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
+	if (!opts.asyncOnly){
+		// SYNC: test one-off usage
+		var results = aggregate(opts.pipeline, opts.inputs);
+		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
-	// SYNC: test one-off usage with context
-	results = aggregate(opts.pipeline, {hi: "there"}, opts.inputs);
-	assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
+		// SYNC: test one-off usage with context
+		results = aggregate(opts.pipeline, {hi: "there"}, opts.inputs);
+		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
-	// SYNC: test use with context
-	var aggregator = aggregate(opts.pipeline, {hi: "there"});
-	results = aggregator(opts.inputs);
-	assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
+		// SYNC: test use with context
+		var aggregator = aggregate(opts.pipeline, {hi: "there"});
+		results = aggregator(opts.inputs);
+		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
-	// SYNC: test reusable aggregator functionality
-	aggregator = aggregate(opts.pipeline);
-	results = aggregator(opts.inputs);
-	assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
+		// SYNC: test reusable aggregator functionality
+		aggregator = aggregate(opts.pipeline);
+		results = aggregator(opts.inputs);
+		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
-	// SYNC: test that it is actually reusable
-	results = aggregator(opts.inputs);
-	assert.equal(JSON.stringify(results), JSON.stringify(opts.expected), "Reuse of aggregator should yield the same results!");
-
+		// SYNC: test that it is actually reusable
+		results = aggregator(opts.inputs);
+		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected), "Reuse of aggregator should yield the same results!");
+	}
 	// ASYNC: test one-off usage
 	aggregate(opts.pipeline, opts.inputs, function(err, results){
 		assert.ifError(err);
@@ -68,6 +70,39 @@ function testAggregate(opts){
 	});
 }
 
+function testBatches(opts){
+	var inputs = [],
+		actual = [],
+		eachExpected = [],
+		expected = [];
+		
+	for(var i = 0; i < opts.documents; i++){
+		inputs.push({a:i});
+		eachExpected.push({foo:i});
+		if (eachExpected.length % opts.batchSize === 0){
+			expected.push(eachExpected);
+			eachExpected = [];
+		}
+	}
+	expected.push(eachExpected);
+	aggregate({
+			batchSize:opts.batchSize,
+			pipeline: [
+			{$project:{
+				foo: "$a"
+			}}
+		]}, 
+		inputs, 
+		function(err, results){
+			assert.ifError(err);
+			if (results) {
+				actual.push(results);
+			} else {
+				assert.deepEqual(actual, expected);
+				opts.next();
+			}
+		});
+}
 
 module.exports = {
 
@@ -208,7 +243,6 @@ module.exports = {
 		},
 
 		"should be able to construct an instance with $group operators properly": function(next){
-			// NOTE: Test case broken until expression is fixed
 			testAggregate({
 				inputs: [
 					{_id:0, a:1},
@@ -242,8 +276,8 @@ module.exports = {
 						//min_a:1,
 						max_a:4,
 						avg_a:2.3,
-						first_b:undefined,
-						last_b:undefined,
+						first_b:null,
+						last_b:null,
 						addToSet_b:[],
 						push_b:[]
 					},
@@ -251,7 +285,7 @@ module.exports = {
 						_id:1,
 						sum_a:0,
 						//min_a:null,
-						max_a:undefined,
+						max_a:null,
 						avg_a:0,
 						first_b:"a",
 						last_b:"c",
@@ -264,7 +298,6 @@ module.exports = {
 		},
 
 		"should be able to construct an instance with $group using concat": function(next){
-			// NOTE: Test case broken until expression is fixed; not sure if that concat is supposed to work
 			testAggregate({
 				inputs: [
 					{_id:0, a:null},
@@ -366,6 +399,164 @@ module.exports = {
 				next: next
 			});
 		},
+		
+		"should be able to handle a large array of inputs": function(next){
+			var inputs = [],
+				expected = [];
+			for(var i = 0; i < 10000; i++){
+				inputs.push({a:i});
+				expected.push({foo:i});
+			}
+			testAggregate({
+				asyncOnly: true,
+				inputs: inputs,
+				pipeline: [
+					{$project:{
+						foo: "$a"
+					}}
+				],
+				expected: expected,
+				next: next
+			});
+		},
+		"should be able to handle a small arrays in batches": function(next){
+			testBatches({
+				documents: 5,
+				batchSize: 100,
+				next: next
+			});
+		},
+		"should be able to handle an array equal to the batch size": function(next){
+			testBatches({
+				documents: 100,
+				batchSize: 100,
+				next: next
+			});
+		},
+		"should be able to handle a large array in batches": function(next){
+			testBatches({
+				documents: 10000,
+				batchSize: 100,
+				next: next
+			});
+		},
+		"should be able to explain an empty pipeline": function(){
+			var pipeline = [],
+				expected = [],
+				actual = aggregate({
+					pipeline: pipeline,
+					explain: true
+				});
+			assert.deepEqual(actual, expected);
+		},
+		"should be able to explain a full pipeline": function(){
+			var pipeline = [
+					{$match:{e:1}},
+					{$match:{d:1}},
+					{$skip:2}, 
+					{$limit:1},
+					{$project:{
+						foo: "$a"
+					}},
+					{$group:{
+						_id:{$concat:["$foo"]}
+					}}
+				],
+				expected = [
+					{$match:{$and:[{e:1},{d:1}]}},
+					{$limit:3},
+					{$skip:2}, 
+					{$project:{
+						foo: "$a"
+					}},
+					{$group:{
+						_id:{$concat:["$foo"]}
+					}}
+				],
+				actual = aggregate({
+					pipeline: pipeline,
+					explain: true
+				});
+			assert.deepEqual(actual, expected);
+		},
+		"should be able to explain a full pipeline with inputs": function(){
+			var pipeline = [
+					{$match:{e:1}},
+					{$match:{d:1}},
+					{$skip:2}, 
+					{$limit:1},
+					{$project:{
+						foo: "$a"
+					}},
+					{$group:{
+						_id:{$concat:["$foo"]}
+					}}
+				],
+				expected = [
+					{"$cursor":{
+						"query":{"$and":[{"e":1},{"d":1}]},
+						"sort":null,
+						"limit":null,
+						"fields":{"a":1,"_id":1},
+						"plan":{
+							"type":"ArrayRunner",
+							"nDocs":1,
+							"position":0,
+							"state":"RUNNER_ADVANCED"
+						}
+					}},
+					{"$match":{"$and":[{"e":1},{"d":1}]}},
+					{"$limit":3},
+					{"$skip":2},
+					{"$project":{"foo":"$a"}},
+					{"$group":{"_id":{"$concat":["$foo"]}}}
+				],
+				actual = aggregate({
+					pipeline: pipeline,
+					explain: true
+				}, [{e:1,d:2,a:4}]);
+			assert.deepEqual(actual, expected);
+		},
+		"should throw parse errors if called sync-ly": function(){
+			assert.throws(function(){
+				aggregate([{"$project":{"foo":"bar"}}], [{"bar":1}]);
+			});
+			assert.throws(function(){
+				aggregate([{"$project":{"foo":"bar"}}]);
+			});
+		},
+		"should return parse errors in the callback if called async-ly": function(done){
+			aggregate([{"$project":{"foo":"bar"}}], [{"bar":1}], function(err, results){
+				assert(err, "Expected Error");
+				done();
+			});
+		},
+		"should throw pipeline errors if called sync-ly": function(){
+			assert.throws(function(){
+				aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}], [{"foo":1, "bar":"baz"}]);
+			});
+			
+			var agg = aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}]);
+			assert.throws(function(){
+				agg([{"foo":1, "bar":"baz"}]);
+			});
+			assert.doesNotThrow(function(){
+				agg([{"foo":1, "bar":2}]);
+			});
+		},
+		"should return pipeline errors in the callback if called async-ly": function(done){
+			aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}], [{"foo":1, "bar":"baz"}], function(err, results){
+				assert(err, "Expected Error");
+				var agg = aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}]);
+				agg([{"foo":1, "bar":"baz"}], function(err, results){
+					assert(err, "Expected Error");
+					agg([{"foo":1, "bar":2}], function(err, results){
+						assert.ifError(err, "UnExpected Error");
+						done();
+					});
+				});
+			});
+		}
 	}
 
 };
