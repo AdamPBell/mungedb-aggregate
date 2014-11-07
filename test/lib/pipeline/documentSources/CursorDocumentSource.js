@@ -96,8 +96,7 @@ module.exports = {
 				);
 			},
 			"should return values past the batch limit": function(done){
-				var n = 0,
-					arr = Array.apply(0, new Array(100000)).map(function() { return n++; }),
+				var arr = Array.apply(0, new Array(100000)).map(function(v, i) { return i; }),
 					result = [];
 
 				var cds = getCursorDocumentSource(arr);
