@@ -24,7 +24,6 @@ function assertExpectedResult(args) {
 			next,
 			results = [],
 			cds = new CursorDocumentSource(null, new ArrayRunner(args.docs), null);
-			debugger;
 		gds.setSource(cds);
 		async.whilst(
 			function() {
@@ -301,6 +300,18 @@ module.exports = {
 					docs: [{}],
 					spec: {_id:0, first:{$first:"$missing"}},
 					expected: [{_id:0, first:null}]
+				});
+			},
+			
+			"should return errors in the callback": function(done){
+				var gds = GroupDocumentSource.createFromJson({_id:null, sum: {$sum:"$a"}}),
+					next,
+					results = [],
+					cds = new CursorDocumentSource(null, new ArrayRunner([{"a":"foo"}]), null);
+				gds.setSource(cds);
+				gds.getNext(function(err, doc) {
+					assert(err, "Expected Error");
+					done();
 				});
 			}
 		}

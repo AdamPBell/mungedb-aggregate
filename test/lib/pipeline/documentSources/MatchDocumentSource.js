@@ -84,7 +84,6 @@ module.exports = {
 					items = [ 1,2,3,4,5,6,7,8,9 ];
 				addSource(mds, items.map(function(i){return {item:i};}));
 
-				debugger;
 				async.series([
 						mds.getNext.bind(mds),
 						mds.getNext.bind(mds),

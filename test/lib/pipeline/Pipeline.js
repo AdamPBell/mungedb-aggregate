@@ -4,6 +4,7 @@ var assert = require("assert"),
 	FieldPath = require("../../../lib/pipeline/FieldPath"),
 	DocumentSource = require('../../../lib/pipeline/documentSources/DocumentSource'),
 	CursorDocumentSource = require("../../../lib/pipeline/documentSources/CursorDocumentSource"),
+	ProjectDocumentSource = require("../../../lib/pipeline/documentSources/ProjectDocumentSource"),
 	ArrayRunner = require("../../../lib/query/ArrayRunner");
 
 var addSource = function addSource(match, data) {
@@ -11,8 +12,12 @@ var addSource = function addSource(match, data) {
 	match.setSource(cds);
 };
 
-var shardedTest = function(inputPipe, expectedMergePipeString, expectedShardPipeString) {
-	var expectedMergePipe = JSON.parse(expectedMergePipeString),
+var shardedTest = function(inputPipeString, expectedMergePipeString, expectedShardPipeString) {
+	inputPipeString = '{"pipeline": ' + inputPipeString + '}';
+	expectedMergePipeString = '{"pipeline": ' + expectedMergePipeString + '}';
+	expectedShardPipeString = '{"pipeline": ' + expectedShardPipeString + '}';
+	var inputPipe = JSON.parse(inputPipeString),
+		expectedMergePipe = JSON.parse(expectedMergePipeString),
 		expectedShardPipe = JSON.parse(expectedShardPipeString);
 
 	var mergePipe = Pipeline.parseCommand(inputPipe, {});
@@ -21,10 +26,8 @@ var shardedTest = function(inputPipe, expectedMergePipeString, expectedShardPipe
 	var shardPipe = mergePipe.splitForSharded();
 	assert.notEqual(shardPipe, null);
 
-	assert.equal(shardPipe.serialize()["pipeline"],
-		expectedShardPipe["pipeline"]);
-	assert.equal(mergePipe.serialize()["pipeline"],
-		expectedMergePipe["pipeline"]);
+	assert.deepEqual(shardPipe.serialize().pipeline, expectedShardPipe.pipeline);
+	assert.deepEqual(mergePipe.serialize().pipeline, expectedMergePipe.pipeline);
 };
 
 module.exports = {
@@ -145,25 +148,38 @@ module.exports = {
 		"sharded": {
 
 			"should handle empty pipeline for sharded": function () {
-				var inputPipe = {pipeline: []},
+				var inputPipe = "[]",
 					expectedMergePipe = "[]",
 					expectedShardPipe = "[]";
-				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+				shardedTest(inputPipe, expectedShardPipe, expectedMergePipe);
 			},
 
 			"should handle one unwind": function () {
-				var inputPipe = "[{$unwind: '$a'}]}",
-					expectedMergePipe = "[]",
-					expectedShardPipe = "[{$unwind: '$a'}]";
+				var inputPipe = '[{"$unwind":"$a"}]',
+					expectedShardPipe = "[]",
+					expectedMergePipe = '[{"$unwind":"$a"}]';
 				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 			},
 
 			"should handle two unwinds": function () {
-				var inputPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}",
-					expectedMergePipe = "[]",
-					expectedShardPipe = "[{$unwind: '$a'}, {$unwind: '$b'}]}";
+				var inputPipe = '[{"$unwind":"$a"}, {"$unwind":"$b"}]',
+					expectedShardPipe = "[]",
+					expectedMergePipe = '[{"$unwind": "$a"}, {"$unwind": "$b"}]';
 				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+			},
 
+			"should handle unwind not final": function () {
+				var inputPipe = '[{"$unwind": "$a"}, {"$match": {"a":1}}]',
+					expectedShardPipe = '[]',
+					expectedMergePipe = '[{"$unwind": "$a"}, {"$match": {"a":1}}]';
+				shardedTest(inputPipe, expectedShardPipe, expectedMergePipe);
+			},
+
+			"should handle unwind with other": function () {
+				var inputPipe = '[{"$match": {"a":1}}, {"$unwind": "$a"}]',
+					expectedShardPipe = '[{"$match":{"a":1}}]',
+					expectedMergePipe = '[{"$unwind":"$a"}]';
+				shardedTest(inputPipe,expectedMergePipe, expectedShardPipe);
 			}
 
 		},
@@ -216,8 +232,20 @@ module.exports = {
 				p.stitch();
 				assert.equal(p.sources[1].source, p.sources[0]);
 			}
-		}
+		},
 
+		"#getDependencies()": {
+
+			"should properly detect dependencies": function testGetDependencies() {
+				var p = Pipeline.parseCommand({pipeline: [
+					{$sort: {"xyz": 1}},
+					{$project: {"a":"$xyz"}}
+				]});
+				var depsTracker = p.getDependencies();
+				assert.equal(Object.keys(depsTracker.fields).length, 2);
+			}
+
+		}
 	}
 
 };
