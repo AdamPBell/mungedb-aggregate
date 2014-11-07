@@ -5,14 +5,13 @@ var assert = require("assert"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	LimitDocumentSource = require("../../../../lib/pipeline/documentSources/LimitDocumentSource"),
 	SkipDocumentSource = require("../../../../lib/pipeline/documentSources/SkipDocumentSource"),
-	Cursor = require("../../../../lib/Cursor");
+	ProjectDocumentSource = require("../../../../lib/pipeline/documentSources/ProjectDocumentSource"),
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
+	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
-var getCursor = function(values) {
-	if (!values)
-		values = [1,2,3,4,5];
-	var cwc = new CursorDocumentSource.CursorWithContext();
-	cwc._cursor = new Cursor( values );
-	return new CursorDocumentSource(cwc);
+var getCursorDocumentSource = function(values) {
+	values = values || [1,2,3,4,5];
+	return new CursorDocumentSource(null, new ArrayRunner(values), null);
 };
 
 
@@ -21,24 +20,15 @@ module.exports = {
 	"CursorDocumentSource": {
 
 		"constructor(data)": {
-			"should fail if CursorWithContext is not provided": function(){
-				assert.throws(function(){
-					var cds = new CursorDocumentSource();
-				});
-			},
 			"should get a accept a CursorWithContext and set it internally": function(){
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				cwc._cursor = new Cursor( [] );
-
-				var cds = new CursorDocumentSource(cwc);
-
-				assert.ok(cds._cursorWithContext);
+				var cds = getCursorDocumentSource([]);
+				assert.ok(cds._runner);
 			}
 		},
 
 		"#coalesce": {
 			"should be able to coalesce a limit into itself": function (){
-				var cds = getCursor(),
+				var cds = getCursorDocumentSource(),
 					lds = LimitDocumentSource.createFromJson(2);
 
 				assert.equal(cds.coalesce(lds) instanceof LimitDocumentSource, true);
@@ -46,7 +36,7 @@ module.exports = {
 			},
 
 			"should keep original limit if coalesced to a larger limit": function() {
-				var cds = getCursor();
+				var cds = getCursorDocumentSource();
 				cds.coalesce(LimitDocumentSource.createFromJson(2));
 				cds.coalesce(LimitDocumentSource.createFromJson(3));
 				assert.equal(cds.getLimit(), 2);
@@ -54,7 +44,7 @@ module.exports = {
 
 
 			"cursor only returns $limit number when coalesced": function(next) {
-				var cds = getCursor(),
+				var cds = getCursorDocumentSource(),
 					lds = LimitDocumentSource.createFromJson(2);
 
 
@@ -69,40 +59,29 @@ module.exports = {
 						});
 					},
 					function() {
-						return docs[i++] !== DocumentSource.EOF;
+						return docs[i++] !== null;
 					},
 					function(err) {
-						assert.deepEqual([1, 2, DocumentSource.EOF], docs);
+						if (err) throw err;
+						assert.deepEqual([1, 2, null], docs);
 						next();
 					}
 				);
 			},
 
 			"should leave non-limit alone": function () {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				cwc._cursor = new Cursor( [] );
-
 				var sds = new SkipDocumentSource(),
-					cds = new CursorDocumentSource(cwc);
+					cds = getCursorDocumentSource([]);
 
 				assert.equal(cds.coalesce(sds), false);
 			}
 		},
 
 		"#getNext": {
-			"should throw an error if no callback is given": function() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				cwc._cursor = new Cursor( [1,2,3,4] );
-				var cds = new CursorDocumentSource(cwc);
-				assert.throws(cds.getNext.bind(cds));
-			},
-
 			"should return the current cursor value async": function(next){
 				var expected = JSON.stringify([1,2]);
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				cwc._cursor = new Cursor( [1,2,3,4] );
 
-				var cds = new CursorDocumentSource(cwc);
+				var cds = getCursorDocumentSource([1,2,3,4]);
 				async.series([
 						cds.getNext.bind(cds),
 						cds.getNext.bind(cds),
@@ -111,18 +90,16 @@ module.exports = {
 						cds.getNext.bind(cds),
 					],
 					function(err,res) {
-						assert.deepEqual([1,2,3,4,DocumentSource.EOF], res);
+						assert.deepEqual([1,2,3,4,null], res);
 						next();
 					}
 				);
 			},
 			"should return values past the batch limit": function(next){
-				var cwc = new CursorDocumentSource.CursorWithContext(),
-					n = 0,
+				var n = 0,
 					arr = Array.apply(0, new Array(200)).map(function() { return n++; });
-				cwc._cursor = new Cursor( arr );
 
-				var cds = new CursorDocumentSource(cwc);
+				var cds = getCursorDocumentSource(arr);
 				async.each(arr,
 					function(a,next) {
 						cds.getNext(function(err,val) {
@@ -135,25 +112,24 @@ module.exports = {
 					}
 				);
 				cds.getNext(function(err,val) {
-					assert.equal(val, DocumentSource.EOF);
+					assert.equal(val, null);
 					next();
 				});
 			},
 		},
 		"#dispose": {
 			"should empty the current cursor": function(next){
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				cwc._cursor = new Cursor( [1,2,3] );
-
-				var cds = new CursorDocumentSource(cwc);
+				var cds = getCursorDocumentSource();
 				async.series([
 						cds.getNext.bind(cds),
 						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
+						function(next){
+							cds.dispose();
+							return cds.getNext(next);
+						}
 					],
 					function(err,res) {
-						assert.deepEqual([1,2,3,DocumentSource.EOF], res);
+						assert.deepEqual([1,2,null], res);
 						next();
 					}
 				);
@@ -162,44 +138,20 @@ module.exports = {
 
 		"#setProjection": {
 
-			"should set a projection": function() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				cwc._cursor = new Cursor( [1,2,3] );
-
-				var cds = new CursorDocumentSource(cwc);
-				cds.setProjection({a:1}, {a:true});
-				assert.deepEqual(cds._projection, {a:1});
-				assert.deepEqual(cds._dependencies, {a:true});
-			},
-
-			"should throw an error if projection is already set": function (){
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				cwc._cursor = new Cursor( [1,2,3] );
-
-				var cds = new CursorDocumentSource(cwc);
-				cds.setProjection({a:1}, {});
-				assert.throws(function() {
-					cds.setProjection({a:1}, {});
-				});
-			},
-
-			"should project properly": function(next) {
-				var cwc = new CursorDocumentSource.CursorWithContext();
-				cwc._cursor = new Cursor( [{a:1},{a:2,b:3},{c:4,d:5}] );
-
-				var cds = new CursorDocumentSource(cwc);
-				cds.setProjection({a:1}, {a:true});
-				assert.deepEqual(cds._projection, {a:1});
-				assert.deepEqual(cds._dependencies, {a:true});
-
+			"should set a projection": function(next) {
+				var cds = getCursorDocumentSource([{a:1, b:2},{a:2, b:3}]),
+					deps = new DepsTracker(),
+					project = ProjectDocumentSource.createFromJson({"a":1});
+				project.getDependencies(deps);
+				cds.setProjection(deps.toProjection(), deps.toParsedDeps());
+				
 				async.series([
 						cds.getNext.bind(cds),
 						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
+						cds.getNext.bind(cds)
 					],
 					function(err,res) {
-						assert.deepEqual([{a:1},{a:2},{},DocumentSource.EOF], res);
+						assert.deepEqual([{a:1},{a:2},null], res);
 						next();
 					}
 				);
@@ -211,4 +163,4 @@ module.exports = {
 
 };
 
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run();
+if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

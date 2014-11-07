@@ -4,11 +4,15 @@ var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	OutDocumentSource = require("../../../../lib/pipeline/documentSources/OutDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	Cursor = require("../../../../lib/Cursor");
+	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
 var createOut = function(ctx) {
 	var ds = new OutDocumentSource(ctx);
 	return ds;
+};
+var addSource = function addSource(ds, data) {
+	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
+	ds.setSource(cds);
 };
 
 module.exports = {
@@ -41,14 +45,11 @@ module.exports = {
 				assert.throws(ods.getNext.bind(ods));
 			},
 
-			"should act ass passthrough (for now)": function(next) {
+			"should act as passthrough (for now)": function(next) {
 				var ods = OutDocumentSource.createFromJson("test"),
-					cwc = new CursorDocumentSource.CursorWithContext(),
 					l = [{_id:0,a:[{b:1},{b:2}]}, {_id:1,a:[{b:1},{b:1}]} ];
 
-				cwc._cursor = new Cursor( l );
-				var cds = new CursorDocumentSource(cwc);
-				ods.setSource(cds);
+				addSource(ods, l);
 
 				var docs = [], i = 0;
 				async.doWhilst(
@@ -59,10 +60,10 @@ module.exports = {
 						});
 					},
 					function() {
-						return docs[i++] !== DocumentSource.EOF;
+						return docs[i++] !== null;
 					},
 					function(err) {
-						assert.deepEqual([{_id:0,a:[{b:1},{b:2}]}, {_id:1,a:[{b:1},{b:1}]}, DocumentSource.EOF], docs);
+						assert.deepEqual([{_id:0,a:[{b:1},{b:2}]}, {_id:1,a:[{b:1},{b:1}]}, null], docs);
 						next();
 					}
 				);
@@ -83,13 +84,10 @@ module.exports = {
 		"#serialize()":{
 
 			"serialize":function() {
-				var cwc = new CursorDocumentSource.CursorWithContext();
 				var input = [{_id: 0, a: 1}, {_id: 1, a: 2}];
-				cwc._cursor = new Cursor( input );
-				var cds = new CursorDocumentSource(cwc);
 				var title = "CognitiveScientists";
 				var ods = OutDocumentSource.createFromJson(title);
-				ods.setSource(cds);
+				addSource(ods, input);
 				var srcNm = ods.getSourceName();
 				var serialize = {};
 				serialize[srcNm] = title;

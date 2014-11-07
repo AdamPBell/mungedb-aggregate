@@ -1,7 +1,6 @@
 "use strict";
 var assert = require("assert"),
-	pipeline = require("../../../../lib/pipeline"),
-	expressions = pipeline.expressions,
+	expressions = require("../../../../lib/pipeline/expressions/"),
 	Expression = expressions.Expression,
 	CompareExpression = require("../../../../lib/pipeline/expressions/CompareExpression"),
 	VariablesParseState = require("../../../../Lib/pipeline/expressions/VariablesParseState"),
