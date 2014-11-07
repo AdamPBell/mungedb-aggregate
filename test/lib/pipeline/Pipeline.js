@@ -153,22 +153,35 @@ module.exports = {
 				var inputPipe = "[]",
 					expectedMergePipe = "[]",
 					expectedShardPipe = "[]";
-				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+				shardedTest(inputPipe, expectedShardPipe, expectedMergePipe);
 			},
 
 			"should handle one unwind": function () {
 				var inputPipe = '[{"$unwind":"$a"}]',
-					expectedMergePipe = "[]",
-					expectedShardPipe = '[{"$unwind":"$a"}]';
+					expectedShardPipe = "[]",
+					expectedMergePipe = '[{"$unwind":"$a"}]';
 				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 			},
 
 			"should handle two unwinds": function () {
 				var inputPipe = '[{"$unwind":"$a"}, {"$unwind":"$b"}]',
-					expectedMergePipe = "[]",
-					expectedShardPipe = '[{"$unwind": "$a"}, {"$unwind": "$b"}]';
+					expectedShardPipe = "[]",
+					expectedMergePipe = '[{"$unwind": "$a"}, {"$unwind": "$b"}]';
 				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
+			},
 
+			"should handle unwind not final": function () {
+				var inputPipe = '[{"$unwind": "$a"}, {"$match": {"a":1}}]',
+					expectedShardPipe = '[]',
+					expectedMergePipe = '[{"$unwind": "$a"}, {"$match": {"a":1}}]';
+				shardedTest(inputPipe, expectedShardPipe, expectedMergePipe);
+			},
+
+			"should handle unwind with other": function () {
+				var inputPipe = '[{"$match": {"a":1}}, {"$unwind": "$a"}]',
+					expectedShardPipe = '[{"$match":{"a":1}}]',
+					expectedMergePipe = '[{"$unwind":"$a"}]';
+				shardedTest(inputPipe,expectedMergePipe, expectedShardPipe);
 			}
 
 		},
