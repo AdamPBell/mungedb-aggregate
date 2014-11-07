@@ -69,13 +69,13 @@ module.exports = {
 		"should return errors in the callback": function Errors() {
 			var input = [{_id: 0, a: "foo"}];
 			var cds = new CursorDocumentSource(null, new ArrayRunner(input), null);
-			var pds = ProjectDocumentSource.createFromJson({x:{"$add":["$a", "$a"]}})
+			var pds = ProjectDocumentSource.createFromJson({x:{"$add":["$a", "$a"]}});
 			pds.setSource(cds);
 			pds.getNext(function(err, actual) {
 				assert(err, "Expected error");
 			});
 		},
-		
+
 		"should return EOF": function testEOF(next) {
 			var pds = createProject({});
 			pds.setSource({
