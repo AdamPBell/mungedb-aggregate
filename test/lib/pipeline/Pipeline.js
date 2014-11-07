@@ -26,10 +26,8 @@ var shardedTest = function(inputPipeString, expectedMergePipeString, expectedSha
 	var shardPipe = mergePipe.splitForSharded();
 	assert.notEqual(shardPipe, null);
 
-	assert.deepEqual(shardPipe.serialize()["pipeline"], 
-		expectedShardPipe["pipeline"]);
-	assert.deepEqual(mergePipe.serialize()["pipeline"],
-		expectedMergePipe["pipeline"]);
+	assert.deepEqual(shardPipe.serialize().pipeline, expectedShardPipe.pipeline);
+	assert.deepEqual(mergePipe.serialize().pipeline, expectedMergePipe.pipeline);
 };
 
 module.exports = {

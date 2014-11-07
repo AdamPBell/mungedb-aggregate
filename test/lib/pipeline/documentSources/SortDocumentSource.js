@@ -569,7 +569,7 @@ module.exports = {
 
 				var deps = {fields: {}, needWholeDocument: false, needTextScore: false};
 
-				assert.equal('SEE_NEXT', sds.getDependencies(deps));
+				assert.equal(DocumentSource.GetDepsReturn.SEE_NEXT, sds.getDependencies(deps));
 				// Sort keys are now part of deps fields.
 				assert.equal(3, Object.keys(deps.fields).length);
 			 	assert.equal(1, deps.fields.a);
