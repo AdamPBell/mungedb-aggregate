@@ -7,7 +7,8 @@ var assert = require("assert"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
 	TestBase = require("./TestBase"),
-	And = require("../../../../lib/pipeline/expressions/AndExpression");
+	And = require("../../../../lib/pipeline/expressions/AndExpression"),
+	Add = require("../../../../lib/pipeline/expressions/AddExpression");
 
 
 /**
@@ -65,6 +66,16 @@ module.exports = {
 
 	"#getNext()": {
 
+		"should return errors in the callback": function Errors() {
+			var input = [{_id: 0, a: "foo"}];
+			var cds = new CursorDocumentSource(null, new ArrayRunner(input), null);
+			var pds = ProjectDocumentSource.createFromJson({x:{"$add":["$a", "$a"]}})
+			pds.setSource(cds);
+			pds.getNext(function(err, actual) {
+				assert(err, "Expected error");
+			});
+		},
+		
 		"should return EOF": function testEOF(next) {
 			var pds = createProject({});
 			pds.setSource({

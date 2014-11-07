@@ -61,6 +61,18 @@ module.exports = {
 					next();
 				});
 			},
+			"should return Error in callback": function testError(next) {
+				var rds = RedactDocumentSource.createFromJson({$cond:{
+					if:{$gt:[0,{$add:["$a", 3]}]},
+					then:"$$DESCEND",
+					else:"$$PRUNE"
+				}});
+				rds.setSource(createCursorDocumentSource([{a:"foo"}]));
+				rds.getNext(function(err, doc) {
+					assert(err, "Expected Error");
+					next();
+				});
+			},
 
 			"iterator state accessors consistently report the source is exhausted": function assertExhausted() {
 				var input = [{}];
