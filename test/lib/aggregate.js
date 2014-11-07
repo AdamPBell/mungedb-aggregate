@@ -419,7 +419,7 @@ module.exports = {
 				next: next
 			});
 		},
-		"should be able to handle a small array in batches": function(next){
+		"should be able to handle a small arrays in batches": function(next){
 			testBatches({
 				documents: 5,
 				batchSize: 100,
@@ -516,6 +516,46 @@ module.exports = {
 					explain: true
 				}, [{e:1,d:2,a:4}]);
 			assert.deepEqual(actual, expected);
+		},
+		"should throw parse errors if called sync-ly": function(){
+			assert.throws(function(){
+				aggregate([{"$project":{"foo":"bar"}}], [{"bar":1}]);
+			});
+			assert.throws(function(){
+				aggregate([{"$project":{"foo":"bar"}}]);
+			});
+		},
+		"should return parse errors in the callback if called async-ly": function(done){
+			aggregate([{"$project":{"foo":"bar"}}], [{"bar":1}], function(err, results){
+				assert(err, "Expected Error");
+				done();
+			});
+		},
+		"should throw pipeline errors if called sync-ly": function(){
+			assert.throws(function(){
+				aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}], [{"foo":1, "bar":"baz"}]);
+			});
+			
+			var agg = aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}]);
+			assert.throws(function(){
+				agg([{"foo":1, "bar":"baz"}]);
+			});
+			assert.doesNotThrow(function(){
+				agg([{"foo":1, "bar":2}]);
+			});
+		},
+		"should return pipeline errors in the callback if called async-ly": function(done){
+			aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}], [{"foo":1, "bar":"baz"}], function(err, results){
+				assert(err, "Expected Error");
+				var agg = aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}]);
+				agg([{"foo":1, "bar":"baz"}], function(err, results){
+					assert(err, "Expected Error");
+					agg([{"foo":1, "bar":2}], function(err, results){
+						assert.ifError(err, "UnExpected Error");
+						done();
+					});
+				});
+			});
 		}
 	}
 
