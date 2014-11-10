@@ -2,6 +2,7 @@
 var assert = require("assert"),
 	async = require("async"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
 	UnwindDocumentSource = require("../../../../lib/pipeline/documentSources/UnwindDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner");
@@ -327,9 +328,9 @@ module.exports = {
 
 			"should get dependent field paths": function () {
 				var pds = createUnwind("$x.y.z"),
-					deps = {};
+					deps = new DepsTracker();
 				assert.strictEqual(pds.getDependencies(deps), DocumentSource.GetDepsReturn.SEE_NEXT);
-				assert.deepEqual(deps, {"x.y.z":1});
+				assert.deepEqual(deps.fields, {"x.y.z":1});
 			}
 
 		}
