@@ -23,6 +23,7 @@
 	"maxlen": 140,
 
 	"boss": true,
+	"expr": true,
 	"globalstrict": true,
 
 	"node": true,
