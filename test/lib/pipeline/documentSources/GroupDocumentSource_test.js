@@ -6,8 +6,6 @@ var assert = require("assert"),
 	pipeline = require("../../../../lib/pipeline/"),
 	CursorDocumentSource = pipeline.documentSources.CursorDocumentSource,
 	GroupDocumentSource = pipeline.documentSources.GroupDocumentSource;
-//	Divide = pipeline.expressions.DivideExpression;
-
 
 /// An assertion for `ObjectExpression` instances based on Mongo's `ExpectedResultBase` class
 function assertExpectedResult(args) {
