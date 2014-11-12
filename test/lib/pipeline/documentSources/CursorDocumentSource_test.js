@@ -1,7 +1,7 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	async = require("async"),
-	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	LimitDocumentSource = require("../../../../lib/pipeline/documentSources/LimitDocumentSource"),
 	SkipDocumentSource = require("../../../../lib/pipeline/documentSources/SkipDocumentSource"),
@@ -79,8 +79,6 @@ module.exports = {
 
 		"#getNext": {
 			"should return the current cursor value async": function(next){
-				var expected = JSON.stringify([1,2]);
-
 				var cds = getCursorDocumentSource([1,2,3,4]);
 				async.series([
 						cds.getNext.bind(cds),
@@ -102,7 +100,7 @@ module.exports = {
 				var cds = getCursorDocumentSource(arr);
 				var doc = null,
 					error = null;
-				
+
 				async.doWhilst(
 					function iterator(next){
 						return cds.getNext(function (err, obj){
@@ -148,7 +146,7 @@ module.exports = {
 					project = ProjectDocumentSource.createFromJson({"a":1});
 				project.getDependencies(deps);
 				cds.setProjection(deps.toProjection(), deps.toParsedDeps());
-				
+
 				async.series([
 						cds.getNext.bind(cds),
 						cds.getNext.bind(cds),
@@ -166,5 +164,3 @@ module.exports = {
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

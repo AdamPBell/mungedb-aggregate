@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator");
 
@@ -10,7 +11,7 @@ module.exports = {
 		"constructor": {
 
 			"Should be able to construct": function canConstruct() {
-				var variablesIdGenerator = new VariablesIdGenerator();
+				new VariablesIdGenerator();
 			}
 
 		},
@@ -53,5 +54,3 @@ module.exports = {
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

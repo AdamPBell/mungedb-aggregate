@@ -9,7 +9,7 @@ var utils = module.exports = {
 	constify: function constify(obj, parentIsArray) {
 		if (parentIsArray === undefined) parentIsArray = false;
 		var bob = parentIsArray ? [] : {};
-		for (var key in obj) {
+		for (var key in obj) { //jshint ignore:line
 			if (!obj.hasOwnProperty(key)) continue;
 			var elem = obj[key];
 			if (elem instanceof Object && elem.constructor === Object) {
@@ -17,8 +17,8 @@ var utils = module.exports = {
 			} else if (Array.isArray(elem) && !parentIsArray) {
 				// arrays within arrays are treated as constant values by the real parser
 				bob[key] = utils.constify(elem, true);
-			} else if (key == "$const" ||
-					(typeof elem == "string" && elem[0] == "$")) {
+			} else if (key === "$const" ||
+					(typeof elem === "string" && elem[0] === "$")) {
 				bob[key] = obj[key];
 			} else {
 				bob[key] = {$const: obj[key]};

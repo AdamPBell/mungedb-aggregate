@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	MatchExpression = require("../../../../lib/pipeline/matcher/MatchExpression"),
 	ListOfMatchExpression = require("../../../../lib/pipeline/matcher/ListOfMatchExpression");
@@ -8,7 +9,7 @@ module.exports = {
 	"ListOfMatchExpression": {
 
 		"Constructor": function (){
-			var e = new ListOfMatchExpression('AND');
+			var e = new ListOfMatchExpression("AND");
 			assert.equal(e._matchType, "AND");
 		},
 
@@ -59,7 +60,7 @@ module.exports = {
 		},
 
 		"Equivalent": function () {
-			var e = new ListOfMatchExpression('TEXT'),
+			var e = new ListOfMatchExpression("TEXT"),
 				f = new ListOfMatchExpression("TEXT");
 			assert.equal(e.equivalent(f), true);
 		}
@@ -67,6 +68,3 @@ module.exports = {
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
-

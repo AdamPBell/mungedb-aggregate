@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	ObjectExpression = require("../../../../lib/pipeline/expressions/ObjectExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression"),
@@ -6,20 +7,15 @@ var assert = require("assert"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
 	AndExpression = require("../../../../lib/pipeline/expressions/AndExpression"),
 	Variables = require("../../../../lib/pipeline/expressions/Variables"),
-	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
-	utils = require("./utils");
+	DepsTracker = require("../../../../lib/pipeline/DepsTracker");
 
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
-
-var constify = utils.constify;
 //SKIPPED: assertBinaryEqual
 //SKIPPED: toJson
 function expressionToJson(expr) {
 	return expr.serialize(false);
 }
 //SKIPPED: fromJson
-//SKIPEPD: valueFromBson
+//SKIPPED: valueFromBson
 
 function assertDependencies(expectedDependencies, expression, includePath) {
 	if (includePath === undefined) includePath = true;
@@ -43,7 +39,7 @@ function assertExpectedResult(args) {
 	{// base args if none provided
 		if (args.source === undefined) args.source = {_id:0, a:1, b:2};
 		if (args.expectedIsSimple === undefined) args.expectedIsSimple = true;
-		if (args.expression === undefined) args.expression = ObjectExpression.createRoot(); //NOTE: replaces prepareExpression + _expression assignment
+		if (args.expression === undefined) args.expression = ObjectExpression.createRoot(); //NOTE: replace prepareExpression + _expression=
 	}
 	// run implementation
 	var doc = args.source,
@@ -75,7 +71,7 @@ exports.ObjectExpression = {
 
 	"#addDependencies": {
 
-		"should be able to get dependencies for non-inclusion expressions": function testNonInclusionDependencies() {
+		"should be able to get dependencies for non-inclusion expressions": function nonInclusionDependencies() {
 			/** Dependencies for non inclusion expressions. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(5));
@@ -86,7 +82,7 @@ exports.ObjectExpression = {
 			assertDependencies(["c.d"], expr, false);
 		},
 
-		"should be able to get dependencies for inclusion expressions": function testInclusionDependencies() {
+		"should be able to get dependencies for inclusion expressions": function inclusionDependencies() {
 			/** Dependencies for inclusion expressions. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a");
@@ -101,7 +97,7 @@ exports.ObjectExpression = {
 
 	"#serialize": {
 
-		"should be able to convert to JSON representation and have constants represented by expressions": function testJson() {
+		"should be able to convert to JSON representation and have constants represented by expressions": function json() {
 			/** Serialize to a BSONObj, with constants represented by expressions. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("foo.a", ConstantExpression.create(5));
@@ -112,7 +108,7 @@ exports.ObjectExpression = {
 
 	"#optimize": {
 
-		"should be able to optimize expression and sub-expressions": function testOptimize() {
+		"should be able to optimize expression and sub-expressions": function optimize() {
 			/** Optimizing an object expression optimizes its sub expressions. */
 			var expr = ObjectExpression.createRoot();
 			// Add inclusion.
@@ -130,7 +126,7 @@ exports.ObjectExpression = {
 
 	"#evaluate()": {
 
-		"should be able to provide an empty object": function testEmpty() {
+		"should be able to provide an empty object": function empty() {
 			/** Empty object spec. */
 			var expr = ObjectExpression.createRoot();
 			assertExpectedResult({
@@ -141,7 +137,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to include 'a' field only": function testInclude() {
+		"should be able to include 'a' field only": function include() {
 			/** Include 'a' field only. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a");
@@ -153,7 +149,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should NOT be able to include missing 'a' field": function testMissingInclude() {
+		"should NOT be able to include missing 'a' field": function missingInclude() {
 			/** Cannot include missing 'a' field. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a");
@@ -166,7 +162,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to include '_id' field only": function testIncludeId() {
+		"should be able to include '_id' field only": function includeId() {
 			/** Include '_id' field only. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("_id");
@@ -178,7 +174,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to exclude '_id' field": function testExcludeId() {
+		"should be able to exclude '_id' field": function excludeId() {
 			/** Exclude '_id' field. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("b");
@@ -191,7 +187,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to include fields in source document order regardless of inclusion order": function testSourceOrder() {
+		"should be able to include fields in source document order regardless of inclusion order": function sourceOrder() {
 			/** Result order based on source document field order, not inclusion spec field order. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("b");
@@ -204,7 +200,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to include a nested field": function testIncludeNested() {
+		"should be able to include a nested field": function includeNested() {
 			/** Include a nested field. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a.b");
@@ -217,7 +213,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to include two nested fields": function testIncludeTwoNested() {
+		"should be able to include two nested fields": function includeTwoNested() {
 			/** Include two nested fields. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a.b");
@@ -231,7 +227,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to include two fields nested within different parents": function testIncludeTwoParentNested() {
+		"should be able to include two fields nested within different parents": function includeTwoParentNested() {
 			/** Include two fields nested within different parents. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a.b");
@@ -245,7 +241,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to attempt to include a missing nested field": function testIncludeMissingNested() {
+		"should be able to attempt to include a missing nested field": function includeMissingNested() {
 			/** Attempt to include a missing nested field. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a.b");
@@ -258,7 +254,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to attempt to include a nested field within a non object": function testIncludeNestedWithinNonObject() {
+		"should be able to attempt to include a nested field within a non object": function includeNestedWithinNonObject() {
 			/** Attempt to include a nested field within a non object. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a.b");
@@ -271,7 +267,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to include a nested field within an array": function testIncludeArrayNested() {
+		"should be able to include a nested field within an array": function includeArrayNested() {
 			/** Include a nested field within an array. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a.b");
@@ -284,7 +280,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should NOT include non-root '_id' field implicitly": function testExcludeNonRootId() {
+		"should NOT include non-root '_id' field implicitly": function excludeNonRootId() {
 			/** Don't include not root '_id' field implicitly. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a.b");
@@ -297,7 +293,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project a computed expression": function testComputed() {
+		"should project a computed expression": function computed() {
 			/** Project a computed expression. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(5));
@@ -311,7 +307,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project a computed expression replacing an existing field": function testComputedReplacement() {
+		"should project a computed expression replacing an existing field": function computedReplacement() {
 			/** Project a computed expression replacing an existing field. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(5));
@@ -325,7 +321,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should NOT be able to project an undefined value": function testComputedUndefined() {
+		"should NOT be able to project an undefined value": function computedUndefined() {
 			/** An undefined value is passed through */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(undefined));
@@ -339,7 +335,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project a computed expression replacing an existing field with Undefined": function testComputedUndefinedReplacement() {
+		"should project a computed expression replacing an existing field with Undefined": function computedUndefinedReplacement() {
 			/** Project a computed expression replacing an existing field with Undefined. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(undefined));
@@ -353,7 +349,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project a null value": function testComputedNull() {
+		"should project a null value": function computedNull() {
 			/** A null value is projected. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(null));
@@ -367,7 +363,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project a nested value": function testComputedNested() {
+		"should project a nested value": function computedNested() {
 			/** A nested value is projected. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a.b", ConstantExpression.create(5));
@@ -381,7 +377,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project a field path": function testComputedFieldPath() {
+		"should project a field path": function computedFieldPath() {
 			/** A field path is projected. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", FieldPathExpression.create("x"));
@@ -395,7 +391,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project a nested field path": function testComputedNestedFieldPath() {
+		"should project a nested field path": function computedNestedFieldPath() {
 			/** A nested field path is projected. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a.b", FieldPathExpression.create("x.y"));
@@ -409,7 +405,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should NOT project an empty subobject expression for a missing field": function testEmptyNewSubobject() {
+		"should NOT project an empty subobject expression for a missing field": function emptyNewSubobject() {
 			/** An empty subobject expression for a missing field is not projected. */
 			var expr = ObjectExpression.createRoot();
 			// Create a sub expression returning an empty object.
@@ -426,7 +422,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project a non-empty new subobject": function testNonEmptyNewSubobject() {
+		"should project a non-empty new subobject": function nonEmptyNewSubobject() {
 			/** A non empty subobject expression for a missing field is projected. */
 			var expr = ObjectExpression.createRoot();
 			// Create a sub expression returning an empty object.
@@ -443,7 +439,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project two computed fields within a common parent": function testAdjacentDottedComputedFields() {
+		"should project two computed fields in a common parent": function adjacentDottedComputedFields() {
 			/** Two computed fields within a common parent. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a.b", ConstantExpression.create(6));
@@ -458,7 +454,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project two computed fields within a common parent (w/ one case dotted)": function testAdjacentDottedAndNestedComputedFields() {
+		"should project two computed fields in a common parent (w/ one case dotted)": function adjacentDottedAndNestedComputedFields() {
 			/** Two computed fields within a common parent, in one case dotted. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a.b", ConstantExpression.create(6));
@@ -475,7 +471,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project two computed fields within a common parent (in another case dotted)": function testAdjacentNestedAndDottedComputedFields() {
+		"should project two computed fields in a common parent (in another case dotted)": function adjacentNestedAndDottedComputedFields() {
 			/** Two computed fields within a common parent, in another case dotted. */
 			var expr = ObjectExpression.createRoot();
 			var subExpr = ObjectExpression.create();
@@ -492,7 +488,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project two computed fields within a common parent (nested rather than dotted)": function testAdjacentNestedComputedFields() {
+		"should project two computed fields in a common parent (nested rather than dotted)": function adjacentNestedComputedFields() {
 			/** Two computed fields within a common parent, nested rather than dotted. */
 			var expr = ObjectExpression.createRoot();
 			var subExpr1 = ObjectExpression.create();
@@ -511,7 +507,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project multiple nested fields out of order without affecting output order": function testAdjacentNestedOrdering() {
+		"should project multiple nested fields out of order without affecting output order": function adjacentNestedOrdering() {
 			/** Field ordering is preserved when nested fields are merged. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a.b", ConstantExpression.create(6));
@@ -530,7 +526,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should be able to project adjacent fields two levels deep": function testMultipleNestedFields() {
+		"should project adjacent fields two levels deep": function multipleNestedFields() {
 			/** Adjacent fields two levels deep. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a.b.c", ConstantExpression.create(6));
@@ -549,7 +545,7 @@ exports.ObjectExpression = {
 			});
 		},
 
-		"should throw an Error if two expressions generate the same field": function testConflictingExpressionFields() {
+		"should error if two expressions generate the same field": function conflictingExpressionFields() {
 			/** Two expressions cannot generate the same field. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(5));
@@ -558,7 +554,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should throw an Error if an expression field conflicts with an inclusion field": function testConflictingInclusionExpressionFields() {
+		"should error if an expression field conflicts with an inclusion field": function conflictingInclusionExpressionFields() {
 			/** An expression field conflicts with an inclusion field. */
 			var expr = ObjectExpression.createRoot();
 			expr.includePath("a");
@@ -567,7 +563,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should throw an Error if an inclusion field conflicts with an expression field": function testConflictingExpressionInclusionFields() {
+		"should error if an inclusion field conflicts with an expression field": function conflictingExpressionInclusionFields() {
 			/** An inclusion field conflicts with an expression field. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(5));
@@ -576,7 +572,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should throw an Error if an object expression conflicts with a constant expression": function testConflictingObjectConstantExpressionFields() {
+		"should error if an object expression conflicts with a constant expression": function conflictingObjectConstantExpressionFields() {
 			/** An object expression conflicts with a constant expression. */
 			var expr = ObjectExpression.createRoot();
 			var subExpr = ObjectExpression.create();
@@ -587,7 +583,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should throw an Error if a constant expression conflicts with an object expression": function testConflictingConstantObjectExpressionFields() {
+		"should error if a constant expression conflicts with an object expression": function conflictingConstantObjectExpressionFields() {
 			/** A constant expression conflicts with an object expression. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a.b", ConstantExpression.create(6));
@@ -598,7 +594,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should throw an Error if two nested expressions cannot generate the same field": function testConflictingNestedFields() {
+		"should error if two nested expressions cannot generate the same field": function conflictingNestedFields() {
 			/** Two nested expressions cannot generate the same field. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a.b", ConstantExpression.create(5));
@@ -607,7 +603,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should throw an Error if an expression is created for a subfield of another expression": function testConflictingFieldAndSubfield() {
+		"should error if an expression is created for a subfield of another expression": function conflictingFieldAndSubfield() {
 			/** An expression cannot be created for a subfield of another expression. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(5));
@@ -616,7 +612,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should throw an Error if an expression is created for a nested field of another expression.": function testConflictingFieldAndNestedField() {
+		"should error if an expression is created for a nested field of another expression.": function conflictingFieldAndNestedField() {
 			/** An expression cannot be created for a nested field of another expression. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a", ConstantExpression.create(5));
@@ -627,7 +623,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should throw an Error if an expression is created for a parent field of another expression": function testConflictingSubfieldAndField() {
+		"should error if an expression is created for a parent field of another expression": function conflictingSubfieldAndField() {
 			/** An expression cannot be created for a parent field of another expression. */
 			var expr = ObjectExpression.createRoot();
 			expr.addField("a.b", ConstantExpression.create(5));
@@ -636,7 +632,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should throw an Error if an expression is created for a parent of a nested field": function testConflictingNestedFieldAndField() {
+		"should error if an expression is created for a parent of a nested field": function conflictingNestedFieldAndField() {
 			/** An expression cannot be created for a parent of a nested field. */
 			var expr = ObjectExpression.createRoot();
 			var subExpr = ObjectExpression.create();
@@ -647,7 +643,7 @@ exports.ObjectExpression = {
 			}, Error);
 		},
 
-		"should be able to evaluate expressions in general": function testEvaluate() {
+		"should be able to evaluate expressions in general": function evaluate() {
 			/**
 			 * evaluate() does not supply an inclusion document.
 			 * Inclusion spec'd fields are not included.

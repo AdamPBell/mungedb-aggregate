@@ -1,5 +1,5 @@
 "use strict";
-
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	MatchDetails = require("../../../../lib/pipeline/matcher/MatchDetails.js"),
 	Matcher2 = require("../../../../lib/pipeline/matcher/Matcher2.js");
@@ -7,7 +7,7 @@ var assert = require("assert"),
 module.exports = {
 	"Matcher2": {
 		"Constructor": function() {
-			var m = new Matcher2({"a":1});
+			new Matcher2({"a":1});
 		},
 
 		"Basic": function() {
@@ -54,7 +54,7 @@ module.exports = {
 				m = new Matcher2(query);
 			assert.ok(m.matches({"a":[1,2,3,4]}));
 			assert.ok(!m.matches({"a":[1,2,3]}));
-			assert.ok(!m.matches({"a":[1,2,3,'a','b']}));
+			assert.ok(!m.matches({"a":[1,2,3,"a","b"]}));
 			assert.ok(!m.matches({"a":[[1,2,3,4]]}));
 		},
 
@@ -82,5 +82,3 @@ module.exports = {
 		}
 		}
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

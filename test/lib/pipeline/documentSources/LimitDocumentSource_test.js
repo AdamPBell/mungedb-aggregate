@@ -1,14 +1,15 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	LimitDocumentSource = require("../../../../lib/pipeline/documentSources/LimitDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
-var addSource = function addSource(ds, data) {
+function addSource(ds, data) {
 	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
 	ds.setSource(cds);
-};
+}
 
 module.exports = {
 
@@ -132,5 +133,3 @@ module.exports = {
 		}
 	}
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

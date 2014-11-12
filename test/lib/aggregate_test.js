@@ -1,4 +1,6 @@
 "use strict";
+/*jshint camelcase:false*/
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	aggregate = require("../../");
 
@@ -28,7 +30,7 @@ function testAggregate(opts){
 
 		// SYNC: test that it is actually reusable
 		results = aggregator(opts.inputs);
-		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected), "Reuse of aggregator should yield the same results!");
+		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected), "should allow sync aggregator reuse");
 	}
 	// ASYNC: test one-off usage
 	aggregate(opts.pipeline, opts.inputs, function(err, results){
@@ -55,7 +57,7 @@ function testAggregate(opts){
 					// ASYNC: test that it is actually reusable
 					aggregator(opts.inputs, function(err, results){
 						assert.ifError(err);
-						assert.equal(JSON.stringify(results), JSON.stringify(opts.expected), "Reuse of aggregator should yield the same results!");
+						assert.equal(JSON.stringify(results), JSON.stringify(opts.expected), "should allow async aggregator reuse");
 
 						// success!
 						return opts.next();
@@ -75,7 +77,7 @@ function testBatches(opts){
 		actual = [],
 		eachExpected = [],
 		expected = [];
-		
+
 	for(var i = 0; i < opts.documents; i++){
 		inputs.push({a:i});
 		eachExpected.push({foo:i});
@@ -91,8 +93,8 @@ function testBatches(opts){
 			{$project:{
 				foo: "$a"
 			}}
-		]}, 
-		inputs, 
+		]},
+		inputs,
 		function(err, results){
 			assert.ifError(err);
 			if (results) {
@@ -399,7 +401,7 @@ module.exports = {
 				next: next
 			});
 		},
-		
+
 		"should be able to handle a large array of inputs": function(next){
 			var inputs = [],
 				expected = [];
@@ -453,7 +455,7 @@ module.exports = {
 			var pipeline = [
 					{$match:{e:1}},
 					{$match:{d:1}},
-					{$skip:2}, 
+					{$skip:2},
 					{$limit:1},
 					{$project:{
 						foo: "$a"
@@ -465,7 +467,7 @@ module.exports = {
 				expected = [
 					{$match:{$and:[{e:1},{d:1}]}},
 					{$limit:3},
-					{$skip:2}, 
+					{$skip:2},
 					{$project:{
 						foo: "$a"
 					}},
@@ -483,7 +485,7 @@ module.exports = {
 			var pipeline = [
 					{$match:{e:1}},
 					{$match:{d:1}},
-					{$skip:2}, 
+					{$skip:2},
 					{$limit:1},
 					{$project:{
 						foo: "$a"
@@ -535,7 +537,7 @@ module.exports = {
 			assert.throws(function(){
 				aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}], [{"foo":1, "bar":"baz"}]);
 			});
-			
+
 			var agg = aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}]);
 			assert.throws(function(){
 				agg([{"foo":1, "bar":"baz"}]);
@@ -560,6 +562,3 @@ module.exports = {
 	}
 
 };
-
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

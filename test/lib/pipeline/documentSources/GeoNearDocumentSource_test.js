@@ -1,19 +1,20 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	GeoNearDocumentSource = require("../../../../lib/pipeline/documentSources/GeoNearDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
 	FieldPath = require("../../../../lib/pipeline/FieldPath");
 
-var createGeoNear = function(ctx) {
+function createGeoNear(ctx) {
 	var ds = new GeoNearDocumentSource(ctx);
 	return ds;
-};
-var addSource = function addSource(ds, data) {
+}
+
+function addSource(ds, data) {
 	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
 	ds.setSource(cds);
-};
+}
 
 module.exports = {
 
@@ -23,7 +24,7 @@ module.exports = {
 
 			"should not throw when constructing without args":function() {
 				assert.doesNotThrow(function(){
-					var gnds = createGeoNear();
+					createGeoNear();
 				});
 			},
 
@@ -76,7 +77,7 @@ module.exports = {
 						// example options
 						near:[40.724, -73.997],
 						limit:25,
-						query:{type:'public'},
+						query:{type:"public"},
 						distanceField: "dist.calculated",
 						maxDistance:0.8,
 						uniqueDocs:true,
@@ -95,5 +96,3 @@ module.exports = {
 		}
 	}
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

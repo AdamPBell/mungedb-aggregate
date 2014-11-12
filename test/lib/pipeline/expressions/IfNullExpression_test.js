@@ -1,13 +1,10 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	IfNullExpression = require("../../../../lib/pipeline/expressions/IfNullExpression"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
-	Variables = require("../../../../lib/pipeline/expressions/Variables"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
-
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
 exports.IfNullExpression = {
 

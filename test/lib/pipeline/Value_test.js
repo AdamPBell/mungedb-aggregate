@@ -1,9 +1,7 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	Value = require("../../../lib/pipeline/Value");
-
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
 exports.Value = {
 
@@ -197,7 +195,7 @@ exports.Value = {
 
 	".compare()": {
 
-		"should test things": function testCompare() {
+		"should test things": function testCompare() { //jshint maxstatements:52
             // BSONObjBuilder undefinedBuilder;
             // undefinedBuilder.appendUndefined( "" );
             // BSONObj undefined = undefinedBuilder.obj();

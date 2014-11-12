@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	async = require("async"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
@@ -8,22 +9,16 @@ var assert = require("assert"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
 
-//HELPERS
-var assertExhausted = function assertExhausted(pds) {
-	assert.ok(pds.eof());
-	assert.ok(!pds.advance());
-};
-
 /**
  * Tests if the given rep is the same as what the pds resolves to as JSON.
  * MUST CALL WITH A PDS AS THIS (e.g. checkJsonRepresentation.call(this, rep) where this is a PDS)
  **/
-var checkJsonRepresentation = function checkJsonRepresentation(self, rep) {
+function checkJsonRepresentation(self, rep) {
 	var pdsRep = self.serialize(true);
 	assert.deepEqual(pdsRep, rep);
-};
+}
 
-var createUnwind = function createUnwind(unwind) {
+function createUnwind(unwind) {
 	//let unwind be optional
 	if (!unwind) {
 		unwind = "$a";
@@ -33,14 +28,14 @@ var createUnwind = function createUnwind(unwind) {
 		unwindDs = UnwindDocumentSource.createFromJson(specElement);
 	checkJsonRepresentation(unwindDs, spec);
 	return unwindDs;
-};
+}
 
-var addSource = function addSource(unwind, data) {
+function addSource(unwind, data) {
 	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
 	unwind.setSource(cds);
-};
+}
 
-var checkResults = function checkResults(data, expectedResults, path, next) {
+function checkResults(data, expectedResults, path, next) {
 	if (expectedResults instanceof Function)
 		next = expectedResults, expectedResults = null, path = null;
 	if (path instanceof Function)
@@ -70,13 +65,13 @@ var checkResults = function checkResults(data, expectedResults, path, next) {
 			next();
 		}
 	);
-};
+}
 
-var throwsException = function throwsException(data, path, expectedResults) {
+function throwsException(data, path, expectedResults) {
 	assert.throws(function () {
 		checkResults(data, path, expectedResults);
 	});
-};
+}
 
 
 //TESTS
@@ -275,7 +270,7 @@ module.exports = {
 					[
 						{_id:0,a:null},
 						{_id:1},
-						{_id:2,a:['a','b']},
+						{_id:2,a:["a","b"]},
 						{_id:3},
 						{_id:4,a:[1,2,3]},
 						{_id:5,a:[4,5,6]},
@@ -283,8 +278,8 @@ module.exports = {
 						{_id:7,a:[]}
 					],
 					[
-						{_id:2,a:'a'},
-						{_id:2,a:'b'},
+						{_id:2,a:"a"},
+						{_id:2,a:"b"},
 						{_id:4,a:1},
 						{_id:4,a:2},
 						{_id:4,a:3},
@@ -306,19 +301,19 @@ module.exports = {
 			"should error if called with non-string": function testNonObjectPassed() {
 				//Date as arg
 				assert.throws(function() {
-					var pds = createUnwind(new Date());
+					createUnwind(new Date());
 				});
 				//Array as arg
 				assert.throws(function() {
-					var pds = createUnwind([]);
+					createUnwind([]);
 				});
 				//Empty args
 				assert.throws(function() {
-					var pds = UnwindDocumentSource.createFromJson();
+					UnwindDocumentSource.createFromJson();
 				});
 				//Top level operator
 				assert.throws(function() {
-					var pds = createUnwind({$add: []});
+					createUnwind({$add: []});
 				});
 			}
 
@@ -338,5 +333,3 @@ module.exports = {
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

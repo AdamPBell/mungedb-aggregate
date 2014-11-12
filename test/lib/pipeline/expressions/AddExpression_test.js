@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression"),
 	AddExpression = require("../../../../lib/pipeline/expressions/AddExpression"),
@@ -7,12 +8,9 @@ var assert = require("assert"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
 	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression");
 
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
-
 var TestBase = function TestBase(overrides) {
 		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
-		for (var key in overrides)
+		for (var key in overrides) //jshint ignore:line
 			this[key] = overrides[key];
 	},
 	ExpectedResultBase = (function() {
@@ -234,7 +232,7 @@ exports.AddExpression = {
 
 		"should optimize strings of numbers without regard to their order": function() {
 			var vps = new VariablesParseState(new VariablesIdGenerator()),
-				expr = Expression.parseOperand({$add:[1,2,3,'$a',4,5,6]}, vps).optimize();
+				expr = Expression.parseOperand({$add:[1,2,3,"$a",4,5,6]}, vps).optimize();
 			assert.strictEqual(expr.operands.length, 2, "should optimize operands away");
 			assert(expr.operands[0] instanceof FieldPathExpression);
 			assert(expr.operands[1] instanceof ConstantExpression);
@@ -244,5 +242,3 @@ exports.AddExpression = {
 	},
 
 };
-
-if (!module.parent)(new (require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

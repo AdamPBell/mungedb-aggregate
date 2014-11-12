@@ -1,26 +1,25 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	async = require("async"),
-	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
-	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
-	ProjectDocumentSource = require("../../../../lib/pipeline/documentSources/ProjectDocumentSource"),
-	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
-	TestBase = require("./TestBase"),
-	And = require("../../../../lib/pipeline/expressions/AndExpression"),
-	Add = require("../../../../lib/pipeline/expressions/AddExpression");
+	pipeline = require("../../../../lib/pipeline/"),
+	DepsTracker = pipeline.DepsTracker,
+	DocumentSource = pipeline.documentSources.DocumentSource,
+	ProjectDocumentSource = pipeline.documentSources.ProjectDocumentSource,
+	CursorDocumentSource = pipeline.documentSources.CursorDocumentSource,
+	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
 
 /**
  *   Tests if the given rep is the same as what the pds resolves to as JSON.
  *   MUST CALL WITH A PDS AS THIS (e.g. checkJsonRepresentation.call(this, rep) where this is a PDS)
  **/
-var checkJsonRepresentation = function checkJsonRepresentation(self, rep) {
+function checkJsonRepresentation(self, rep) {
 	var pdsRep = self.serialize();
 	assert.deepEqual(pdsRep, rep);
-};
+}
 
-var createProject = function createProject(projection) {
+function createProject(projection) {
 	//let projection be optional
 	if (!projection) {
 		projection = {
@@ -34,7 +33,7 @@ var createProject = function createProject(projection) {
 		_project = ProjectDocumentSource.createFromJson(specElement);
 	checkJsonRepresentation(_project, spec);
 	return _project;
-};
+}
 
 //TESTS
 module.exports = {
@@ -227,29 +226,29 @@ module.exports = {
 		"should error if called with non-object": function testNonObjectPassed() {
 			//String as arg
 			assert.throws(function() {
-				var pds = createProject("not an object");
+				createProject("not an object");
 			});
 			//Date as arg
 			assert.throws(function() {
-				var pds = createProject(new Date());
+				createProject(new Date());
 			});
 			//Array as arg
 			assert.throws(function() {
-				var pds = createProject([]);
+				createProject([]);
 			});
 			//Empty args
 			assert.throws(function() {
-				var pds = ProjectDocumentSource.createFromJson();
+				ProjectDocumentSource.createFromJson();
 			});
 			//Top level operator
 			assert.throws(function() {
-				var pds = createProject({
+				createProject({
 					$add: []
 				});
 			});
 			//Invalid spec
 			assert.throws(function() {
-				var pds = createProject({
+				createProject({
 					a: {
 						$invalidOperator: 1
 					}
@@ -265,9 +264,9 @@ module.exports = {
 		"should properly detect dependencies in project": function testGetDependencies() {
 			var input = {
 				a: true,
-				x: '$b',
+				x: "$b",
 				y: {
-					$and: ['$c', '$d']
+					$and: ["$c", "$d"]
 				}
 			};
 			var pds = createProject(input);
@@ -284,5 +283,3 @@ module.exports = {
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);
