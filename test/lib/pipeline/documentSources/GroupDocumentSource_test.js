@@ -1,10 +1,12 @@
 "use strict";
 if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	GroupDocumentSource = require("../../../../lib/pipeline/documentSources/GroupDocumentSource"),
+	async = require("async"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
-	async = require("async");
+	pipeline = require("../../../../lib/pipeline/"),
+	CursorDocumentSource = pipeline.documentSources.CursorDocumentSource,
+	GroupDocumentSource = pipeline.documentSources.GroupDocumentSource;
+//	Divide = pipeline.expressions.DivideExpression;
 
 
 /// An assertion for `ObjectExpression` instances based on Mongo's `ExpectedResultBase` class
@@ -193,7 +195,7 @@ module.exports = {
 			},
 
 			// $group _id is a field path expression
-			"should compute _id from a Date": function Date(){
+			"should compute _id from a Date": function testDate(){
 				var d = new Date();
 				assertExpectedResult({
 					docs: [{a:d}],
