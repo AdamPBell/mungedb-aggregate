@@ -132,7 +132,7 @@ module.exports = {
 			assert(!regex.matchesSingleElement(notMatchFlags.x));
 		},
 
-//skipped as we don"t support symbols yet
+//SKIPPED: we don't support symbols yet
 /*
     TEST( RegexMatchExpression, MatchesElementSymbolType ) {
         BSONObj match = BSONObjBuilder().appendSymbol( "x", "yz" ).obj();
