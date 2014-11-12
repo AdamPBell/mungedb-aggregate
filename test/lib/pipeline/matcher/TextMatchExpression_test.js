@@ -13,7 +13,7 @@ module.exports = {
 			assert.strictEqual(text.init("query", "language").code, ErrorCodes.OK);
 			assert.strictEqual(text2.init("query2", "language2").code, ErrorCodes.OK);
 
-			assert.ok(text.matchesSingleElement(text2)); // It"ll always work. Just the way it is in source.
+			assert.ok(text.matchesSingleElement(text2)); // It'll always work. Just the way it is in source.
 		},
 
 		"Should return the query provided in the init.": function() {
