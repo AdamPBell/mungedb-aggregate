@@ -1,12 +1,10 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	GroupDocumentSource = require("../../../../lib/pipeline/documentSources/GroupDocumentSource"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
-	async = require('async'),
-	utils = require("../expressions/utils"),
-	expressions = require("../../../../lib/pipeline/expressions");
+	async = require("async");
 
 
 /// An assertion for `ObjectExpression` instances based on Mongo's `ExpectedResultBase` class
@@ -55,7 +53,7 @@ function assertExpectedResult(args) {
 			});
 		} else {
 			assert.doesNotThrow(function(){
-				var gds = GroupDocumentSource.createFromJson(args.spec);
+				GroupDocumentSource.createFromJson(args.spec);
 			});
 		}
 	}
@@ -177,7 +175,7 @@ module.exports = {
 			// Note: Can't duplicate fields in javascript objects -- skipped
 
 			// $group _id is computed from an object expression
-			"should compute _id from an object expression": function testAdvance_ObjectExpression(){
+			"should compute _id from an object expression": function ObjectExpression(){
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:{z:"$a"}},
@@ -186,7 +184,7 @@ module.exports = {
 			},
 
 			// $group _id is a field path expression
-			"should compute _id from a field path expression": function testAdvance_FieldPathExpression(){
+			"should compute _id from a field path expression": function FieldPathExpression(){
 				assertExpectedResult({
 					docs: [{a:5}],
 					spec: {_id:"$a"},
@@ -195,7 +193,7 @@ module.exports = {
 			},
 
 			// $group _id is a field path expression
-			"should compute _id from a Date": function testAdvance_Date(){
+			"should compute _id from a Date": function Date(){
 				var d = new Date();
 				assertExpectedResult({
 					docs: [{a:d}],
@@ -205,7 +203,7 @@ module.exports = {
 			},
 
 			// Aggregate the value of an object expression
-			"should aggregate the value of an object expression": function testAdvance_ObjectExpression(){
+			"should aggregate the value of an object expression": function AggregateObjectExpression(){
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:0, z:{$first:{x:"$a"}}},
@@ -214,7 +212,7 @@ module.exports = {
 			},
 
 			// Aggregate the value of an operator expression
-			"should aggregate the value of an operator expression": function testAdvance_OperatorExpression(){
+			"should aggregate the value of an operator expression": function AggregateOperatorExpression(){
 				assertExpectedResult({
 					docs: [{a:6}],
 					spec: {_id:0, z:{$first:"$a"}},
@@ -222,14 +220,15 @@ module.exports = {
 				});
 			},
 
-			// Aggregate the value of an operator expression
-			"should aggregate the value of an operator expression with a null id": function testAdvance_Null(){
-				assertExpectedResult({
-					docs: [{a:6}],
-					spec: {_id:null, z:{$first:"$a"}},
-					expected: [{_id:null, z:6}]
-				});
-			},
+			//TODO: verify which tests are mongos vs which are *useful* tests that we've added and delete the rest
+			// // Aggregate the value of an operator expression
+			// "should aggregate the value of an operator expression with a null id": function testAdvance_Null(){
+			// 	assertExpectedResult({
+			// 		docs: [{a:6}],
+			// 		spec: {_id:null, z:{$first:"$a"}},
+			// 		expected: [{_id:null, z:6}]
+			// 	});
+			// },
 
 			// A $group performed on a single document
 			"should make one group with one values": function SingleDocument() {
@@ -290,7 +289,7 @@ module.exports = {
 				assertExpectedResult({
 					docs: [{a:"de", b:"ad", c:"beef", d:""}, {a:"d", b:"eadbe", c:"", d:"ef"}],
 					spec: {_id:{$concat:["$a", "$b", "$c", "$d"]}},
-					expected: [{_id:'deadbeef'}]
+					expected: [{_id:"deadbeef"}]
 				});
 			},
 
@@ -302,11 +301,9 @@ module.exports = {
 					expected: [{_id:0, first:null}]
 				});
 			},
-			
+
 			"should return errors in the callback": function(done){
 				var gds = GroupDocumentSource.createFromJson({_id:null, sum: {$sum:"$a"}}),
-					next,
-					results = [],
 					cds = new CursorDocumentSource(null, new ArrayRunner([{"a":"foo"}]), null);
 				gds.setSource(cds);
 				gds.getNext(function(err, doc) {
@@ -319,5 +316,3 @@ module.exports = {
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

@@ -1,10 +1,11 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
+	ErrorCodes = require("../../../../lib/Errors").ErrorCodes,
 	EqualityMatchExpression = require("../../../../lib/pipeline/matcher/EqualityMatchExpression.js"),
 	ElemMatchObjectMatchExpression = require("../../../../lib/pipeline/matcher/ElemMatchObjectMatchExpression.js"),
 	AndMatchExpression = require("../../../../lib/pipeline/matcher/AndMatchExpression.js"),
 	MatchDetails = require("../../../../lib/pipeline/matcher/MatchDetails.js");
-
 
 module.exports = {
 	"ElemMatchObjectMatchExpression": {
@@ -15,22 +16,22 @@ module.exports = {
 				eq = new EqualityMatchExpression(),
 				op = new ElemMatchObjectMatchExpression();
 
-			assert.strictEqual(eq.init("b", baseOperand.b).code, 'OK');
+			assert.strictEqual(eq.init("b", baseOperand.b).code, ErrorCodes.OK);
 
-			assert.strictEqual(op.init("a", eq).code, 'OK');
+			assert.strictEqual(op.init("a", eq).code, ErrorCodes.OK);
 			assert.ok(op.matchesSingleElement(match.a));
 			assert.ok(!op.matchesSingleElement(notMatch.a));
 		},
 
 		"Should match an array of elements inside the array": function() {
 			var baseOperand= {"1":5},
-				match= {"a":[['s',5.0]]},
+				match= {"a":[["s",5.0]]},
 				notMatch= {"a":[[5,6]]},
 				eq = new EqualityMatchExpression(),
 				op = new ElemMatchObjectMatchExpression();
 
-			assert.strictEqual(eq.init("1", baseOperand["1"]).code, 'OK');
-			assert.strictEqual(op.init("a", eq).code, 'OK');
+			assert.strictEqual(eq.init("1", baseOperand["1"]).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a", eq).code, ErrorCodes.OK);
 			assert.ok(op.matchesSingleElement(match.a));
 			assert.ok(!op.matchesSingleElement(notMatch.a));
 		},
@@ -49,15 +50,15 @@ module.exports = {
 				eq3 = new EqualityMatchExpression(),
 				op = new ElemMatchObjectMatchExpression();
 
-			assert.strictEqual(eq1.init("b", baseOperand1.b).code, 'OK');
-			assert.strictEqual(eq2.init("b", baseOperand2.b).code, 'OK');
-			assert.strictEqual(eq3.init("c", baseOperand3.c).code, 'OK');
+			assert.strictEqual(eq1.init("b", baseOperand1.b).code, ErrorCodes.OK);
+			assert.strictEqual(eq2.init("b", baseOperand2.b).code, ErrorCodes.OK);
+			assert.strictEqual(eq3.init("c", baseOperand3.c).code, ErrorCodes.OK);
 
 			andOp.add(eq1);
 			andOp.add(eq2);
 			andOp.add(eq3);
 
-			assert.strictEqual(op.init("a", andOp).code, 'OK');
+			assert.strictEqual(op.init("a", andOp).code, ErrorCodes.OK);
 			assert.ok(!op.matchesSingleElement(notMatch1.a));
 			assert.ok(!op.matchesSingleElement(notMatch2.a));
 			assert.ok(!op.matchesSingleElement(notMatch3.a));
@@ -69,8 +70,8 @@ module.exports = {
 				eq = new EqualityMatchExpression(),
 				op = new ElemMatchObjectMatchExpression();
 
-			assert.strictEqual(eq.init("b", baseOperand.b).code, 'OK');
-			assert.strictEqual(op.init("a", eq).code, 'OK');
+			assert.strictEqual(eq.init("b", baseOperand.b).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a", eq).code, ErrorCodes.OK);
 			// Directly nested objects are not matched with $elemMatch.  An intervening array is
 			// required.
 			assert.ok(!op.matches({"a":{"b":5}},null));
@@ -83,8 +84,8 @@ module.exports = {
 				eq = new EqualityMatchExpression(),
 				op = new ElemMatchObjectMatchExpression();
 
-			assert.strictEqual(eq.init("b", baseOperand.b).code, 'OK');
-			assert.strictEqual(op.init("a", eq).code, 'OK');
+			assert.strictEqual(eq.init("b", baseOperand.b).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a", eq).code, ErrorCodes.OK);
 			assert.ok(op.matches({"a":[{"b":5}]}, null));
 			assert.ok(op.matches({"a":[4,{"b":5}]}, null));
 			assert.ok(op.matches({"a":[{},{"b":5}]}, null));
@@ -96,8 +97,8 @@ module.exports = {
 				eq = new EqualityMatchExpression(),
 				op = new ElemMatchObjectMatchExpression();
 
-			assert.strictEqual(eq.init("c", baseOperand.c).code, 'OK');
-			assert.strictEqual(op.init("a.b", eq).code, 'OK');
+			assert.strictEqual(eq.init("c", baseOperand.c).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a.b", eq).code, ErrorCodes.OK);
 			assert.ok(op.matches({"a":[{"b":[{"c":5}]}]},null));
 			assert.ok(op.matches({"a":[{"b":[{"c":1}]}, {"b":[{"c":5}]}]},null));
 		},
@@ -108,8 +109,8 @@ module.exports = {
 				op = new ElemMatchObjectMatchExpression(),
 				details = new MatchDetails();
 
-			assert.strictEqual(eq.init("c", baseOperand.c).code, 'OK');
-			assert.strictEqual(op.init("a.b", eq).code, 'OK');
+			assert.strictEqual(eq.init("c", baseOperand.c).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a.b", eq).code, ErrorCodes.OK);
 			details.requestElemMatchKey();
 			assert.ok(!op.matches({}, details));
 			assert.ok(!details.hasElemMatchKey());
@@ -126,6 +127,3 @@ module.exports = {
 		},
 	}
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
-

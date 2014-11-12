@@ -1,10 +1,8 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	Document = require("../../../lib/pipeline/Document"),
 	FieldPath = require("../../../lib/pipeline/FieldPath");
-
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
 exports.Document = {
 
@@ -20,7 +18,7 @@ exports.Document = {
 
 	".compare()": {
 
-		"should work": function testCompare() {
+		"should work": function testCompare() { //jshint latedef:false
             assertComparison(0, {}, {});
             assertComparison(0, {a:1}, {a:1});
             assertComparison(-1, {}, {a:1});
@@ -125,7 +123,7 @@ exports.Document = {
 		},
 
 		"should shallow clone a multi field document": function testCloneMultipleFields() {
-			var doc = {a:1,b:['ra',4],c:{z:1},d:'lal'},
+			var doc = {a:1,b:["ra",4],c:{z:1},d:"lal"},
 				clone = Document.clone(doc);
 			assert.deepEqual(doc, clone);
 		},

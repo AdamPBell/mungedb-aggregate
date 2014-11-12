@@ -6,13 +6,11 @@ var assert = require("assert"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
 
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
-
 var ExpectedResultBase = module.exports = (function() { //jshint ignore:line
+
 	var klass = function ExpectedResultBase(overrides) {
 		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
-		for (var key in overrides)
+		for (var key in overrides) //jshint ignore:line
 			this[key] = overrides[key];
 	}, proto = klass.prototype;
 	proto.run = function() {
@@ -20,7 +18,7 @@ var ExpectedResultBase = module.exports = (function() { //jshint ignore:line
 			args = spec.input;
 		if (spec.expected !== undefined && spec.expected !== null) {
 			var fields = spec.expected;
-			for (var fieldFirst in fields) {
+			for (var fieldFirst in fields) { //jshint ignore:line
 				var fieldSecond = fields[fieldFirst],
 					expected = fieldSecond;
 					// obj = {<fieldFirst>: args}; //NOTE: DEVIATION FROM MONGO: see parseExpression below

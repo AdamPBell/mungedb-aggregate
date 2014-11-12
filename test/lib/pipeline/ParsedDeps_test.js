@@ -1,5 +1,5 @@
 "use strict";
-if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))).addFile(__filename).ui("exports").run(process.exit); //jshint ignore:line
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	ParsedDeps = require("../../../lib/pipeline/ParsedDeps");
 

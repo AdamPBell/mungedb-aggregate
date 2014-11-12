@@ -1,9 +1,7 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	SumAccumulator = require("../../../../lib/pipeline/accumulators/SumAccumulator");
-
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
 exports.SumAccumulator = {
 
@@ -150,8 +148,7 @@ exports.SumAccumulator = {
 
 		"should return sum for int and NaN as NaN": function testIntNanDouble() {
 			var summand1 = 4,
-				summand2 = NaN,
-				expected = NaN;
+				summand2 = NaN;
 			assert(isNaN(this.getSumValueFor(summand1, summand2)));
 			assert(isNaN(this.getSumValueFor(summand2, summand1)));
 		},

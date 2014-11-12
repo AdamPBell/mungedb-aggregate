@@ -1,11 +1,9 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
 	Variables = require("../../../../lib/pipeline/expressions/Variables"),
 	DepsTracker = require("../../../../lib/pipeline/DepsTracker");
-
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
 exports.FieldPathExpression = {
 
@@ -98,7 +96,7 @@ exports.FieldPathExpression = {
 			assert.deepEqual(FieldPathExpression.create("a.b").evaluateInternal(new Variables(1,{a:[{b:9}]})), [9]);
 		},
 
-		"should return Array with multiple value types if field path is within Array with multiple value types": function testMultipleArrayValues(){
+		"should return Array with multiple values if field path is within Array and multiple matches": function testMultipleArrayValues(){
 			var path = "a.b",
 				doc = {a:[{b:9},null,undefined,{g:4},{b:20},{}]},
 				expected = [9,20];

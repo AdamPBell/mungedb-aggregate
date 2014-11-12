@@ -1,21 +1,13 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	Pipeline = require("../../../lib/pipeline/Pipeline"),
-	FieldPath = require("../../../lib/pipeline/FieldPath"),
-	DocumentSource = require('../../../lib/pipeline/documentSources/DocumentSource'),
-	CursorDocumentSource = require("../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	ProjectDocumentSource = require("../../../lib/pipeline/documentSources/ProjectDocumentSource"),
-	ArrayRunner = require("../../../lib/query/ArrayRunner");
+	DocumentSource = require("../../../lib/pipeline/documentSources/DocumentSource");
 
-var addSource = function addSource(match, data) {
-	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
-	match.setSource(cds);
-};
-
-var shardedTest = function(inputPipeString, expectedMergePipeString, expectedShardPipeString) {
-	inputPipeString = '{"pipeline": ' + inputPipeString + '}';
-	expectedMergePipeString = '{"pipeline": ' + expectedMergePipeString + '}';
-	expectedShardPipeString = '{"pipeline": ' + expectedShardPipeString + '}';
+function shardedTest(inputPipeString, expectedMergePipeString, expectedShardPipeString) {
+	inputPipeString = "{\"pipeline\": " + inputPipeString + "}";
+	expectedMergePipeString = "{\"pipeline\": " + expectedMergePipeString + "}";
+	expectedShardPipeString = "{\"pipeline\": " + expectedShardPipeString + "}";
 	var inputPipe = JSON.parse(inputPipeString),
 		expectedMergePipe = JSON.parse(expectedMergePipeString),
 		expectedShardPipe = JSON.parse(expectedShardPipeString);
@@ -28,7 +20,7 @@ var shardedTest = function(inputPipeString, expectedMergePipeString, expectedSha
 
 	assert.deepEqual(shardPipe.serialize().pipeline, expectedShardPipe.pipeline);
 	assert.deepEqual(mergePipe.serialize().pipeline, expectedMergePipe.pipeline);
-};
+}
 
 module.exports = {
 
@@ -47,7 +39,7 @@ module.exports = {
 
 					this.current = 5;
 
-				}, TestDocumentSource = klass, base = DocumentSource, proto = klass.prototype = Object.create(base.prototype, {constructor: {value: klass}});
+				}, TestDocumentSource = klass, base = DocumentSource, proto = klass.prototype = Object.create(base.prototype, {constructor: {value: klass}}); //jshint ignore:line
 
 
 				proto.coalesce = function () {
@@ -155,30 +147,30 @@ module.exports = {
 			},
 
 			"should handle one unwind": function () {
-				var inputPipe = '[{"$unwind":"$a"}]',
+				var inputPipe = JSON.stringify([{$unwind:"$a"}]),
 					expectedShardPipe = "[]",
-					expectedMergePipe = '[{"$unwind":"$a"}]';
+					expectedMergePipe = JSON.stringify([{$unwind:"$a"}]);
 				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 			},
 
 			"should handle two unwinds": function () {
-				var inputPipe = '[{"$unwind":"$a"}, {"$unwind":"$b"}]',
+				var inputPipe = JSON.stringify([{$unwind:"$a"},{$unwind:"$b"}]),
 					expectedShardPipe = "[]",
-					expectedMergePipe = '[{"$unwind": "$a"}, {"$unwind": "$b"}]';
+					expectedMergePipe = JSON.stringify([{$unwind:"$a"},{$unwind:"$b"}]);
 				shardedTest(inputPipe, expectedMergePipe, expectedShardPipe);
 			},
 
 			"should handle unwind not final": function () {
-				var inputPipe = '[{"$unwind": "$a"}, {"$match": {"a":1}}]',
-					expectedShardPipe = '[]',
-					expectedMergePipe = '[{"$unwind": "$a"}, {"$match": {"a":1}}]';
+				var inputPipe = JSON.stringify([{$unwind:"$a"},{$match:{"a":1}}]),
+					expectedShardPipe = "[]",
+					expectedMergePipe = JSON.stringify([{$unwind:"$a"},{$match:{"a":1}}]);
 				shardedTest(inputPipe, expectedShardPipe, expectedMergePipe);
 			},
 
 			"should handle unwind with other": function () {
-				var inputPipe = '[{"$match": {"a":1}}, {"$unwind": "$a"}]',
-					expectedShardPipe = '[{"$match":{"a":1}}]',
-					expectedMergePipe = '[{"$unwind":"$a"}]';
+				var inputPipe = JSON.stringify([{$match:{"a":1}},{$unwind:"$a"}]),
+					expectedShardPipe = JSON.stringify([{$match:{"a":1}}]),
+					expectedMergePipe = JSON.stringify([{$unwind:"$a"}]);
 				shardedTest(inputPipe,expectedMergePipe, expectedShardPipe);
 			}
 
@@ -208,8 +200,7 @@ module.exports = {
 				});
 			},
 			"should handle sources that return errors": function (done) {
-				var p = Pipeline.parseCommand({pipeline:[{$test:{works:false}}]}),
-					results = [];
+				var p = Pipeline.parseCommand({pipeline:[{$test:{works:false}}]});
 				p.run(function(err, doc) {
 					assert(err);
 					done();
@@ -249,5 +240,3 @@ module.exports = {
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

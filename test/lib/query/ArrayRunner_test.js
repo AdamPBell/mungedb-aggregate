@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	Runner = require("../../../lib/query/Runner"),
 	ArrayRunner = require("../../../lib/query/ArrayRunner");
@@ -9,22 +10,22 @@ module.exports = {
 		"#constructor": {
 			"should accept an array of data": function(){
 				assert.doesNotThrow(function(){
-					var ar = new ArrayRunner([1,2,3]);
+					new ArrayRunner([1,2,3]);
 				});
 			},
 			"should fail if not given an array": function(){
 				assert.throws(function(){
-					var ar = new ArrayRunner();
+					new ArrayRunner();
 				});
 				assert.throws(function(){
-					var ar = new ArrayRunner(123);
+					new ArrayRunner(123);
 				});
 			}
 		},
 		"#getNext": {
 			"should return the next item in the array": function(done){
 				var ar = new ArrayRunner([1,2,3]);
-				
+
 				ar.getNext(function(err, out, state){
 					assert.strictEqual(state, Runner.RunnerState.RUNNER_ADVANCED);
 					assert.strictEqual(out, 1);
@@ -41,7 +42,7 @@ module.exports = {
 			},
 			"should return EOF if there is nothing left in the array": function(done){
 				var ar = new ArrayRunner([1]);
-				
+
 				ar.getNext(function(err, out, state){
 					assert.strictEqual(state, Runner.RunnerState.RUNNER_ADVANCED);
 					assert.strictEqual(out, 1);
@@ -72,17 +73,15 @@ module.exports = {
 			"should clear out the runner": function(){
 				var ar = new ArrayRunner([1,2,3]);
 				ar.reset();
-				
+
 				assert.deepEqual(ar.getInfo(true), {
 					"type":"ArrayRunner",
 					"nDocs":0,
 					"position":0,
 					"state": Runner.RunnerState.RUNNER_DEAD
-				});				
+				});
 			}
 		}
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run();

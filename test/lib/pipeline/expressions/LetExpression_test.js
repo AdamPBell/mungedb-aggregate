@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
 	LetExpression = require("../../../../lib/pipeline/expressions/LetExpression"),
@@ -11,9 +12,6 @@ var assert = require("assert"),
 	Variables = require("../../../../lib/pipeline/expressions/Variables"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
-
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
 exports.LetExpression = {
 
@@ -48,7 +46,7 @@ exports.LetExpression = {
 		"should throw if $let isn't in expr": function() {
 			var self = this;
 			assert.throws(function() {
-				Expression.parseOperand({$xlet: ['$$a', 1]}, self.vps);
+				Expression.parseOperand({$xlet: ["$$a", 1]}, self.vps);
 			}, /15999/);
 		},
 
@@ -142,9 +140,9 @@ exports.LetExpression = {
 	"#serialize()": {
 
 		"should serialize variables and the subexpression": function() {
-			var s = Expression.parseOperand({$let: {vars: {a:{$const:1}, b:{$const:2}}, in: {$multiply: [2,3]}}}, this.vps).optimize().serialize("zoot");
-			var expected = {$let:{vars:{a:{$const:1},b:{$const:2}},in:{$const:6}}};
-			assert.deepEqual(s, expected);
+			var spec = {$let: {vars: {a:{$const:1}, b:{$const:2}}, in: {$multiply: [2,3]}}},
+				expr = Expression.parseOperand(spec, this.vps).optimize();
+			assert.deepEqual(expr.serialize(false), {$let:{vars:{a:{$const:1},b:{$const:2}},in:{$const:6}}});
 		},
 
 	},
@@ -152,7 +150,7 @@ exports.LetExpression = {
 	"#evaluate()": {
 
 		"should perform the evaluation for variables and the subexpression": function() {
-			var x = Expression.parseOperand({$let: {vars: {a: '$in1', b: '$in2'}, in: { $multiply: ["$$a", "$$b"] }}}, this.vps).optimize();
+			var x = Expression.parseOperand({$let: {vars: {a: "$in1", b: "$in2"}, in: { $multiply: ["$$a", "$$b"] }}}, this.vps).optimize();
 			var	y = x.evaluate(new Variables(10, {in1: 6, in2: 7}));
 			assert.equal(y, 42);
 		},
@@ -162,14 +160,14 @@ exports.LetExpression = {
 	"#addDependencies()": {
 
 		"should add dependencies": function() {
-			var expr = Expression.parseOperand({$let: {vars: {a: {$multiply:['$a','$b']}}, in: {$multiply: ['$c','$d']}}}, this.vps);
+			var expr = Expression.parseOperand({$let: {vars: {a: {$multiply:["$a","$b"]}}, in: {$multiply: ["$c","$d"]}}}, this.vps);
 			var deps = new DepsTracker();
 			expr.addDependencies(deps);
 			assert.equal(Object.keys(deps.fields).length, 4);
-			assert('a' in deps.fields);
-			assert('b' in deps.fields);
-			assert('c' in deps.fields);
-			assert('d' in deps.fields);
+			assert("a" in deps.fields);
+			assert("b" in deps.fields);
+			assert("c" in deps.fields);
+			assert("d" in deps.fields);
 			assert.strictEqual(deps.needWholeDocument, false);
 			assert.strictEqual(deps.needTextScore, false);
 		},
@@ -179,10 +177,14 @@ exports.LetExpression = {
 	"The Gauntlet": {
 
 		"example from http://docs.mongodb.org/manual/reference/operator/aggregation/let/": function() {
-			var x = Expression.parseOperand(
-				{$let: { vars: { total: { $add: [ '$price', '$tax' ] },	discounted: { $cond: { if: '$applyDiscount', then: 0.9, else: 1 } }}, in: { $multiply: [ '$$total', '$$discounted' ] }}},
-				this.vps).optimize();
-			var y;
+			var spec = {$let: {
+					vars: {
+						total: { $add: [ "$price", "$tax" ] },
+						discounted: { $cond: { if: "$applyDiscount", then: 0.9, else: 1 } }},
+					in: { $multiply: [ "$$total", "$$discounted" ] }
+				}},
+				x = Expression.parseOperand(spec, this.vps).optimize(),
+				y;
 			y = x.evaluate(new Variables(10, {price: 90, tax: 0.05}));
 			assert.equal(y, 90.05);
 			y = x.evaluate(new Variables(10, {price: 90, tax: 0.05, applyDiscount: 1}));
@@ -192,6 +194,3 @@ exports.LetExpression = {
 	},
 
 };
-
-
-if (!module.parent)(new (require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

@@ -1,9 +1,9 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	Variables = require("../../../../lib/pipeline/expressions/Variables"),
 	VariablesIdGenerator = require("../../../../lib/pipeline/expressions/VariablesIdGenerator"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState");
-
 
 module.exports = {
 
@@ -12,28 +12,28 @@ module.exports = {
 		"constructor": {
 
 			"Should be able to construct": function canConstruct() {
-				var idGen = new VariablesIdGenerator(),
-					vps = new VariablesParseState(idGen);
+				var idGen = new VariablesIdGenerator();
+				new VariablesParseState(idGen);
 			},
 
 			"Should throw given invalid args": function throwsForArgs() {
 				assert.throws(function() {
-					var vps = new VariablesParseState();
+					new VariablesParseState();
 				});
 				assert.throws(function() {
-					var vps = new VariablesParseState(1);
+					new VariablesParseState(1);
 				});
 				assert.throws(function() {
-					var vps = new VariablesParseState('hi');
+					new VariablesParseState("hi");
 				});
 				assert.throws(function() {
-					var vps = new VariablesParseState({});
+					new VariablesParseState({});
 				});
 				assert.throws(function() {
-					var vps = new VariablesParseState([]);
+					new VariablesParseState([]);
 				});
 				assert.throws(function() {
-					var vps = new VariablesParseState(new Date());
+					new VariablesParseState(new Date());
 				});
 			}
 
@@ -45,15 +45,15 @@ module.exports = {
 				var idGen = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGen);
 				assert.throws(function() {
-					vps.defineVariable('ROOT', 5);
+					vps.defineVariable("ROOT", 5);
 				});
 			},
 
 			"Should return new ids": function returnsNewIds() {
 				var idGen = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGen),
-					firstId = vps.defineVariable('hi', 'bye'),
-					secondId = vps.defineVariable('bye', 'hi');
+					firstId = vps.defineVariable("hi", "bye"),
+					secondId = vps.defineVariable("bye", "hi");
 				assert.notEqual(firstId, secondId);
 			}
 
@@ -64,15 +64,15 @@ module.exports = {
 			"Can retrieve defined variables": function getVariable() {
 				var idGen = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGen),
-					firstId = vps.defineVariable('hi', 'bye'),
-					firstVariable = vps.getVariable('hi');
+					firstId = vps.defineVariable("hi", "bye"),
+					firstVariable = vps.getVariable("hi");
 				assert.equal(firstVariable, firstId);
 			},
 
 			"Can retrieve root id": function getVariable() {
 				var idGen = new VariablesIdGenerator(),
 					vps = new VariablesParseState(idGen),
-					firstVariable = vps.getVariable('ROOT');
+					firstVariable = vps.getVariable("ROOT");
 				assert.equal(firstVariable, Variables.ROOT_ID);
 			}
 		}
@@ -80,5 +80,3 @@ module.exports = {
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	async = require("async"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
@@ -8,10 +9,9 @@ var assert = require("assert"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression");
 
-var getCursorDocumentSource = function(values) {
+function getCursorDocumentSource(values) {
 	return new CursorDocumentSource(null, new ArrayRunner(values), null);
-};
-
+}
 
 /// An assertion for `ObjectExpression` instances based on Mongo's `ExpectedResultBase` class
 function assertExpectedResult(args) {
@@ -59,7 +59,7 @@ function assertExpectedResult(args) {
 			});
 		} else {
 			assert.doesNotThrow(function(){
-				var gds = SortDocumentSource.createFromJson(args.spec);
+				SortDocumentSource.createFromJson(args.spec);
 			});
 		}
 	}
@@ -257,28 +257,28 @@ module.exports = {
 
 			"should throw an exception when not passed an object": function createTest(next){
 				assert.throws(function() {
-					var sds = SortDocumentSource.createFromJson(7);
+					SortDocumentSource.createFromJson(7);
 				});
 				return next();
 			},
 
 			"should throw an exception when passed an empty object": function createTest(next){
 				assert.throws(function() {
-					var sds = SortDocumentSource.createFromJson({});
+					SortDocumentSource.createFromJson({});
 				});
 				return next();
 			},
 
 			"should throw an exception when passed an object with a non number value": function createTest(next){
 				assert.throws(function() {
-					var sds = SortDocumentSource.createFromJson({a:"b"});
+					SortDocumentSource.createFromJson({a:"b"});
 				});
 				return next();
 			},
 
 			"should throw an exception when passed an object with a non valid number value": function createTest(next){
 				assert.throws(function() {
-					var sds = SortDocumentSource.createFromJson({a:14});
+					SortDocumentSource.createFromJson({a:14});
 				});
 				next();
 			}
@@ -531,8 +531,7 @@ module.exports = {
 
 
 			"should return limit source when coalescing a limit source": function limitSource(next) {
-				var sds = SortDocumentSource.createFromJson({a:1}),
-					lds = LimitDocumentSource.createFromJson(1);
+				var sds = SortDocumentSource.createFromJson({a:1});
 
 				// TODO: add missing test cases.
 				// array json getLimit
@@ -564,8 +563,8 @@ module.exports = {
 			"should have Dependant field paths": function dependencies(next) {
 			 	var sds = SortDocumentSource.createFromJson({sort: 1});
 
-				sds.addKey('a', true);
-			 	sds.addKey('b.c', false);
+				sds.addKey("a", true);
+			 	sds.addKey("b.c", false);
 
 				var deps = {fields: {}, needWholeDocument: false, needTextScore: false};
 
@@ -573,7 +572,7 @@ module.exports = {
 				// Sort keys are now part of deps fields.
 				assert.equal(3, Object.keys(deps.fields).length);
 			 	assert.equal(1, deps.fields.a);
-				assert.equal(1, deps.fields['b.c']);
+				assert.equal(1, deps.fields["b.c"]);
 				assert.equal(false, deps.needWholeDocument);
 				assert.equal(false, deps.needTextScore);
 				return next();
@@ -581,5 +580,3 @@ module.exports = {
 		}
 	}
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

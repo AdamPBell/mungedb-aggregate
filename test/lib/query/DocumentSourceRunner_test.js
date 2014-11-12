@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	Runner = require("../../../lib/query/Runner"),
 	CursorDocumentSource = require("../../../lib/pipeline/documentSources/CursorDocumentSource"),
@@ -16,30 +17,30 @@ module.exports = {
 				var cds = new CursorDocumentSource(null, new ArrayRunner([]), null),
 					pipeline = [];
 				assert.doesNotThrow(function(){
-					var ar = new DocumentSourceRunner(cds, pipeline);
+					new DocumentSourceRunner(cds, pipeline);
 				});
 			},
 			"should fail if not given a document source or pipeline": function(){
 				var cds = new CursorDocumentSource(null, new ArrayRunner([]), null);
-				
+
 				assert.throws(function(){
-					var ar = new DocumentSourceRunner();
+					new DocumentSourceRunner();
 				});
 				assert.throws(function(){
-					var ar = new DocumentSourceRunner(123);
+					new DocumentSourceRunner(123);
 				});
 				assert.throws(function(){
-					var ar = new DocumentSourceRunner(cds, 123);
+					new DocumentSourceRunner(cds, 123);
 				});
 			},
 			"should coalesce the pipeline into the given documentsource": function(){
 				var cds = new CursorDocumentSource(null, new ArrayRunner([]), null),
 					pipeline = [new LimitDocumentSource(3), new MatchDocumentSource({"a":true})],
 					expected = [{$match:{a:true}}];
-				
-				var ds = new DocumentSourceRunner(cds, pipeline);
+
+				new DocumentSourceRunner(cds, pipeline);
 				var actual = pipeline.map(function(d){return d.serialize();});
-				
+
 				assert.deepEqual(expected, actual);
 			}
 		},
@@ -47,9 +48,9 @@ module.exports = {
 			"should return the next item in the given documentsource": function(done){
 				var cds = new CursorDocumentSource(null, new ArrayRunner([1,2,3]), null),
 					pipeline = [new LimitDocumentSource(3)];
-				
+
 				var ds = new DocumentSourceRunner(cds, pipeline);
-				
+
 				ds.getNext(function(err, out, state){
 					assert.strictEqual(state, Runner.RunnerState.RUNNER_ADVANCED);
 					assert.strictEqual(out, 1);
@@ -67,9 +68,9 @@ module.exports = {
 			"should return EOF if there is nothing left in the given documentsource": function(done){
 				var cds = new CursorDocumentSource(null, new ArrayRunner([1,2,3]), null),
 					pipeline = [new LimitDocumentSource({}, 1)];
-				
+
 				var ds = new DocumentSourceRunner(cds, pipeline);
-				
+
 				ds.getNext(function(err, out, state){
 					assert.strictEqual(state, Runner.RunnerState.RUNNER_ADVANCED);
 					assert.strictEqual(out, 1);
@@ -85,7 +86,7 @@ module.exports = {
 			"should return nothing if explain flag is not set": function(){
 				var cds = new CursorDocumentSource(null, new ArrayRunner([1,2,3]), null),
 					pipeline = [new LimitDocumentSource({}, 1)];
-				
+
 				var ds = new DocumentSourceRunner(cds, pipeline);
 				assert.strictEqual(ds.getInfo(), undefined);
 			},
@@ -93,7 +94,7 @@ module.exports = {
 				var cds = new CursorDocumentSource(null, new ArrayRunner([1,2,3]), null),
 					pipeline = [new LimitDocumentSource({}, 1)];
 				var ds = new DocumentSourceRunner(cds, pipeline);
-				
+
 				assert.deepEqual(ds.getInfo(true), {
 					"type": "DocumentSourceRunner",
 					"docSrc": {
@@ -106,11 +107,11 @@ module.exports = {
 								"type": "ArrayRunner",
 								"nDocs": 3,
 								"position": 0,
-								"state": "RUNNER_ADVANCED"
+								"state": Runner.RunnerState.RUNNER_ADVANCED
 							}
 						}
 					},
-					"state": "RUNNER_ADVANCED"
+					"state": Runner.RunnerState.RUNNER_ADVANCED
 				});
 			}
 		},
@@ -119,7 +120,7 @@ module.exports = {
 				var cds = new CursorDocumentSource(null, new ArrayRunner([1,2,3]), null),
 					pipeline = [new LimitDocumentSource({}, 1)];
 				var ds = new DocumentSourceRunner(cds, pipeline);
-				
+
 				ds.reset();
 				assert.deepEqual(ds.getInfo(true), {
 					"type": "DocumentSourceRunner",
@@ -133,16 +134,14 @@ module.exports = {
 								"type": "ArrayRunner",
 								"nDocs": 0,
 								"position": 0,
-								"state": "RUNNER_DEAD"
+								"state": Runner.RunnerState.RUNNER_DEAD
 							}
 						}
 					},
-					"state": "RUNNER_DEAD"
+					"state": Runner.RunnerState.RUNNER_DEAD
 				});
 			}
 		}
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run();

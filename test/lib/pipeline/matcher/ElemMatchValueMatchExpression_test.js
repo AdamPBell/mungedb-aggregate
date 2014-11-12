@@ -1,5 +1,7 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
+	ErrorCodes = require("../../../../lib/Errors").ErrorCodes,
 	ElemMatchObjectMatchExpression = require("../../../../lib/pipeline/matcher/ElemMatchObjectMatchExpression.js"),
 	ElemMatchValueMatchExpression = require("../../../../lib/pipeline/matcher/ElemMatchValueMatchExpression.js"),
 	MatchDetails = require("../../../../lib/pipeline/matcher/MatchDetails.js"),
@@ -16,8 +18,8 @@ module.exports = {
 				gt = new GTMatchExpression(),
 				op = new ElemMatchValueMatchExpression();
 
-			assert.strictEqual(gt.init("", baseOperand.$gt).code, 'OK');
-			assert.strictEqual(op.init("a", gt).code, 'OK');
+			assert.strictEqual(gt.init("", baseOperand.$gt).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a", gt).code, ErrorCodes.OK);
 			assert.ok(op.matchesSingleElement(match.a));
 			assert.ok(!op.matchesSingleElement(notMatch.a));
 		},
@@ -32,10 +34,10 @@ module.exports = {
 				lt = new LTMatchExpression(),
 				op = new ElemMatchValueMatchExpression();
 
-			assert.strictEqual(gt.init("", baseOperand1.$gt).code, 'OK');
-			assert.strictEqual(lt.init("", baseOperand2.$lt).code, 'OK');
+			assert.strictEqual(gt.init("", baseOperand1.$gt).code, ErrorCodes.OK);
+			assert.strictEqual(lt.init("", baseOperand2.$lt).code, ErrorCodes.OK);
 
-			assert.strictEqual(op.init("a").code, 'OK');
+			assert.strictEqual(op.init("a").code, ErrorCodes.OK);
 			op.add(gt);
 			op.add(lt);
 
@@ -49,8 +51,8 @@ module.exports = {
 				gt = new GTMatchExpression(),
 				op = new ElemMatchObjectMatchExpression();
 
-			assert.strictEqual(gt.init("", baseOperand.$gt).code, 'OK');
-			assert.strictEqual(op.init("a", gt).code, 'OK');
+			assert.strictEqual(gt.init("", baseOperand.$gt).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a", gt).code, ErrorCodes.OK);
 			// Directly nested objects are not matched with $elemMatch.  An intervening array is
 			// required.
 			assert.ok(!op.matches({"a":6},null));
@@ -62,8 +64,8 @@ module.exports = {
 				gt = new GTMatchExpression(),
 				op = new ElemMatchValueMatchExpression();
 
-			assert.strictEqual(gt.init("", baseOperand.$gt).code, 'OK');
-			assert.strictEqual(op.init("a", gt).code, 'OK');
+			assert.strictEqual(gt.init("", baseOperand.$gt).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a", gt).code, ErrorCodes.OK);
 			assert.ok(op.matches({"a":[6]},null));
 			assert.ok(op.matches({"a":[4,6]},null));
 			assert.ok(op.matches({"a":[{},7]},null));
@@ -74,8 +76,8 @@ module.exports = {
 				gt = new GTMatchExpression(),
 				op = new ElemMatchValueMatchExpression();
 
-			assert.strictEqual(gt.init("", baseOperand.$gt).code, 'OK');
-			assert.strictEqual(op.init("a.b", gt).code, 'OK');
+			assert.strictEqual(gt.init("", baseOperand.$gt).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a.b", gt).code, ErrorCodes.OK);
 			assert.ok(op.matches({"a":[{"b":[6]}]}, null));
 			assert.ok(op.matches({"a":[{"b":[4]}, {"b":[4,6]}]}, null));
 		},
@@ -86,8 +88,8 @@ module.exports = {
 				op = new ElemMatchValueMatchExpression(),
 				details = new MatchDetails();
 
-			assert.strictEqual(gt.init("", baseOperand.$gt).code, 'OK');
-			assert.strictEqual(op.init("a.b", gt).code, 'OK');
+			assert.strictEqual(gt.init("", baseOperand.$gt).code, ErrorCodes.OK);
+			assert.strictEqual(op.init("a.b", gt).code, ErrorCodes.OK);
 			details.requestElemMatchKey();
 			assert.ok(!op.matches({}, details));
 			assert.ok(!details.hasElemMatchKey());
@@ -104,6 +106,3 @@ module.exports = {
 		}
 	}
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
-

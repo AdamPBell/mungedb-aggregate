@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	ToLowerExpression = require("../../../../lib/pipeline/expressions/ToLowerExpression"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
@@ -8,12 +9,9 @@ var assert = require("assert"),
 	constify = utils.constify,
 	expressionToJson = utils.expressionToJson;
 
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
-
 var TestBase = function TestBase(overrides) {
 		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
-		for (var key in overrides)
+		for (var key in overrides) //jshint ignore:line
 			this[key] = overrides[key];
 	},
 	ExpectedResultBase = (function() {
@@ -61,7 +59,7 @@ exports.ToLowerExpression = {
 
 	"#evaluate()": {
 
-		"should return the lowercase version of the string if there is a null character at the beginning of the string": function NullBegin() {
+		"should return the lowercase version of the string if a null is character at the beginning of the string": function NullBegin() {
 			/** String beginning with a null character. */
 			new ExpectedResultBase({
 				str: "\0aB",
@@ -69,7 +67,7 @@ exports.ToLowerExpression = {
 			}).run();
 		},
 
-		"should return the lowercase version of the string if there is a null character in the middle of the string": function NullMiddle() {
+		"should return the lowercase version of the string if a null is character in the middle of the string": function NullMiddle() {
 			/** String containing a null character. */
 			new ExpectedResultBase({
 				str: "a\0B",
@@ -77,7 +75,7 @@ exports.ToLowerExpression = {
 			}).run();
 		},
 
-		"should return the lowercase version of the string if there is a null character at the end of the string": function NullEnd() {
+		"should return the lowercase version of the string if a null is character at the end of the string": function NullEnd() {
 			/** String ending with a null character. */
 			new ExpectedResultBase({
 				str: "aB\0",
@@ -88,5 +86,3 @@ exports.ToLowerExpression = {
 	},
 
 };
-
-if (!module.parent)(new (require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

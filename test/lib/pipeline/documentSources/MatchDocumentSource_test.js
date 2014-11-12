@@ -1,19 +1,20 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	async = require("async"),
-	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	MatchDocumentSource = require("../../../../lib/pipeline/documentSources/MatchDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
-var testRedactSafe = function testRedactSafe(input, safePortion) {
+function testRedactSafe(input, safePortion) {
 	var match = MatchDocumentSource.createFromJson(input);
 	assert.deepEqual(match.redactSafePortion(), safePortion);
-};
-var addSource = function addSource(match, data) {
+}
+
+function addSource(match, data) {
 	var cds = new CursorDocumentSource(null, new ArrayRunner(data), null);
 	match.setSource(cds);
-};
+}
 
 module.exports = {
 
@@ -47,9 +48,9 @@ module.exports = {
 		"#serialize()": {
 
 			"should append the match query to the input builder": function sourceToJsonTest(){
-				var mds = new MatchDocumentSource({ location : { $in : ['Kentucky'] } });
+				var mds = new MatchDocumentSource({ location : { $in : ["Kentucky"] } });
 				var t = mds.serialize(false);
-				assert.deepEqual(t, { "$match" : { location : { $in : ['Kentucky'] } }});
+				assert.deepEqual(t, { "$match" : { location : { $in : ["Kentucky"] } }});
 			}
 
 		},
@@ -210,17 +211,17 @@ module.exports = {
 				testRedactSafe({a:1},
 					{a:1});
 
-				testRedactSafe({a:'asdf'},
-					{a:'asdf'});
+				testRedactSafe({a:"asdf"},
+					{a:"asdf"});
 
 				testRedactSafe({a:/asdf/i},
 					{a:/asdf/i});
 
-				testRedactSafe({a: {$regex: 'adsf'}},
-					{a: {$regex: 'adsf'}});
+				testRedactSafe({a: {$regex: "adsf"}},
+					{a: {$regex: "adsf"}});
 
-				testRedactSafe({a: {$regex: 'adsf', $options: 'i'}},
-					{a: {$regex: 'adsf', $options: 'i'}});
+				testRedactSafe({a: {$regex: "adsf", $options: "i"}},
+					{a: {$regex: "adsf", $options: "i"}});
 
 				testRedactSafe({a: {$mod: [1, 0]}},
 					{a: {$mod: [1, 0]}});
@@ -241,10 +242,10 @@ module.exports = {
 				testRedactSafe({a: []},
 					{});
 
-				testRedactSafe({'a.0': 1},
+				testRedactSafe({"a.0": 1},
 					{});
 
-				testRedactSafe({'a.0.b': 1},
+				testRedactSafe({"a.0.b": 1},
 					{});
 
 				testRedactSafe({a: {$ne: 1}},
@@ -268,8 +269,8 @@ module.exports = {
 			},
 
 			"Combinations": function() {
-				testRedactSafe({a:1, b: 'asdf'},
-					{a:1, b: 'asdf'});
+				testRedactSafe({a:1, b: "asdf"},
+					{a:1, b: "asdf"});
 
 				testRedactSafe({a:1, b: null},
 					{a:1});
@@ -345,17 +346,17 @@ module.exports = {
 		"#isTextQuery()": {
 
 			"should return true when $text operator is first stage in pipeline": function () {
-				var query = {$text:'textQuery'};
+				var query = {$text:"textQuery"};
 				assert.ok(MatchDocumentSource.isTextQuery(query)); // true
 			},
 
 			"should return true when $text operator is nested in the pipeline": function () {
-				var query = {$stage:{$text:'textQuery'}};
+				var query = {$stage:{$text:"textQuery"}};
 				assert.ok(MatchDocumentSource.isTextQuery(query)); // true
 			},
 
 			"should return false when $text operator is not in pipeline": function () {
-				var query = {$notText:'textQuery'};
+				var query = {$notText:"textQuery"};
 				assert.ok(!MatchDocumentSource.isTextQuery(query)); // false
 			}
 
@@ -364,58 +365,58 @@ module.exports = {
 		"#uassertNoDisallowedClauses()": {
 
 			"should throw if invalid stage is in match expression": function () {
-				var whereQuery = {$where:'where'};
+				var whereQuery = {$where:"where"};
 				assert.throws(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(whereQuery);
 				});
 
-				var nearQuery = {$near:'near'};
+				var nearQuery = {$near:"near"};
 				assert.throws(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(nearQuery);
 				});
 
-				var withinQuery = {$within:'within'};
+				var withinQuery = {$within:"within"};
 				assert.throws(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(withinQuery);
 				});
 
-				var nearSphereQuery = {$nearSphere:'nearSphere'};
+				var nearSphereQuery = {$nearSphere:"nearSphere"};
 				assert.throws(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(nearSphereQuery);
 				});
 			},
 
 			"should throw if invalid stage is nested in the match expression": function () {
-				var whereQuery = {$validStage:{$where:'where'}};
+				var whereQuery = {$validStage:{$where:"where"}};
 				assert.throws(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(whereQuery);
 				});
 
-				var nearQuery = {$validStage:{$near:'near'}};
+				var nearQuery = {$validStage:{$near:"near"}};
 				assert.throws(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(nearQuery);
 				});
 
-				var withinQuery = {$validStage:{$within:'within'}};
+				var withinQuery = {$validStage:{$within:"within"}};
 				assert.throws(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(withinQuery);
 				});
 
-				var nearSphereQuery = {$validStage:{$nearSphere:'nearSphere'}};
+				var nearSphereQuery = {$validStage:{$nearSphere:"nearSphere"}};
 				assert.throws(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(nearSphereQuery);
 				});
 			},
 
 			"should not throw if invalid stage is not in match expression": function () {
-				var query = {$valid:'valid'};
+				var query = {$valid:"valid"};
 				assert.doesNotThrow(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(query);
 				});
 			},
 
 			"should not throw if invalid stage is not nested in the match expression": function () {
-				var query = {$valid:{$anotherValid:'valid'}};
+				var query = {$valid:{$anotherValid:"valid"}};
 				assert.doesNotThrow(function(){
 					MatchDocumentSource.uassertNoDisallowedClauses(query);
 				});
@@ -426,6 +427,3 @@ module.exports = {
 	}
 
 };
-
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);

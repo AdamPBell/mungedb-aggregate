@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	expressions = require("../../../../lib/pipeline/expressions/"),
 	Expression = expressions.Expression,
@@ -9,12 +10,9 @@ var assert = require("assert"),
 	constify = utils.constify,
 	expressionToJson = utils.expressionToJson;
 
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
-
 var TestBase = function TestBase(overrides) {
 		//NOTE: DEVIATION FROM MONGO: using this base class to make things easier to initialize
-		for (var key in overrides)
+		for (var key in overrides) //jshint ignore:line
 			this[key] = overrides[key];
 	},
 	OptimizeBase = (function() {
@@ -308,7 +306,7 @@ exports.CompareExpression = {
 
 		/** $cmp results are bracketed to an absolute value of 1. */
 		"CmpBracketed": function CmpBracketed() {
-			var test = new ExpectedResultBase({
+			new ExpectedResultBase({
 				spec: {$cmp:["z","a"]},
 				expectedResult: 1,
 			}).run();

@@ -1,5 +1,7 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
+	ErrorCodes = require("../../../../lib/Errors").ErrorCodes,
 	EqualityMatchExpression = require("../../../../lib/pipeline/matcher/EqualityMatchExpression.js"),
 	ElemMatchObjectMatchExpression = require("../../../../lib/pipeline/matcher/ElemMatchObjectMatchExpression.js"),
 	ElemMatchValueMatchExpression = require("../../../../lib/pipeline/matcher/ElemMatchValueMatchExpression.js"),
@@ -8,22 +10,19 @@ var assert = require("assert"),
 	GTMatchExpression = require("../../../../lib/pipeline/matcher/GTMatchExpression.js"),
 	AllElemMatchOp = require("../../../../lib/pipeline/matcher/AllElemMatchOp.js");
 
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
-
 exports.AllElemMatchOp = {
 	"Should match an element": function() {
 		var baseOperanda1={"a":1},
 			eqa1 = new EqualityMatchExpression();
 
-		assert.strictEqual(eqa1.init("a", baseOperanda1.a).code, 'OK');
+		assert.strictEqual(eqa1.init("a", baseOperanda1.a).code, ErrorCodes.OK);
 
 		var baseOperandb1={"b":1},
 			eqb1 = new EqualityMatchExpression(),
 			and1 = new AndMatchExpression(),
 			elemMatch1 = new ElemMatchObjectMatchExpression();
 
-		assert.strictEqual(eqb1.init("b", baseOperandb1.b).code, 'OK');
+		assert.strictEqual(eqb1.init("b", baseOperandb1.b).code, ErrorCodes.OK);
 
 		and1.add(eqa1);
 		and1.add(eqb1);
@@ -35,7 +34,7 @@ exports.AllElemMatchOp = {
 		var baseOperanda2={"a":2},
 			eqa2 = new EqualityMatchExpression();
 
-		assert.strictEqual(eqa2.init("a", baseOperanda2.a).code, 'OK');
+		assert.strictEqual(eqa2.init("a", baseOperanda2.a).code, ErrorCodes.OK);
 
 		var baseOperandb2={"b":2},
 			eqb2 = new EqualityMatchExpression(),
@@ -43,7 +42,7 @@ exports.AllElemMatchOp = {
 			elemMatch2 = new ElemMatchObjectMatchExpression(),
 			op = new AllElemMatchOp();
 
-		assert.strictEqual(eqb2.init("b", baseOperandb2.b).code, 'OK');
+		assert.strictEqual(eqb2.init("b", baseOperandb2.b).code, ErrorCodes.OK);
 
 		and2.add(eqa2);
 		and2.add(eqb2);
@@ -76,13 +75,13 @@ exports.AllElemMatchOp = {
 		var baseOperandgt1={"$gt":1},
 			gt1 = new GTMatchExpression();
 
-		assert.strictEqual(gt1.init("", baseOperandgt1.$gt).code, 'OK');
+		assert.strictEqual(gt1.init("", baseOperandgt1.$gt).code, ErrorCodes.OK);
 
 		var baseOperandlt1={"$lt":10},
 			lt1 = new LTMatchExpression(),
 			elemMatch1 = new ElemMatchValueMatchExpression();
 
-		assert.strictEqual(lt1.init("", baseOperandlt1.$lt).code, 'OK');
+		assert.strictEqual(lt1.init("", baseOperandlt1.$lt).code, ErrorCodes.OK);
 
 		elemMatch1.init("x");
 		elemMatch1.add(gt1);
@@ -91,14 +90,14 @@ exports.AllElemMatchOp = {
 		var baseOperandgt2={"$gt":101},
 			gt2 = new GTMatchExpression();
 
-		assert.strictEqual(gt2.init("", baseOperandgt2.$gt).code, 'OK');
+		assert.strictEqual(gt2.init("", baseOperandgt2.$gt).code, ErrorCodes.OK);
 
 		var baseOperandlt2={"$lt":110},
 			lt2 = new LTMatchExpression(),
 			elemMatch2 = new ElemMatchValueMatchExpression(),
 			op = new AllElemMatchOp();
 
-		assert.strictEqual(lt2.init("", baseOperandlt2.$lt).code, 'OK');
+		assert.strictEqual(lt2.init("", baseOperandlt2.$lt).code, ErrorCodes.OK);
 
 		elemMatch2.init("x");
 		elemMatch2.add(gt2);

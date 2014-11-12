@@ -1,4 +1,5 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	MultiplyExpression = require("../../../../lib/pipeline/expressions/MultiplyExpression"),
 	VariablesParseState = require("../../../../lib/pipeline/expressions/VariablesParseState"),
@@ -6,9 +7,6 @@ var assert = require("assert"),
 	FieldPathExpression = require("../../../../lib/pipeline/expressions/FieldPathExpression"),
 	ConstantExpression = require("../../../../lib/pipeline/expressions/ConstantExpression"),
 	Expression = require("../../../../lib/pipeline/expressions/Expression");
-
-// Mocha one-liner to make these tests self-hosted
-if(!module.parent)return(require.cache[__filename]=null,(new(require("mocha"))({ui:"exports",reporter:"spec",grep:process.env.TEST_GREP})).addFile(__filename).run(process.exit));
 
 exports.MultiplyExpression = {
 
@@ -81,7 +79,10 @@ exports.MultiplyExpression = {
 		},
 
 		"should return result of multiplying large variables": function () {
-			assert.strictEqual(Expression.parseOperand({$multiply: ["$a", "$b", "$c"]}, this.vps).evaluate({a: 1.345, b: 2e45, c: 0}), 1.345 * 2e45 * 0);
+			var spec = {$multiply: ["$a", "$b", "$c"]},
+				doc = {a: 1.345, b: 2e45, c: 0},
+				expr = Expression.parseOperand(spec, this.vps);
+			assert.strictEqual(expr.evaluate(doc), 1.345 * 2e45 * 0);
 		},
 
 		"should return result of multiplying one number": function () {
@@ -99,7 +100,7 @@ exports.MultiplyExpression = {
 	"optimize": {
 
 		"should optimize out constants separated by a variable": function () {
-			var a = Expression.parseOperand({$multiply: [2, 3, 4, 5, '$a', 6, 7, 8]}, this.vps).optimize();
+			var a = Expression.parseOperand({$multiply: [2, 3, 4, 5, "$a", 6, 7, 8]}, this.vps).optimize();
 			assert(a instanceof MultiplyExpression);
 			assert.equal(a.operands.length, 2);
 			assert(a.operands[0] instanceof FieldPathExpression);

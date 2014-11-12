@@ -1,9 +1,9 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
 	Pipeline = require("../../../lib/pipeline/Pipeline"),
 	PipelineD = require("../../../lib/pipeline/PipelineD"),
-	DocumentSource = require('../../../lib/pipeline/documentSources/DocumentSource'),
-	CursorDocumentSource = require('../../../lib/pipeline/documentSources/CursorDocumentSource');
+	CursorDocumentSource = require("../../../lib/pipeline/documentSources/CursorDocumentSource");
 
 
 module.exports = {
@@ -13,14 +13,14 @@ module.exports = {
 		"prepareCursorSource": {
 
 			"should place a CursorDocumentSource in pipeline": function () {
-				var p = Pipeline.parseCommand({pipeline:[{$match:{a:true}}], aggregate:[]}),
-					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				var p = Pipeline.parseCommand({pipeline:[{$match:{a:true}}], aggregate:[]});
+				PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
 				assert.equal(p.sources[0].constructor, CursorDocumentSource);
 			},
 
 			"should get projection from all sources": function () {
-				var p = Pipeline.parseCommand({pipeline:[{$project:{a:"$x"}}], aggregate:[]}),
-					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				var p = Pipeline.parseCommand({pipeline:[{$project:{a:"$x"}}], aggregate:[]});
+				PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
 				assert.deepEqual(p.sources[0]._projection, {x:1, _id:1});
 				assert.deepEqual(p.sources[0]._dependencies, {_fields:{_id:true, x:true}});
 			},
@@ -44,9 +44,9 @@ module.exports = {
 						}}
 					]
 				};
-				var p = Pipeline.parseCommand(cmdObj),
-					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
-				assert.deepEqual(p.sources[0]._projection, {'a.b.c': 1, d: 1, 'e.f.g': 1, _id: 1});
+				var p = Pipeline.parseCommand(cmdObj);
+				PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.deepEqual(p.sources[0]._projection, {"a.b.c": 1, d: 1, "e.f.g": 1, _id: 1});
 				assert.deepEqual(p.sources[0]._dependencies, {"_fields":{"_id":true,"a":{"b":{"c":true}},"d":true,"e":{"f":{"g":true}}}});
 			},
 			"should get group's deps": function(){
@@ -70,9 +70,9 @@ module.exports = {
 						}}
 					]
 				};
-				var p = Pipeline.parseCommand(cmdObj),
-					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
-				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({ a: 1, b: 1, 'x.y.z': 1, _id: 0 }));
+				var p = Pipeline.parseCommand(cmdObj);
+				PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				assert.equal(JSON.stringify(p.sources[0]._projection), JSON.stringify({ a: 1, b: 1, "x.y.z": 1, _id: 0 }));
 				assert.deepEqual(p.sources[0]._dependencies, {"_fields":{"a":true,"b":true,"x":{"y":{"z":true}}}});
 			},
 			"should set the queryObj on the Cursor": function(){
@@ -85,8 +85,8 @@ module.exports = {
 						}}
 					]
 				};
-				var p = Pipeline.parseCommand(cmdObj),
-					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				var p = Pipeline.parseCommand(cmdObj);
+				PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
 				assert.deepEqual(p.sources[0]._query, {x:{$exists: true}, y:{$exists:false}});
 			},
 			"should set the sort on the Cursor": function(){
@@ -99,8 +99,8 @@ module.exports = {
 						}}
 					]
 				};
-				var p = Pipeline.parseCommand(cmdObj),
-					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				var p = Pipeline.parseCommand(cmdObj);
+				PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
 				assert.deepEqual(p.sources[0]._sort, {x:1, y:-1});
 			},
 			"should set the sort on the Cursor if there is a match first": function(){
@@ -117,8 +117,8 @@ module.exports = {
 						}}
 					]
 				};
-				var p = Pipeline.parseCommand(cmdObj),
-					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				var p = Pipeline.parseCommand(cmdObj);
+				PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
 				assert.deepEqual(p.sources[0]._sort, {x:1, y:-1});
 			},
 			"should coalesce the Cursor with the rest of the pipeline": function(){
@@ -128,8 +128,8 @@ module.exports = {
 						{$limit:1}
 					]
 				};
-				var p = Pipeline.parseCommand(cmdObj),
-					cs = PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
+				var p = Pipeline.parseCommand(cmdObj);
+				PipelineD.prepareCursorSource(p, {ns:[1,2,3,4,5]});
 				assert.equal(p.sources[0].getLimit(), 1);
 				assert.equal(p.sources.length, 1);
 			},
@@ -137,6 +137,3 @@ module.exports = {
 	}
 
 };
-
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

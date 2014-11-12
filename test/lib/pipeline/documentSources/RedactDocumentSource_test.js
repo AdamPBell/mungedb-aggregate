@@ -1,11 +1,10 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	async = require("async"),
-	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
-	RedactDocumentSource = require("../../../../lib/pipeline/documentSources/RedactDocumentSource"),
-	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
-	ArrayRunner = require("../../../../lib/query/ArrayRunner"),
-	Expressions = require("../../../../lib/pipeline/expressions");
+	pipeline = require("../../../../lib/pipeline/"),
+	RedactDocumentSource = pipeline.documentSources.RedactDocumentSource,
+	CursorDocumentSource = pipeline.documentSources.CursorDocumentSource,
+	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
 var exampleRedact = {$cond:{
 	if:{$gt:[0,4]},
@@ -13,16 +12,16 @@ var exampleRedact = {$cond:{
 	else:"$$PRUNE"
 }};
 
-var createCursorDocumentSource = function createCursorDocumentSource (input) {
-	if (!input || input.constructor !== Array) throw new Error('invalid');
+function createCursorDocumentSource (input) {
+	if (!input || input.constructor !== Array) throw new Error("invalid");
 	return new CursorDocumentSource(null, new ArrayRunner(input), null);
-};
+}
 
-var createRedactDocumentSource = function createRedactDocumentSource (src, expression) {
+function createRedactDocumentSource (src, expression) {
 	var rds = RedactDocumentSource.createFromJson(expression);
 	rds.setSource(src);
 	return rds;
-};
+}
 
 module.exports = {
 
@@ -113,11 +112,11 @@ module.exports = {
 			"should error if called with non-object": function testNonObjectPassed() {
 				//Empty args
 				assert.throws(function() {
-					var rds = RedactDocumentSource.createFromJson();
+					RedactDocumentSource.createFromJson();
 				});
 				//Invalid spec
 				assert.throws(function() {
-					var rds = RedactDocumentSource.createFromJson({$invalidOperator: 1});
+					RedactDocumentSource.createFromJson({$invalidOperator: 1});
 				});
 
 			}
@@ -189,17 +188,17 @@ module.exports = {
 				var cds = createCursorDocumentSource([{
 					_id: 1,
 					level: 1,
-					acct_id: "xyz123",
+					acctId: "xyz123",
 					cc: {
 						level: 5,
 						type: "yy",
-						exp_date: new Date("2015-11-01"),
-						billing_addr: {
+						expDate: new Date("2015-11-01"),
+						billingAddr: {
 							level: 5,
 							addr1: "123 ABC Street",
 							city: "Some City"
 						},
-						shipping_addr: [
+						shippingAddr: [
 							{
 								level: 3,
 								addr1: "987 XYZ Ave",
@@ -226,7 +225,7 @@ module.exports = {
 				var result = {
 					_id:1,
 					level:1,
-					acct_id:"xyz123",
+					acctId:"xyz123",
 					status:"A"
 				};
 
@@ -242,5 +241,3 @@ module.exports = {
 	}
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).grep(process.env.MOCHA_GREP || '').run(process.exit);

@@ -1,5 +1,7 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
+	ErrorCodes = require("../../../../lib/Errors").ErrorCodes,
 	SizeMatchExpression = require("../../../../lib/pipeline/matcher/SizeMatchExpression.js"),
 	MatchDetails = require("../../../../lib/pipeline/matcher/MatchDetails.js");
 
@@ -11,7 +13,7 @@ module.exports = {
 				notMatch={"a":[5]},
 				size = new SizeMatchExpression();
 
-			assert.strictEqual(size.init("", 2).code, 'OK');
+			assert.strictEqual(size.init("", 2).code, ErrorCodes.OK);
 			assert.ok(size.matchesSingleElement(match.a));
 			assert.ok(!size.matchesSingleElement(notMatch.a));
 		},
@@ -23,7 +25,7 @@ module.exports = {
 				arrayValue={"a":[]},
 				size = new SizeMatchExpression();
 
-			assert.strictEqual(size.init("", 0).code, 'OK');
+			assert.strictEqual(size.init("", 0).code, ErrorCodes.OK);
 			assert.ok(!size.matchesSingleElement(stringValue.a));
 			assert.ok(!size.matchesSingleElement(numberValue.a));
 			assert.ok(size.matchesSingleElement(arrayValue.a));
@@ -32,7 +34,7 @@ module.exports = {
 		"Should match an array": function() {
 			var size = new SizeMatchExpression();
 
-			assert.strictEqual(size.init("a", 2).code, 'OK');
+			assert.strictEqual(size.init("a", 2).code, ErrorCodes.OK);
 			assert.ok(size.matches({"a":[4, 5.5]}, null));
 			// Arrays are not unwound to look for matching subarrays.
 			assert.ok(!size.matches({"a":[4, 5.5, [1,2]]}, null));
@@ -41,7 +43,7 @@ module.exports = {
 		"Should match a nested array": function() {
 			var size = new SizeMatchExpression();
 
-			assert.strictEqual(size.init("a.2", 2).code, 'OK');
+			assert.strictEqual(size.init("a.2", 2).code, ErrorCodes.OK);
 			// A numerically referenced nested array is matched.
 			assert.ok(size.matches({"a":[4, 5.5, [1, 2]]}, null));
 		},
@@ -50,7 +52,7 @@ module.exports = {
 			var size = new SizeMatchExpression(),
 				details = new MatchDetails();
 
-			assert.strictEqual(size.init("a.b", 3).code, 'OK');
+			assert.strictEqual(size.init("a.b", 3).code, ErrorCodes.OK);
 			details.requestElemMatchKey();
 			assert.ok(!size.matches({"a":1}, details));
 			assert.ok(!details.hasElemMatchKey());
@@ -76,6 +78,3 @@ module.exports = {
 		}
 	}
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
-
