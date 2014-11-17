@@ -9,158 +9,170 @@ var assert = require("assert"),
 	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner");
 
-var getCursorDocumentSource = function(values) {
+
+var createSource = function(values) {
 	values = values || [1,2,3,4,5];
 	return new CursorDocumentSource(null, new ArrayRunner(values), null);
 };
 
+//TODO: port their tests and test classes or document why we chose not to
 
-module.exports = {
+exports.CursorDocumentSource = {
 
-	"CursorDocumentSource": {
+	"constructor(data)": {
 
-		"constructor(data)": {
-			"should get a accept a CursorWithContext and set it internally": function(){
-				var cds = getCursorDocumentSource([]);
-				assert.ok(cds._runner);
-			}
+		"should get a accept a CursorWithContext and set it internally": function() {
+			var cds = createSource([]);
+			debugger
+			assert(cds._runner instanceof ArrayRunner);
 		},
 
-		"#coalesce": {
-			"should be able to coalesce a limit into itself": function (){
-				var cds = getCursorDocumentSource(),
-					lds = LimitDocumentSource.createFromJson(2);
+	},
 
-				assert.equal(cds.coalesce(lds) instanceof LimitDocumentSource, true);
-				assert.equal(cds.getLimit(), 2);
-			},
+	"#coalesce": {
 
-			"should keep original limit if coalesced to a larger limit": function() {
-				var cds = getCursorDocumentSource();
-				cds.coalesce(LimitDocumentSource.createFromJson(2));
-				cds.coalesce(LimitDocumentSource.createFromJson(3));
-				assert.equal(cds.getLimit(), 2);
-			},
-
-
-			"cursor only returns $limit number when coalesced": function(next) {
-				var cds = getCursorDocumentSource(),
-					lds = LimitDocumentSource.createFromJson(2);
-
-
-				cds.coalesce(lds);
-
-				var docs = [], i = 0;
-				async.doWhilst(
-					function(cb) {
-						cds.getNext(function(err, val) {
-							docs[i] = val;
-							return cb(err);
-						});
-					},
-					function() {
-						return docs[i++] !== null;
-					},
-					function(err) {
-						if (err) throw err;
-						assert.deepEqual([1, 2, null], docs);
-						next();
-					}
-				);
-			},
-
-			"should leave non-limit alone": function () {
-				var sds = new SkipDocumentSource(),
-					cds = getCursorDocumentSource([]);
-
-				assert.equal(cds.coalesce(sds), false);
-			}
+		"should be able to coalesce a limit into itself": function() {
+			var cds = createSource(),
+				lds = LimitDocumentSource.createFromJson(2);
+			cds.coalesce(lds);
+			assert.strictEqual(cds.getLimit(), 2);
 		},
 
-		"#getNext": {
-			"should return the current cursor value async": function(next){
-				var cds = getCursorDocumentSource([1,2,3,4]);
-				async.series([
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-					],
-					function(err,res) {
-						assert.deepEqual([1,2,3,4,null], res);
-						next();
-					}
-				);
-			},
-			"should return values past the batch limit": function(done){
-				var arr = Array.apply(0, new Array(100000)).map(function(v, i) { return i; }),
-					result = [];
+		"should keep original limit if coalesced to a larger limit": function() {
+			var cds = createSource();
+			cds.coalesce(LimitDocumentSource.createFromJson(2));
+			cds.coalesce(LimitDocumentSource.createFromJson(3));
+			assert.strictEqual(cds.getLimit(), 2);
+		},
 
-				var cds = getCursorDocumentSource(arr);
-				var doc = null,
-					error = null;
+		"cursor only returns $limit number when coalesced": function(done) {
+			var cds = createSource(),
+				lds = LimitDocumentSource.createFromJson(2);
 
-				async.doWhilst(
-					function iterator(next){
-						return cds.getNext(function (err, obj){
-							if (obj !== null) result.push(obj);
-							doc = obj;
-							error = err;
-							next();
-						});
-					},
-					function test(){
-						return doc !== null && !error;
-					},
-					function (err){
-						assert.deepEqual(arr,result);
-						done();
+			cds.coalesce(lds);
+
+			var docs = [],
+				i = 0;
+			async.doWhilst(
+				function iterator(cb) {
+					cds.getNext(function(err, val) {
+						docs[i] = val;
+						return cb(err);
 					});
-			},
-		},
-		"#dispose": {
-			"should empty the current cursor": function(next){
-				var cds = getCursorDocumentSource();
-				async.series([
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-						function(next){
-							cds.dispose();
-							return cds.getNext(next);
-						}
-					],
-					function(err,res) {
-						assert.deepEqual([1,2,null], res);
-						next();
-					}
-				);
-			}
+				},
+				function test() {
+					return docs[i++] !== null;
+				},
+				function(err) {
+					assert.ifError(err);
+					assert.deepEqual([1, 2, null], docs);
+					return done();
+				}
+			);
 		},
 
-		"#setProjection": {
+		"should leave non-limit alone": function() {
+			var sds = new SkipDocumentSource(),
+				cds = createSource([]);
 
-			"should set a projection": function(next) {
-				var cds = getCursorDocumentSource([{a:1, b:2},{a:2, b:3}]),
-					deps = new DepsTracker(),
-					project = ProjectDocumentSource.createFromJson({"a":1});
-				project.getDependencies(deps);
-				cds.setProjection(deps.toProjection(), deps.toParsedDeps());
+			assert.strictEqual(cds.coalesce(sds), false);
+		},
 
-				async.series([
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds),
-						cds.getNext.bind(cds)
-					],
-					function(err,res) {
-						assert.deepEqual([{a:1},{a:2},null], res);
-						next();
+	},
+
+	"#getNext": {
+
+		"should return the current cursor value async": function(done) {
+			var cds = createSource([1,2,3,4]);
+			async.series(
+				[
+					cds.getNext.bind(cds),
+					cds.getNext.bind(cds),
+					cds.getNext.bind(cds),
+					cds.getNext.bind(cds),
+					cds.getNext.bind(cds),
+				],
+				function(err, res) {
+					assert.ifError(err);
+					assert.deepEqual([1,2,3,4,null], res);
+					return done();
+				}
+			);
+		},
+
+		"should return values past the batch limit": function(done) {
+			var arr = Array.apply(0, new Array(100000)).map(function(v, i) { return i; }),
+				cds = createSource(arr),
+				docs = [],
+				doc;
+			async.doWhilst(
+				function iterator(next) {
+					return cds.getNext(function(err, obj) {
+						if (err) return next(err);
+						doc = obj;
+						if (doc !== null) docs.push(doc);
+						return next();
+					});
+				},
+				function test() {
+					return doc !== null;
+				},
+				function after(err) {
+					assert.ifError(err);
+					assert.deepEqual(arr, docs);
+					return done();
+				}
+			);
+		},
+
+	},
+
+	"#dispose": {
+
+		"should empty the current cursor": function(done) {
+			var cds = createSource();
+			async.series(
+				[
+					cds.getNext.bind(cds),
+					cds.getNext.bind(cds),
+					function(next) {
+						cds.dispose();
+						return cds.getNext(next);
 					}
-				);
-			}
+				],
+				function(err, res) {
+					assert.ifError(err);
+					assert.deepEqual([1,2,null], res);
+					return done();
+				}
+			);
+		},
 
-		}
+	},
 
-	}
+	"#setProjection": {
+
+		"should set a projection": function(done) {
+			var cds = createSource([{a:1, b:2},{a:2, b:3}]),
+				deps = new DepsTracker(),
+				project = ProjectDocumentSource.createFromJson({"a":1});
+			project.getDependencies(deps);
+			cds.setProjection(deps.toProjection(), deps.toParsedDeps());
+
+			async.series(
+				[
+					cds.getNext.bind(cds),
+					cds.getNext.bind(cds),
+					cds.getNext.bind(cds)
+				],
+				function(err, res) {
+					assert.ifError(err);
+					assert.deepEqual([{a:1},{a:2},null], res);
+					return done();
+				}
+			);
+		},
+
+	},
 
 };
