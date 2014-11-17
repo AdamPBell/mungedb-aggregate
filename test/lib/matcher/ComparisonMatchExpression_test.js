@@ -4,9 +4,9 @@ var assert = require("assert"),
 	bson = require("bson"),
 	MinKey = bson.BSONPure.MinKey,
 	MaxKey = bson.BSONPure.MaxKey,
-	ErrorCodes = require("../../../../lib/Errors").ErrorCodes,
-	MatchDetails = require("../../../../lib/pipeline/matcher/MatchDetails"),
-	ComparisonMatchExpression = require("../../../../lib/pipeline/matcher/ComparisonMatchExpression");
+	ErrorCodes = require("../../../lib/errors").ErrorCodes,
+	MatchDetails = require("../../../lib/matcher/MatchDetails"),
+	ComparisonMatchExpression = require("../../../lib/matcher/ComparisonMatchExpression");
 
 exports.ComparisonMatchExpression = {
 

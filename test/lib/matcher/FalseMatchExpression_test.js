@@ -1,51 +1,46 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	FalseMatchExpression = require("../../../../lib/pipeline/matcher/FalseMatchExpression");
+	FalseMatchExpression = require("../../../lib/matcher/FalseMatchExpression");
 
 
-module.exports = {
-	"FalseMatchExpression": {
+exports.FalseMatchExpression = {
 
-		"Constructor": function (){
-			var e = new FalseMatchExpression();
-			assert.equal(e._matchType, "ALWAYS_FALSE");
-		},
+	"Constructor": function Constructor() {
+		var e = new FalseMatchExpression();
+		assert.equal(e._matchType, "ALWAYS_FALSE");
+	},
 
-		"DebugString": function () {
-			var e = new FalseMatchExpression();
-			assert.equal(e.debugString(0), "$false\n");
-		},
+	"DebugString": function DebugString() {
+		var e = new FalseMatchExpression();
+		assert.equal(e.debugString(0), "$false\n");
+	},
 
-		"Equivalent": function () {
-			var a = new FalseMatchExpression(),
-				b = new FalseMatchExpression();
-			assert.equal(a.equivalent(b), true);
-		},
+	"Equivalent": function Equivalent() {
+		var a = new FalseMatchExpression(),
+			b = new FalseMatchExpression();
+		assert.equal(a.equivalent(b), true);
+	},
 
-		"Matches": function () {
-			var e = new FalseMatchExpression();
-			assert.equal(e.matches({},{}), false);
-		},
+	"Matches": function Matches() {
+		var e = new FalseMatchExpression();
+		assert.equal(e.matches({},{}), false);
+	},
 
-		"MatchesSingleElement": function () {
-			var e = new FalseMatchExpression();
-			assert.equal(e.matchesSingleElement({}), false);
-		},
+	"MatchesSingleElement": function MatchesSingleElement() {
+		var e = new FalseMatchExpression();
+		assert.equal(e.matchesSingleElement({}), false);
+	},
 
-		"ShallowClone": function () {
-			var e = new FalseMatchExpression();
-			assert.deepEqual(e.shallowClone(), new FalseMatchExpression());
-		},
+	"ShallowClone": function ShallowClone() {
+		var e = new FalseMatchExpression();
+		assert.deepEqual(e.shallowClone(), new FalseMatchExpression());
+	},
 
-		"toJson": function () {
-			var e = new FalseMatchExpression(),
-				obj = {};
-			assert.deepEqual(e.toJson(obj), {"$false":1});
-		}
-
-	}
+	"toJson": function toJson() {
+		var e = new FalseMatchExpression(),
+			obj = {};
+		assert.deepEqual(e.toJson(obj), {"$false":1});
+	},
 
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
-

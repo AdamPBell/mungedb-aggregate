@@ -1,17 +1,19 @@
 "use strict";
 if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	ErrorCodes = require("../../../../lib/Errors").ErrorCodes,
-	EqualityMatchExpression = require("../../../../lib/pipeline/matcher/EqualityMatchExpression.js"),
-	ElemMatchObjectMatchExpression = require("../../../../lib/pipeline/matcher/ElemMatchObjectMatchExpression.js"),
-	ElemMatchValueMatchExpression = require("../../../../lib/pipeline/matcher/ElemMatchValueMatchExpression.js"),
-	AndMatchExpression = require("../../../../lib/pipeline/matcher/AndMatchExpression.js"),
-	LTMatchExpression = require("../../../../lib/pipeline/matcher/LTMatchExpression.js"),
-	GTMatchExpression = require("../../../../lib/pipeline/matcher/GTMatchExpression.js"),
-	AllElemMatchOp = require("../../../../lib/pipeline/matcher/AllElemMatchOp.js");
+	ErrorCodes = require("../../../lib/errors").ErrorCodes,
+	matcher = require("../../../lib/matcher/"),
+	AllElemMatchOp = matcher.AllElemMatchOp,
+	AndMatchExpression = matcher.AndMatchExpression,
+	ElemMatchObjectMatchExpression = matcher.ElemMatchObjectMatchExpression,
+	ElemMatchValueMatchExpression = matcher.ElemMatchValueMatchExpression,
+	EqualityMatchExpression = matcher.EqualityMatchExpression,
+	GTMatchExpression = matcher.GTMatchExpression,
+	LTMatchExpression = matcher.LTMatchExpression;
 
 exports.AllElemMatchOp = {
-	"Should match an element": function() {
+
+	"should match an element": function() {
 		var baseOperanda1={"a":1},
 			eqa1 = new EqualityMatchExpression();
 
@@ -71,7 +73,7 @@ exports.AllElemMatchOp = {
 		assert.ok(!op.matchesSingleElement(noObjMatch.x));
 	},
 
-	"Should match things": function() {
+	"should match things": function() {
 		var baseOperandgt1={"$gt":1},
 			gt1 = new GTMatchExpression();
 
@@ -123,5 +125,6 @@ exports.AllElemMatchOp = {
 		assert.ok(!op.matches(otherMatch, null));
 		assert.ok(op.matches(bothMatch, null));
 		assert.ok(!op.matches(neitherMatch, null));
-	}
+	},
+
 };

@@ -1,57 +1,57 @@
 "use strict";
 if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	ErrorCodes = require("../../../../lib/Errors").ErrorCodes,
-	TextMatchExpression = require("../../../../lib/pipeline/matcher/TextMatchExpression");
+	ErrorCodes = require("../../../lib/errors").ErrorCodes,
+	TextMatchExpression = require("../../../lib/matcher/TextMatchExpression");
 
-module.exports = {
-	"TextMatchExpression": {
-		"Should match an element, regardless of what is provided.": function() {
-			var text = new TextMatchExpression(),
-				text2 = new TextMatchExpression();
+exports.TextMatchExpression = {
 
-			assert.strictEqual(text.init("query", "language").code, ErrorCodes.OK);
-			assert.strictEqual(text2.init("query2", "language2").code, ErrorCodes.OK);
+	"should match an element, regardless of what is provided": function() {
+		var text = new TextMatchExpression(),
+			text2 = new TextMatchExpression();
 
-			assert.ok(text.matchesSingleElement(text2)); // It'll always work. Just the way it is in source.
-		},
+		assert.strictEqual(text.init("query", "language").code, ErrorCodes.OK);
+		assert.strictEqual(text2.init("query2", "language2").code, ErrorCodes.OK);
 
-		"Should return the query provided in the init.": function() {
-			var text = new TextMatchExpression();
+		assert.ok(text.matchesSingleElement(text2)); // It'll always work. Just the way it is in source.
+	},
 
-			text.init("query", "language");
+	"should return the query provided in the init": function() {
+		var text = new TextMatchExpression();
 
-			assert.strictEqual(text.getQuery(), "query");
-		},
+		text.init("query", "language");
 
-		"Should return the language provided in the init.": function() {
-			var text = new TextMatchExpression();
+		assert.strictEqual(text.getQuery(), "query");
+	},
 
-			text.init("query", "language");
+	"should return the language provided in the init": function() {
+		var text = new TextMatchExpression();
 
-			assert.strictEqual(text.getLanguage(), "language");
-		},
+		text.init("query", "language");
 
-		"Should return equivalency.": function() {
-			var text1 = new TextMatchExpression(),
-				text2 = new TextMatchExpression(),
-				text3 = new TextMatchExpression();
+		assert.strictEqual(text.getLanguage(), "language");
+	},
 
-			text1.init("query", "language");
-			text2.init("query", "language");
-			text3.init("query2", "language2");
+	"should return equivalency": function() {
+		var text1 = new TextMatchExpression(),
+			text2 = new TextMatchExpression(),
+			text3 = new TextMatchExpression();
 
-			assert.ok(text1.equivalent(text1));
-			assert.ok(text1.equivalent(text2));
-			assert.ok(!text1.equivalent(text3));
-		},
+		text1.init("query", "language");
+		text2.init("query", "language");
+		text3.init("query2", "language2");
 
-		"Should return a shallow copy of the original text match expression.": function() {
-			var text1 = new TextMatchExpression();
-			text1.init("query", "language");
-			var text2 = text1.shallowClone();
+		assert.ok(text1.equivalent(text1));
+		assert.ok(text1.equivalent(text2));
+		assert.ok(!text1.equivalent(text3));
+	},
 
-			assert.ok(text1.equivalent(text2));
-		}
-	}
+	"should return a shallow copy of the original text match expression": function() {
+		var text1 = new TextMatchExpression();
+		text1.init("query", "language");
+		var text2 = text1.shallowClone();
+
+		assert.ok(text1.equivalent(text2));
+	},
+
 };

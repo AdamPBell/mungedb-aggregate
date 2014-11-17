@@ -1,62 +1,61 @@
 "use strict";
+if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	MatchDetails = require("../../../../lib/pipeline/matcher/MatchDetails.js");
+	MatchDetails = require("../../../lib/matcher/MatchDetails");
 
-module.exports = {
-	"MatchDetails": {
-		"Constructor": function() {
-			var md = new MatchDetails();
-			assert.equal(md._elemMatchKeyRequested, false);
-			assert.equal(md._loadedRecord, false);
-			assert.equal(md._elemMatchKey, undefined);
-			assert(md instanceof MatchDetails);
-		},
+exports.MatchDetails = {
 
-		"ResetOutput": function() {
-			var md = new MatchDetails();
-			md.setLoadedRecord(1);
-			assert.equal(md._loadedRecord, 1);
-			md.resetOutput();
-			assert.equal(md._loadedRecord, 0);
-			assert.equal(md._elemMatchKey, undefined);
-		},
+	"Constructor": function Constructor() {
+		var md = new MatchDetails();
+		assert.equal(md._elemMatchKeyRequested, false);
+		assert.equal(md._loadedRecord, false);
+		assert.equal(md._elemMatchKey, undefined);
+		assert(md instanceof MatchDetails);
+	},
 
-		"toString": function() {
-			var md = new MatchDetails();
-			assert(typeof md.toString() === "string");
-		},
+	"ResetOutput": function ResetOutput() {
+		var md = new MatchDetails();
+		md.setLoadedRecord(1);
+		assert.equal(md._loadedRecord, 1);
+		md.resetOutput();
+		assert.equal(md._loadedRecord, 0);
+		assert.equal(md._elemMatchKey, undefined);
+	},
 
-		"setLoadedRecord": function() {
-			var md = new MatchDetails(),
-				rec = {"TEST":1};
-			md.setLoadedRecord(rec);
-			assert.deepEqual(md._loadedRecord, rec);
-		},
+	"toString": function toString() {
+		var md = new MatchDetails();
+		assert(typeof md.toString() === "string");
+	},
 
-		"hasLoadedRecord": function() {
-			var md = new MatchDetails(),
-				rec = true;
-			md.setLoadedRecord(rec);
-			assert.equal(md.hasLoadedRecord(), true);
-		},
+	"setLoadedRecord": function setLoadedRecord() {
+		var md = new MatchDetails(),
+			rec = {"TEST":1};
+		md.setLoadedRecord(rec);
+		assert.deepEqual(md._loadedRecord, rec);
+	},
 
-		"requestElemMatchKey": function() {
-			var md = new MatchDetails();
-			md.requestElemMatchKey();
-			assert(md.needRecord, true);	//should be true after request
-		},
+	"hasLoadedRecord": function hasLoadedRecord() {
+		var md = new MatchDetails(),
+			rec = true;
+		md.setLoadedRecord(rec);
+		assert.equal(md.hasLoadedRecord(), true);
+	},
 
-		"setElemMatchKey": function() {
-			var md = new MatchDetails(),
-				key = "TEST";
-			md.setElemMatchKey(key);
-			assert.equal(md.hasElemMatchKey(), false);	//should not be set unless requested
-			md.requestElemMatchKey();
-			md.setElemMatchKey(key);
-			assert.equal(md.hasElemMatchKey(), true);
-			assert.equal(md.elemMatchKey(), key);
-		}
-	}
+	"requestElemMatchKey": function requestElemMatchKey() {
+		var md = new MatchDetails();
+		md.requestElemMatchKey();
+		assert(md.needRecord, true);	//should be true after request
+	},
+
+	"setElemMatchKey": function setElemMatchKey() {
+		var md = new MatchDetails(),
+			key = "TEST";
+		md.setElemMatchKey(key);
+		assert.equal(md.hasElemMatchKey(), false);	//should not be set unless requested
+		md.requestElemMatchKey();
+		md.setElemMatchKey(key);
+		assert.equal(md.hasElemMatchKey(), true);
+		assert.equal(md.elemMatchKey(), key);
+	},
+
 };
-
-if (!module.parent)(new(require("mocha"))()).ui("exports").reporter("spec").addFile(__filename).run(process.exit);
