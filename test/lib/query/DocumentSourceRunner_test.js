@@ -124,15 +124,4 @@ exports.DocumentSourceRunner = {
 
 	},
 
-	"#dispose": {
-
-		"should dispose of the documentSource": function() {
-			var cds = new CursorDocumentSource(null, new ArrayRunner([1,2,3]), null),
-				pipeline = [new LimitDocumentSource({}, 1)],
-				ds = new DocumentSourceRunner(cds, pipeline);
-			ds.dispose();
-			assert.strictEqual(ds._docSrc, undefined);
-		}
-	},
-
 };
