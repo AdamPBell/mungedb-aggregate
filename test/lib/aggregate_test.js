@@ -508,4 +508,31 @@ exports.aggregate = {
 		});
 	},
 
+	"should be able to each over a cursor": function(done) {
+		var docs = [{a:1}, {a:2}, {a:3}],
+			expected = docs.slice(0,2),
+			counter = 0,
+			iterator = function(err, doc) {
+				assert.ifError(err);
+				assert.deepEqual(doc, expected[counter++]);
+				if (doc === null) return done();
+			};
+		expected.push(null);
+		aggregate([{$limit:2}], docs).each(iterator);
+	},
+
+	"should be able to forEach over a cursor": function(done) {
+		var docs = [{a:1}, {a:2}, {a:3}],
+			expected = docs.slice(0,2),
+			counter = 0,
+			iterator = function(doc) {
+				assert.deepEqual(doc, expected[counter++]);
+			},
+			callback = function(err) {
+				assert.ifError(err);
+				done();
+			};
+		aggregate([{$limit:2}], docs).forEach(iterator, callback);
+	}
+
 };
