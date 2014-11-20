@@ -11,25 +11,25 @@ function testAggregate(opts){
 
 	if (!opts.asyncOnly){
 		// SYNC: test one-off usage
-		var results = aggregate(opts.pipeline, opts.inputs);
+		var results = aggregate(opts.pipeline, opts.inputs).toArray();
 		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
 		// SYNC: test one-off usage with context
-		results = aggregate(opts.pipeline, {hi: "there"}, opts.inputs);
+		results = aggregate(opts.pipeline, {hi: "there"}, opts.inputs).toArray();
 		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
 		// SYNC: test use with context
 		var aggregator = aggregate(opts.pipeline, {hi: "there"});
-		results = aggregator(opts.inputs);
+		results = aggregator(opts.inputs).toArray();
 		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
 		// SYNC: test reusable aggregator functionality
 		aggregator = aggregate(opts.pipeline);
-		results = aggregator(opts.inputs);
+		results = aggregator(opts.inputs).toArray();
 		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected));
 
 		// SYNC: test that it is actually reusable
-		results = aggregator(opts.inputs);
+		results = aggregator(opts.inputs).toArray();
 		assert.equal(JSON.stringify(results), JSON.stringify(opts.expected), "should allow sync aggregator reuse");
 	}
 	// ASYNC: test one-off usage
@@ -70,40 +70,6 @@ function testAggregate(opts){
 		});
 
 	});
-}
-
-function testBatches(opts){
-	var inputs = [],
-		actual = [],
-		eachExpected = [],
-		expected = [];
-
-	for(var i = 0; i < opts.documents; i++){
-		inputs.push({a:i});
-		eachExpected.push({foo:i});
-		if (eachExpected.length % opts.batchSize === 0){
-			expected.push(eachExpected);
-			eachExpected = [];
-		}
-	}
-	expected.push(eachExpected);
-	aggregate({
-			batchSize:opts.batchSize,
-			pipeline: [
-			{$project:{
-				foo: "$a"
-			}}
-		]},
-		inputs,
-		function(err, results){
-			assert.ifError(err);
-			if (results) {
-				actual.push(results);
-			} else {
-				assert.deepEqual(actual, expected);
-				opts.next();
-			}
-		});
 }
 
 exports.aggregate = {
@@ -420,30 +386,6 @@ exports.aggregate = {
 		});
 	},
 
-	"should be able to handle a small arrays in batches": function(next){
-		testBatches({
-			documents: 5,
-			batchSize: 100,
-			next: next
-		});
-	},
-
-	"should be able to handle an array equal to the batch size": function(next){
-		testBatches({
-			documents: 100,
-			batchSize: 100,
-			next: next
-		});
-	},
-
-	"should be able to handle a large array in batches": function(next){
-		testBatches({
-			documents: 10000,
-			batchSize: 100,
-			next: next
-		});
-	},
-
 	"should be able to explain an empty pipeline": function(){
 		var pipeline = [],
 			expected = [],
@@ -540,15 +482,15 @@ exports.aggregate = {
 
 	"should throw pipeline errors if called sync-ly": function(){
 		assert.throws(function(){
-			aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}], [{"foo":1, "bar":"baz"}]);
+			aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}], [{"foo":1, "bar":"baz"}]).toArray();
 		});
 
 		var agg = aggregate([{"$project":{"sum":{"$add":["$foo", "$bar"]}}}]);
 		assert.throws(function(){
-			agg([{"foo":1, "bar":"baz"}]);
+			agg([{"foo":1, "bar":"baz"}]).toArray();
 		});
 		assert.doesNotThrow(function(){
-			agg([{"foo":1, "bar":2}]);
+			agg([{"foo":1, "bar":2}]).toArray();
 		});
 	},
 
@@ -565,5 +507,32 @@ exports.aggregate = {
 			});
 		});
 	},
+
+	"should be able to each over a cursor": function(done) {
+		var docs = [{a:1}, {a:2}, {a:3}],
+			expected = docs.slice(0,2),
+			counter = 0,
+			iterator = function(err, doc) {
+				assert.ifError(err);
+				assert.deepEqual(doc, expected[counter++]);
+				if (doc === null) return done();
+			};
+		expected.push(null);
+		aggregate([{$limit:2}], docs).each(iterator);
+	},
+
+	"should be able to forEach over a cursor": function(done) {
+		var docs = [{a:1}, {a:2}, {a:3}],
+			expected = docs.slice(0,2),
+			counter = 0,
+			iterator = function(doc) {
+				assert.deepEqual(doc, expected[counter++]);
+			},
+			callback = function(err) {
+				assert.ifError(err);
+				done();
+			};
+		aggregate([{$limit:2}], docs).forEach(iterator, callback);
+	}
 
 };
