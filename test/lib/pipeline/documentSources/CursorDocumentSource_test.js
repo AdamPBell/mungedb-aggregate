@@ -23,7 +23,6 @@ exports.CursorDocumentSource = {
 
 		"should get a accept a CursorWithContext and set it internally": function() {
 			var cds = createSource([]);
-			debugger
 			assert(cds._runner instanceof ArrayRunner);
 		},
 
