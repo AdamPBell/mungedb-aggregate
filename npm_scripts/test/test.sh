@@ -186,7 +186,7 @@ if [ -z "$NO_UNIT" ]; then
 	REPORT_FILE="$REPORT_FILE_BASE.$UNIT_TEST_EXTENSION"
 	REPORT_FILE_ERR="$REPORT_FILE_BASE.err"
 
-	LOGGER_PREFIX='' LOGGER_LEVEL=NOTICE "$MOCHA_BIN" --ui exports --reporter "$MOCHA_REPORTER" $MOCHA_EXTRA_FLAGS --recursive "$TEST_DIR" 2> "$REPORT_FILE_ERR" 1> "$REPORT_FILE"	\
+	LOGGER_PREFIX='' LOGGER_LEVEL=NOTICE "$MOCHA_BIN" --reporter "$MOCHA_REPORTER" $MOCHA_EXTRA_FLAGS 2> "$REPORT_FILE_ERR" 1> "$REPORT_FILE"	\
 		|| die "ERROR: Mocha errors during unit tests! $(echo; cat "$REPORT_FILE"; cat "$REPORT_FILE_ERR")"
 	[ "$VERBOSE" ] && echo "REPORT OUTPUT: $REPORT_FILE" && cat "$REPORT_FILE" && echo
 
@@ -233,12 +233,12 @@ if [ -z "$NO_COVERAGE" ]; then
 
 	mv "$CODE_DIR" "$CODE_DIR.ORIGINAL"	\
 		&& mv "$JSCOVERAGE_TMP_DIR" "$CODE_DIR"	\
-		&& LOGGER_PREFIX='' LOGGER_LEVEL=NOTICE "$MOCHA_BIN" --ui "exports" --reporter "html-cov" --recursive "$TEST_DIR" 2> "$REPORT_FILE_ERR" | sed 's|'"$(pwd)/lib/"'||g' > "$REPORT_FILE"	\
+		&& LOGGER_PREFIX='' LOGGER_LEVEL=NOTICE "$MOCHA_BIN" --reporter "html-cov" 2>"$REPORT_FILE_ERR" | sed 's|'"$(pwd)/lib/"'||g' > "$REPORT_FILE"	\
 		|| echo "WARNING: JSCoverage: insufficient coverage (exit code $?)."
 #		|| die "ERROR: JSCoverage errors during coverage tests! $(rm -fr "$CODE_DIR" && mv "$CODE_DIR.ORIGINAL" "$CODE_DIR"; echo; cat "$REPORT_FILE")"
 #	[ "$VERBOSE" ] && echo "REPORT OUTPUT: $REPORT_FILE" && cat "$REPORT_FILE" && echo
 
-	LOGGER_PREFIX='' LOGGER_LEVEL=NOTICE "$MOCHA_BIN" --ui "exports" --reporter "json-cov" --recursive "$TEST_DIR" 2> "$REPORT_FILE_ERR" > "$REPORT_FILE_BASE.json"
+	LOGGER_PREFIX='' LOGGER_LEVEL=NOTICE "$MOCHA_BIN" --reporter "json-cov" 2>"$REPORT_FILE_ERR" >"$REPORT_FILE_BASE.json"
 
 	# Cleanup
 	rm -rf "$CODE_DIR" || die "ERROR: Unable to remove temp copy of \"$CODE_DIR\""
