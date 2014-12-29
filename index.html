@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html ng-app="app">
+
+<head>
+	<meta charset="utf-8" />
+
+	<title>MungeDB-Aggregate Playground</title>
+
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery.ui.all.css" />
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" />
+
+	<style type="text/css">
+
+		/* github icon */
+		.octicon {
+			background: url(GitHub-Mark-64px.png);
+			display: inline-block;
+			background-size: 1em 1em;
+			width: 1em;
+			height: 1em;
+			opacity: 0.70;
+		}
+		a:hover .octicon {
+			opacity: 1.0;
+		}
+
+		/* reduce the padding between columns in a row */
+		.row {
+			margin-right: 0;
+			margin-left: 0;
+		}
+		.row [class^="col-"],
+		.row [class*=" col-"] {
+			padding-right: 5px;
+			padding-left: 5px;
+		}
+
+	</style>
+
+	<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+	<script src="//code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script>
+
+	<script src="//code.angularjs.org/1.3.7/angular.min.js"></script>
+	<script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.12.0.js"></script>
+
+	<script src="//ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js"></script>
+	<script src="//ajaxorg.github.io/ace-builds/src-min-noconflict/ext-language_tools.js"></script>
+
+	<script src="//angular-ui.github.io/ui-ace/dist/ui-ace.min.js"></script>
+
+	<script src="aggregate.web.js"></script>
+	<script src="index.js"></script>
+
+</head>
+
+<body ng-controller="MainCtrl">
+
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="container-fluid">
+
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#"><strong>MungeDB-Aggregate</strong></a>
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+			</div>
+
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+
+				<ul class="nav navbar-nav">
+
+					<li dropdown>
+						<a href="#" dropdown-toggle data-toggle="dropdown" role="button" aria-expanded="false">
+							<span class="glyphicon glyphicon-file"></span>
+							Examples
+							<span class="caret"></span>
+						</a>
+						<ul class="dropdown-menu" role="menu">
+							<li ng-repeat="(exName, ex) in examples" ng-class="{active:exName===exampleName}">
+								<a href ng-click="setExample(exName)">
+									{{exName}}
+								</a>
+							</li>
+						</ul>
+					</li>
+
+
+					<li><a href="https://github.com/RiveraGroup/mungedb-aggregate">
+						<span class="octicon"></span>
+						GitHub
+					</a></li>
+
+				</ul>
+			</div><!-- /.navbar-collapse -->
+
+		</div><!-- /.container-fluid -->
+	</nav>
+
+	<div class="container-fluid">
+
+		<h3>
+			Playground
+			<a class="btn btn-xs btn-primary"
+				ng-class="{disabled:isRunning}"
+				ng-click="run()"
+			>
+				<span class="glyphicon glyphicon-play"></span>
+				Run
+			</a>
+		</h3>
+
+		<div class="row">
+
+			<div class="col-md-4">
+				<h4>
+					Inputs
+				</h4>
+				<div class="form-control" style="min-height:40em"
+					ng-model="inputs"
+					ui-ace="{
+						mode: 'javascript',
+						require: ['ace/ext/language_tools'],
+						onLoad: aceLoaded,
+					}"
+				></div>
+			</div>
+
+			<div class="col-md-4">
+				<h4>
+					Pipeline
+				</h4>
+				<div class="form-control" style="min-height:40em"
+					ng-model="pipeline"
+					ui-ace="{
+						mode: 'javascript',
+						require: ['ace/ext/language_tools'],
+						onLoad: aceLoaded,
+					}"
+				></div>
+			</div>
+
+			<div class="col-md-4">
+				<h4>
+					Output
+					<small ng-if="isRunning"> (running ...) </small>
+				</h4>
+				<div class="form-control" style="min-height:40em"
+					ng-model="output"
+					ui-ace="{
+						mode: 'javascript',
+						require: ['ace/ext/language_tools'],
+						onLoad:aceLoaded,
+					}"
+				></div>
+			</div>
+
+		</div>
+
+	</div>
+
+</body>
+
+</html>
