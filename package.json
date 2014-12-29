@@ -16,7 +16,13 @@
   ],
   "main": "./mungedb-aggregate.js",
   "scripts": {
-    "test": "npm_scripts/test/test.sh"
+    "test": "npm_scripts/test/test.sh",
+    "mocha": "mocha test/{,**/}*_test.js",
+    "jshint": "jshint -e js,json .",
+    "jscs": "jscs *.js lib/ test/",
+    "benchmarks": "./benchmarksman.js example/*.js",
+    "browserify": "N=aggregate; browserify --standalone $N ./lib/index.js | tee $N.web.js | uglifyjs -c > $N.web.min.js",
+    "webpack": "N=aggregate; webpack -v -c --progress -d --output-library-target var --output-library $N --entry=./lib/ $N.web.js"
   },
   "repository": {
     "url": "git+https://github.com/RiveraGroup/mungedb-aggregate.git#master"
