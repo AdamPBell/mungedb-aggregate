@@ -21,7 +21,7 @@
     "webpack": "N=aggregate; webpack -v -c --progress -d --output-library-target var --output-library $N --entry=./lib/ $N.web.js"
   },
   "repository": {
-    "url": "git+https://github.com/RiveraGroup/mungedb-aggregate.git#master"
+    "url": "git+https://github.com/RiveraGroup/mungedb-aggregate.git#feature/mongo_2.6.5"
   },
   "keywords": [
     "aggregation",
@@ -30,7 +30,7 @@
   ],
   "dependencies": {
     "async": "*",
-    "xregexp": "*"
+    "xregexp": "git+https://stash.rd.rcg.local/scm/eagle6/xregexp.git#master"
   },
   "devDependencies": {
     "mocha": "*",
