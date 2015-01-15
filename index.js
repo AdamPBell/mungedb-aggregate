@@ -100,7 +100,7 @@ function($scope, $timeout, $interpolate) {
 			throw new Error("invalid exampleName");
 		var example = $scope.examples[$scope.exampleName];
 
-		$scope.inputs = "exports.inputs = " + getFormattedDocs(example.inputs).trimRight() + ";\n";
+		$scope.inputs = "exports.inputs = " + getFormattedDocs(example.inputs).trim() + ";\n";
 
 		$scope.pipeline = "exports.pipeline = [\n" +
 			"\n\t" +
@@ -139,7 +139,7 @@ function($scope, $timeout, $interpolate) {
 
 				var output = aggregate(pipeline, inputs);
 
-				$scope.output = "exports.outputs = " + getFormattedDocs(output).trimRight() + ";\n";
+				$scope.output = "exports.outputs = " + getFormattedDocs(output).trim() + ";\n";
 
 				$scope.isRunning = false;
 
