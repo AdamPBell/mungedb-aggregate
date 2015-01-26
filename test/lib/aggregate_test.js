@@ -4,8 +4,6 @@ if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))
 var assert = require("assert"),
 	aggregate = require("../../");
 
-aggregate.cmdDefaults.batchSize = Infinity;
-
 // Utility to test the various use cases of `aggregate`
 function testAggregate(opts){
 
@@ -366,20 +364,27 @@ exports.aggregate = {
 		});
 	},
 
-	"should be able to handle a large array of inputs": function(next){
+	"should be able to handle a large array of inputs (async only, sync will crash)": function(next) {
+		this.timeout(10000);
 		var inputs = [],
 			expected = [];
 		for(var i = 0; i < 10000; i++){
-			inputs.push({a:i});
-			expected.push({foo:i});
+			inputs.push({a:i, b:[i,i,i,i,i]});
+			expected.push({foo:i, bar:i});
+			expected.push({foo:i, bar:i});
+			expected.push({foo:i, bar:i});
+			expected.push({foo:i, bar:i});
+			expected.push({foo:i, bar:i});
 		}
 		testAggregate({
 			asyncOnly: true,
 			inputs: inputs,
 			pipeline: [
+				{$unwind:"$b"},
 				{$project:{
-					foo: "$a"
-				}}
+					foo: "$a",
+					bar: "$b",
+				}},
 			],
 			expected: expected,
 			next: next
@@ -533,6 +538,6 @@ exports.aggregate = {
 				done();
 			};
 		aggregate([{$limit:2}], docs).forEach(iterator, callback);
-	}
+	},
 
 };
