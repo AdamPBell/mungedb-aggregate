@@ -41,7 +41,7 @@
     "jshint": "*",
     "jscoverage": "*",
     "jscheckstyle": "*",
-    "bson": "0.2.15"
+    "bson": "~0.2.18"
   },
   "license": "AGPL",
   "private": true,
