@@ -17,7 +17,7 @@
   "main": "./mungedb-aggregate.js",
   "scripts": {
     "test": "npm_scripts/test/test.sh",
-    "mocha": "mocha test/{,**/}*_test.js",
+    "mocha": "mocha 'test/{,**/}*_test.js'",
     "jshint": "jshint -e js,json .",
     "jscs": "jscs *.js lib/ test/",
     "benchmarks": "./benchmarksman.js example/*.js",
