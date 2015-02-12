@@ -1,7 +1,7 @@
 "use strict";
 if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	async = require("async"),
+	async = require("neo-async"),
 	DocumentSource = require("../../../../lib/pipeline/documentSources/DocumentSource"),
 	DepsTracker = require("../../../../lib/pipeline/DepsTracker"),
 	UnwindDocumentSource = require("../../../../lib/pipeline/documentSources/UnwindDocumentSource"),

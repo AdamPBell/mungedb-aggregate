@@ -33,7 +33,7 @@
     "alteration"
   ],
   "dependencies": {
-    "async": "*",
+    "neo-async": "*",
     "xregexp": "git+https://github.com/KylePDavis/xregexp.git#0e7f2f75a5ef47612d84d019cf5164c1846f6bcd"
   },
   "devDependencies": {

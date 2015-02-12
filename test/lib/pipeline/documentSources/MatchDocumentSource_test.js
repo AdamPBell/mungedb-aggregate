@@ -1,7 +1,7 @@
 "use strict";
 if (!module.parent) return require.cache[__filename] = 0, (new(require("mocha"))()).addFile(__filename).ui("exports").run(process.exit);
 var assert = require("assert"),
-	async = require("async"),
+	async = require("neo-async"),
 	MatchDocumentSource = require("../../../../lib/pipeline/documentSources/MatchDocumentSource"),
 	CursorDocumentSource = require("../../../../lib/pipeline/documentSources/CursorDocumentSource"),
 	ArrayRunner = require("../../../../lib/query/ArrayRunner");
