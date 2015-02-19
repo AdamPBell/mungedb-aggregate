@@ -34,7 +34,7 @@
   ],
   "dependencies": {
     "sift": "0.5.6",
-	"async": "*"
+    "async": "*"
   },
   "devDependencies": {
     "mocha": "*",
