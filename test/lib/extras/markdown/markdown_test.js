@@ -207,6 +207,35 @@ exports.markdown = {
 					assert.equal(actual, expected);
 				},
 
+			},
+
+			'is $sort': {
+
+				'should get markdown for simple path in order': function() {
+					var actual = md.getMarkdown([
+							{$sort: {
+								foo: 1,
+							}}
+						]),
+						expected = [
+							'0. sort docs by:',
+							'    0. `foo`, in order',
+						].join('\n') + '\n';
+					assert.equal(actual, expected);
+				},
+
+				'should get markdown for complex path in reverse order': function() {
+					var actual = md.getMarkdown([
+							{$sort: {
+								"foo.bar": -1,
+							}}
+						]),
+						expected = [
+							'0. sort docs by:',
+							'    0. `foo.bar`, in reverse order',
+						].join('\n') + '\n';
+					assert.equal(actual, expected);
+				},
 
 			},
 
