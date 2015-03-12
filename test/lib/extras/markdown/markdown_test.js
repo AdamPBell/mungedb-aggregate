@@ -227,7 +227,7 @@ exports.markdown = {
 				'should get markdown for complex path in reverse order': function() {
 					var actual = md.getMarkdown([
 							{$sort: {
-								"foo.bar": -1,
+								'foo.bar': -1,
 							}}
 						]),
 						expected = [
