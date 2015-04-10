@@ -1,51 +1,51 @@
 {
-  "name": "mungedb-aggregate",
-  "version": "2.4.0-rc0",
-  "description": "A JavaScript data aggregation pipeline based on the MongoDB aggregation framework.",
-  "author": "Rivera Group <support@riverainc.com>",
-  "contributors": [
-    "Adam Bell <ABell@riverainc.com>",
-    "Charles Ezell <CEzell@riverainc.com>",
-    "Chris Sexton <CSexton@riverainc.com>",
-    "Jake Delaney <JDelaney@riverainc.com>",
-    "Jared Hall <JHall@riverainc.com>",
-    "Kyle P Davis <KDavis@riverainc.com>",
-    "Phil Murray <PMurray@riverainc.com>",
-    "Spencer Rathbun <SRathbun@riverainc.com>",
-    "Tony Ennis <TEnnis@riverainc.com>"
-  ],
-  "main": "./mungedb-aggregate.js",
-  "scripts": {
-    "test": "npm_scripts/test/test.sh",
-    "mocha": "mocha test/{,**/}*_test.js",
-    "jshint": "jshint -e js,json .",
-    "jscs": "jscs *.js lib/ test/",
-    "benchmarks": "./benchmarksman.js example/*.js",
-    "browserify": "N=aggregate; browserify --standalone $N ./lib/index.js | tee $N.web.js | uglifyjs -c > $N.web.min.js",
-    "webpack": "N=aggregate; webpack -v -c --progress -d --output-library-target var --output-library $N --entry=./lib/ $N.web.js"
-  },
-  "repository": {
-    "url": "git+https://github.com/RiveraGroup/mungedb-aggregate.git#master"
-  },
-  "keywords": [
-    "aggregation",
-    "manipulation",
-    "alteration"
-  ],
-  "dependencies": {
-    "sift": "0.5.6",
-    "async": "*"
-  },
-  "devDependencies": {
-    "mocha": "*",
-    "jshint": "*",
-    "jscoverage": "*",
-    "jscheckstyle": "*"
-  },
-  "license": "AGPL",
-  "private": true,
-  "engine": {
-    "node": ">=0.8"
-  },
-  "config": {}
+    "name": "mungedb-aggregate",
+    "version": "v0.2.2+2015-Q1",
+    "description": "A JavaScript data aggregation pipeline based on the MongoDB aggregation framework.",
+    "author": "Rivera Group <support@riverainc.com>",
+    "contributors": [
+        "Adam Bell <ABell@riverainc.com>",
+        "Charles Ezell <CEzell@riverainc.com>",
+        "Chris Sexton <CSexton@riverainc.com>",
+        "Jake Delaney <JDelaney@riverainc.com>",
+        "Jared Hall <JHall@riverainc.com>",
+        "Kyle P Davis <KDavis@riverainc.com>",
+        "Phil Murray <PMurray@riverainc.com>",
+        "Spencer Rathbun <SRathbun@riverainc.com>",
+        "Tony Ennis <TEnnis@riverainc.com>"
+    ],
+    "main": "./mungedb-aggregate.js",
+    "scripts": {
+        "test": "npm_scripts/test/test.sh",
+        "mocha": "mocha test/{,**/}*_test.js",
+        "jshint": "jshint -e js,json .",
+        "jscs": "jscs *.js lib/ test/",
+        "benchmarks": "./benchmarksman.js example/*.js",
+        "browserify": "N=aggregate; browserify --standalone $N ./lib/index.js | tee $N.web.js | uglifyjs -c > $N.web.min.js",
+        "webpack": "N=aggregate; webpack -v -c --progress -d --output-library-target var --output-library $N --entry=./lib/ $N.web.js"
+    },
+    "repository": {
+        "url": "git+https://github.com/RiveraGroup/mungedb-aggregate.git#master"
+    },
+    "keywords": [
+        "aggregation",
+        "manipulation",
+        "alteration"
+    ],
+    "dependencies": {
+        "sift": "0.2.4",
+        "async": "~0.2.10"
+    },
+    "devDependencies": {
+        "mocha": "~2.1.0",
+        "jshint": "~2.6.0",
+        "jscoverage": "~0.5.9",
+        "jscheckstyle": "~0.0.9"
+    },
+    "license": "AGPL",
+    "private": true,
+    "engine": {
+        "node": ">=0.8"
+    },
+    "config": {}
 }
